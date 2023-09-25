@@ -1,7 +1,6 @@
 import mychor.SPChecker;
 import mychor.SPCheckerRich;
-import mychor.SPCompiler;
-import mychor.SPCompiler2;
+import mychor.SPCompilerState;
 import mychor.SPlexer;
 import mychor.SPparser;
 import mychor.SPparserRich;
@@ -48,7 +47,7 @@ public class Main {
     }
 
     public static void compileToQuarkusServices(SPparserRich spp){
-        var spc = new SPCompiler2();
+        var spc = new SPCompilerState();
         spc.setOutputPath("/tmp/myDistributedApplication");
         spp.program().accept(spc);
     }
