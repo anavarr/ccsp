@@ -39,6 +39,7 @@ public class SPCompilerState extends SPparserRichBaseVisitor<ArrayList<String>>{
 
         //compile the networks -> get the different processes involved and the non-resource code
         ctx.children.get(0).accept((this));
+        //compile the Recursive variables
         for(ParseTree pt : ctx.children.subList(1, ctx.getChildCount()-1)){
             var rec = pt.accept(this);
         }
@@ -47,60 +48,48 @@ public class SPCompilerState extends SPparserRichBaseVisitor<ArrayList<String>>{
         System.out.println(resourceRecvars);
         System.out.println(applicationd);
         boolean pastedCode = true;
+
+        System.out.println("===== embedding variables =====");
+        //we have compiled recursive variables as well as a compiled network,
         while(pastedCode){
             pastedCode = false;
+            // iterate over the processes in the distributed application
             for (Map.Entry<String, HashMap<String, ArrayList<String>>> processEntry : applicationd.entrySet()) {
                 var resources = processEntry.getValue();
+                // iterate over the resource files in the distributed application
                 for (Map.Entry<String, ArrayList<String>> resourceEntry : resources.entrySet()) {
-                    if(resourceEntry.getKey() == ""){
-                        // this is not a Resource but a piece of code that is not a handler
-                        // it is not in a label, it needs to go in its own file
-                        var code = resourceEntry.getValue();
-                        if(code.size() == 0){
-                            applicationd.remove(resourceEntry.getKey());
-                            continue;
-                        }
-                        for(int i=0;i<code.size();i++){
-                            var s = code.get(i);
-                            if(s.contains("<calling")){
-                                //The non-resource code ends with a Call
-                                var recvar = s.split(" ")[1];
-                                recvar = recvar.substring(0, recvar.length()-1);
-                                code.remove(i);
-                                if(resourceRecvars.keySet().contains(recvar)){
-                                    //it calls a recursive variable representing a resource
+                    var code = resourceEntry.getValue();
+                    if(code.size() == 0){
+                        applicationd.remove(resourceEntry.getKey());
+                        ;
+                    }
+                    // this is not a Resource but a piece of code that is not a handler
+                    // it is not in a label, it needs to go in its own file
+                    // iterate over the instructions in the Resource file
+                    for(int i=0;i<code.size();i++){
+                        var s = code.get(i);
+                        if(s.contains("<calling")){
+                            //The non-resource code ends with a Call
+                            var recvar = s.split(" ")[1];
+                            recvar = recvar.substring(0, recvar.length()-1);
+                            code.remove(i);
+                            if(resourceRecvars.keySet().contains(recvar)){
+                                //it calls a recursive variable representing a resource
+                                if(resourceEntry.getKey() == ""){
                                     resourceRecvars.get(recvar).entrySet().forEach(ent -> {
                                         applicationd.get(processEntry.getKey()).put(ent.getKey(), ent.getValue());
                                     });
                                     pastedCode = true;
-                                }
-                                if (codeRecvars.keySet().contains(recvar)) {
-                                    //it calls a recursive variable representing a simple piece of code
-                                    code.addAll(codeRecvars.get(recvar));
-                                    pastedCode = true;
+                                }else{
+                                    if(resourceRecvars.keySet().contains(recvar)){
+                                        System.err.println("can't paste a resource into a resource");
+                                    }
                                 }
                             }
-                        }
-                    }else{
-                        var code = resourceEntry.getValue();
-                        if(code.size() == 0){
-                            applicationd.remove(resourceEntry.getKey());
-                            continue;
-                        }
-                        for(int i = 0;i<code.size();i++){
-                            var s = code.get(i);
-                            if (s.contains("<calling")){
-                                var recvar = s.split(" ")[1];
-                                recvar = recvar.substring(0, recvar.length()-1);
-                                code.remove(i);
-                                if(resourceRecvars.keySet().contains(recvar)){
-                                    System.out.println("can't paste a resource into a resource");
-                                }
-                                if (codeRecvars.keySet().contains(recvar)) {
-                                    //it calls a recursive variable representing a simple piece of code
-                                    code.addAll(codeRecvars.get(recvar));
-                                    pastedCode = true;
-                                }
+                            if (codeRecvars.keySet().contains(recvar)) {
+                                //it calls a recursive variable representing a simple piece of code
+                                code.addAll(codeRecvars.get(recvar));
+                                pastedCode = true;
                             }
                         }
                     }
@@ -164,8 +153,8 @@ public class SPCompilerState extends SPparserRichBaseVisitor<ArrayList<String>>{
         HashMap<String, ArrayList<String>> hm = new HashMap<>();
         for (String s : nlinearCode.keySet()) {
             var endpoints = nlinearCode.get(s).keySet();
+            ArrayList<String> l = new ArrayList<>();
             endpoints.forEach(e -> {
-                ArrayList<String> l = new ArrayList<>();
                 var httpVerb = e.substring(e.indexOf(":")+1, e.length()-1);
                 var path =e.substring(1, e.indexOf(":"));
                 var pathCamelCase = String.join("",
@@ -328,6 +317,7 @@ public class SPCompilerState extends SPparserRichBaseVisitor<ArrayList<String>>{
         recvar2proc.put(recvar, currentProcess);
         if(recvar.equals(currentRecvar)){
             //do stuff to say that there is a loop
+            //don't do anything in the case of REST services
         }
         var l = new ArrayList<String>();
         l.add("<calling "+recvar+">");
