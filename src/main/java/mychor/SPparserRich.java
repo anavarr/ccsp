@@ -554,10 +554,12 @@ public class SPparserRich extends Parser {
 		public ProcContext proc() {
 			return getRuleContext(ProcContext.class,0);
 		}
-		public TerminalNode SEL() { return getToken(SPparserRich.SEL, 0); }
+		public List<TerminalNode> PLUS() { return getTokens(SPparserRich.PLUS); }
+		public TerminalNode PLUS(int i) {
+			return getToken(SPparserRich.PLUS, i);
+		}
 		public TerminalNode BLABEL() { return getToken(SPparserRich.BLABEL, 0); }
 		public TerminalNode AT() { return getToken(SPparserRich.AT, 0); }
-		public TerminalNode PLUS() { return getToken(SPparserRich.PLUS, 0); }
 		public AnnContext ann() {
 			return getRuleContext(AnnContext.class,0);
 		}
@@ -683,7 +685,7 @@ public class SPparserRich extends Parser {
 				setState(61);
 				proc();
 				setState(62);
-				match(SEL);
+				match(PLUS);
 				setState(63);
 				match(BLABEL);
 				setState(64);
@@ -1284,7 +1286,7 @@ public class SPparserRich extends Parser {
 		"\n\u0005\u000056\u0005\u0003\u0000\u000067\u0003\f\u0006\u000078\u0005"+
 		"\u0001\u0000\u000089\u0005\u0003\u0000\u00009:\u0003\u000e\u0007\u0000"+
 		":;\u0005\u0004\u0000\u0000;<\u0003\u0006\u0003\u0000<\u0080\u0001\u0000"+
-		"\u0000\u0000=>\u0003\n\u0005\u0000>?\u0005\f\u0000\u0000?@\u0005\u001c"+
+		"\u0000\u0000=>\u0003\n\u0005\u0000>?\u0005\u0007\u0000\u0000?@\u0005\u001c"+
 		"\u0000\u0000@A\u0005\u0001\u0000\u0000AB\u0005\u0007\u0000\u0000BC\u0003"+
 		"\u000e\u0007\u0000CD\u0005\u0004\u0000\u0000DE\u0003\u0006\u0003\u0000"+
 		"E\u0080\u0001\u0000\u0000\u0000FG\u0003\n\u0005\u0000GH\u0005\b\u0000"+

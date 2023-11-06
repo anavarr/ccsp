@@ -1,9 +1,6 @@
-import mychor.SPChecker;
-import mychor.SPCheckerRich;
-import mychor.SPCompiler;
-import mychor.SPCompiler2;
+import mychor.SPcheckerRich;
+import mychor.SPcompiler;
 import mychor.SPlexer;
-import mychor.SPparser;
 import mychor.SPparserRich;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -33,22 +30,22 @@ public class Main {
         }
     }
 
-    public static void verifyChorProgramSemantics(SPparser spp){
-        var spc = new SPChecker();
+    public static void verifyChorProgramSemantics(SPparserRich spp){
+        var spc = new SPcheckerRich();
         var r = spp.program().accept(spc);
-        System.out.println(spc.processCommunicationsMap());
     }
 
     public static void verifyRichChorProgramSemantics(SPparserRich spp){
-        var spc = new SPCheckerRich();
+        var spc = new SPcheckerRich();
         var r = spp.program().accept(spc);
         System.out.println("Your program is well-formed : "+spc.noSelfCom());
         System.out.println("Your program contains those unknown processes : " + spc.unknownProcesses());
         System.out.println("Your program contains those unknown recursive variables : " + spc.unknownVariables());
+        System.out.println(spc.compilerCtx.getComms());
     }
 
     public static void compileToQuarkusServices(SPparserRich spp){
-        var spc = new SPCompiler2();
+        var spc = new SPcompiler();
         spc.setOutputPath("/tmp/myDistributedApplication");
         spp.program().accept(spc);
     }

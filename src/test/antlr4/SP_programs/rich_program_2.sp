@@ -1,6 +1,7 @@
 server [ Call Server ]
 
 Server:
+    #
     client &
         { "/text:GET" :  #GET all the texts
             Some(

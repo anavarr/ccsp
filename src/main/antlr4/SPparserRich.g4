@@ -22,7 +22,7 @@ recdef : LABEL ':' behaviour;
 behaviour
     : proc '!' expr AT '!' ann SEQ behaviour #Snd
     | proc '?' expr AT '?' ann SEQ behaviour #Rcv
-    | proc SEL BLABEL AT '+' ann SEQ behaviour #Sel
+    | proc '+' BLABEL AT '+' ann SEQ behaviour #Sel
     | proc '&' '{' BLABEL ':' mBehaviour AT '&' ann '}' ('//' '{' BLABEL ':' mBehaviour AT '&' ann '}')+ #BraAnn
     | proc '&' '{' BLABEL ':' mBehaviour '}'  ('//'  '{' BLABEL ':' mBehaviour '}')+ #Bra
     | IF expr THEN behaviour ELSE behaviour #Cdt

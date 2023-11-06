@@ -1,13 +1,11 @@
 package mychor;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 
-public class SPChecker extends SPparserBaseVisitor<List<String>>{
+public class SPchecker extends SPparserBaseVisitor<List<String>>{
     HashMap<String, String> recvar2proc = new HashMap();
     HashMap comms = new HashMap<String, List<String>>();
     String currentProcess;
