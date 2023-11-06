@@ -45,7 +45,7 @@ public class SessionTest {
     @Test
     public void sessionFirstSenderIsInitiator(){
         var presence = b.getInitiator();
-        assert presence.isPresent() & presence.get() == "client";
+        assert presence.isPresent() & presence.get().equals("client");
     }
 
     @Test

@@ -8,32 +8,23 @@ import java.util.Set;
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
-    public class Context{
+    public static class Context{
         //the current process studied
         String currentProcess;
         //a list of recursive variables
         ArrayList<String> recVars = new ArrayList<>();
         //a list of communications
-        HashMap comms = new HashMap<String, List<String>>();
+        HashMap<String, List<String>> comms = new HashMap<>();
         //maps a recursive variable to a process
-        HashMap<String, String> recvar2proc = new HashMap();
-
-        public HashMap getComms(){
-            return comms;
-        }
+        HashMap<String, String> recvar2proc = new HashMap<>();
     }
     public Context compilerCtx = new Context();
-
-
-    public HashMap<String, List<String>> processCommunicationsMap(){
-        return compilerCtx.comms;
-    }
 
     // check that no process sends or receive a message to or from itself
     public boolean noSelfCom() {
         Set<String> keys = compilerCtx.comms.keySet();
         for (String k : keys) {
-            if (((List<String>)compilerCtx.comms.get(k)).contains(k)){
+            if ((compilerCtx.comms.get(k)).contains(k)){
                 return false;
             }
         }
@@ -44,7 +35,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public List<String> unknownProcesses(){
         return compilerCtx.comms.values()
                 .stream()
-                .flatMap(v -> ((List<String>) v).stream().distinct())
+                .flatMap(v -> v.stream().distinct())
                 .filter(v -> !compilerCtx.comms.containsKey(v)).toList();
     }
 
@@ -63,7 +54,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         String process = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
         compilerCtx.currentProcess = process;
         var processes = ctx.getChild(2).accept(this);
-        ((List<String>) compilerCtx.comms.get(process)).addAll(processes);
+        compilerCtx.comms.get(process).addAll(processes);
         compilerCtx.currentProcess = null;
         return super.visitRecdef(ctx);
     }

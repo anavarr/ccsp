@@ -11,25 +11,19 @@ public record Session(String peerA, String peerB, List<Communication> communicat
         Objects.requireNonNull(communications, "communications list cannot be null");
     }
     public Optional<String> getInitiator(){
-        return (communications != null & communications.size() > 0) ?
+        return (communications.size() > 0) ?
                 Optional.of(communications.get(0).isSend() ? peerA : peerB) :
                 Optional.empty();
     }
 
     public Optional<String> getInitiated(){
-        return (communications != null & communications.size() > 0) ?
+        return (communications.size() > 0) ?
                 Optional.of(communications.get(0).isReceive() ? peerA : peerB) :
                 Optional.empty();
     }
 
-    public Optional<Boolean> isSingle(int index){
-        return (communications != null & communications.size() >= (index-1)) ?
-                Optional.of(communications.get(index).isSingle()):
-                Optional.empty();
-    }
-
     public boolean areEnds(String peerAP, String peerBP){
-        return (peerA == peerAP || peerA == peerBP) & (peerB == peerAP || peerB == peerBP);
+        return (peerA.equals(peerAP) || peerA.equals(peerBP)) & (peerB.equals(peerAP) || peerB.equals(peerBP));
     }
 
     public boolean isComplementary(Session comp){
