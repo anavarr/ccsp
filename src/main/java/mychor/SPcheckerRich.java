@@ -1,33 +1,34 @@
 package mychor;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.w3c.dom.ls.LSOutput;
-
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 
-public class SPCheckerRich extends SPparserRichBaseVisitor<List<String>>{
-    HashMap<String, String> recvar2proc = new HashMap();
-    HashMap comms = new HashMap<String, List<String>>();
-    String currentProcess;
-    ArrayList<String> recVars = new ArrayList<>();
+public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
-    //
+    class Context{
+        //the current process studied
+        String currentProcess;
+        //a list of recursive variables
+        ArrayList<String> recVars = new ArrayList<>();
+        //a list of communications
+        HashMap comms = new HashMap<String, List<String>>();
+        //maps a recursive variable to a process
+        HashMap<String, String> recvar2proc = new HashMap();
+    }
+    Context compilerCtx = new Context();
+
     public HashMap<String, List<String>> processCommunicationsMap(){
-        return comms;
+        return compilerCtx.comms;
     }
 
     // check that no process sends or receive a message to or from itself
     public boolean noSelfCom() {
-        Set<String> keys = comms.keySet();
+        Set<String> keys = compilerCtx.comms.keySet();
         for (String k : keys) {
-            if (((List<String>)comms.get(k)).contains(k)){
+            if (((List<String>)compilerCtx.comms.get(k)).contains(k)){
                 return false;
             }
         }
@@ -36,15 +37,16 @@ public class SPCheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     // check that all the processes mentioned are defined in the network
     public List<String> unknownProcesses(){
-        return comms.values()
+        return compilerCtx.comms.values()
                 .stream()
                 .flatMap(v -> ((List<String>) v).stream().distinct())
-                .filter(v -> !comms.containsKey(v)).toList();
+                .filter(v -> !compilerCtx.comms.containsKey(v)).toList();
     }
 
     // check that all the recursive variables called in behaviours are defined
     public List<String> unknownVariables(){
-        return recvar2proc.keySet().stream().filter(vari -> !recVars.contains(vari)).toList();
+        return compilerCtx.recvar2proc.keySet().stream()
+                .filter(vari -> !compilerCtx.recVars.contains(vari)).toList();
     }
 
     @Override
@@ -52,12 +54,12 @@ public class SPCheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 0 : name
         // 1 : ':'
         // 2 : behaviour
-        recVars.add(ctx.getChild(0).getText());
-        String process = recvar2proc.get(ctx.getChild(0).getText());
-        currentProcess = process;
+        compilerCtx.recVars.add(ctx.getChild(0).getText());
+        String process = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
+        compilerCtx.currentProcess = process;
         var processes = ctx.getChild(2).accept(this);
-        ((List<String>) comms.get(process)).addAll(processes);
-        currentProcess = null;
+        ((List<String>) compilerCtx.comms.get(process)).addAll(processes);
+        compilerCtx.currentProcess = null;
         return super.visitRecdef(ctx);
     }
 
@@ -72,11 +74,11 @@ public class SPCheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var children = ctx.getChildCount();
         for(int i =0; i < children -1; i+=5){
             var name = ctx.getChild(i).getText();
-            currentProcess = name;
+            compilerCtx.currentProcess = name;
             var processes = ctx.getChild(i +2).accept(this);
-            comms.put(name, processes);
+            compilerCtx.comms.put(name, processes);
         }
-        currentProcess = null;
+        compilerCtx.currentProcess = null;
         return null;
     }
 
@@ -161,7 +163,7 @@ public class SPCheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
         // 1 : name
-        this.recvar2proc.put(ctx.getChild(1).getText(),currentProcess);
+        this.compilerCtx.recvar2proc.put(ctx.getChild(1).getText(),compilerCtx.currentProcess);
         return new ArrayList<>();
     }
 

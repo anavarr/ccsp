@@ -3,7 +3,6 @@ package mychor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.Collectors.groupingBy;
-public class SPCompilerState extends SPparserRichBaseVisitor<ArrayList<String>>{
+public class SPcompiler extends SPparserRichBaseVisitor<ArrayList<String>>{
     HashMap<String, HashMap<String, ArrayList<String>>> applicationd = new HashMap<>();
     HashMap<String, String> recvar2proc = new HashMap<>();
 

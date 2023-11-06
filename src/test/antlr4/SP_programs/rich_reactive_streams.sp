@@ -2,6 +2,8 @@ subscriber [ call Subscriber ] | publisher [ call Publisher ]
 
 
 Publisher:
+    subscriber?firstSubscribe @?"";
+
     subscriber &
         {
             "subscribe":
@@ -9,10 +11,10 @@ Publisher:
             subscriber+onSubscribe @+"";
             Call Publisher
         }
-        //
+    subscription &
         {
             "request":
-            subscriber?pendingRequests @?"";
+            subscription?pendingRequests @?"";
             //send all stuff
             Call Sending
         }
@@ -24,9 +26,9 @@ Publisher:
 
 
 Subscriber:
-    publisher+"subscribe" @+"";
-
-
+    publisher+ "subscribe" @+"";
+    publisher?subscription @?"";
+    //doStuff()
 
 Sending:
     If (mustSend(pendingRequests)) Then
