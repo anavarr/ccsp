@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
-    class Context{
+    public class Context{
         //the current process studied
         String currentProcess;
         //a list of recursive variables
@@ -17,8 +17,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         HashMap comms = new HashMap<String, List<String>>();
         //maps a recursive variable to a process
         HashMap<String, String> recvar2proc = new HashMap();
+
+        public HashMap getComms(){
+            return comms;
+        }
     }
-    Context compilerCtx = new Context();
+    public Context compilerCtx = new Context();
+
 
     public HashMap<String, List<String>> processCommunicationsMap(){
         return compilerCtx.comms;

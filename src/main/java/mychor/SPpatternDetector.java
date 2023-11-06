@@ -29,7 +29,7 @@ public class SPpatternDetector extends SPparserRichBaseVisitor<List<String>>{
             var name = ctx.getChild(i).getText();
             currentProcess = name;
             var processes = ctx.getChild(i +2).accept(this);
-            comms.put(name, processes);
+//            comms.put(name, processes);
         }
         currentProcess = null;
         return null;

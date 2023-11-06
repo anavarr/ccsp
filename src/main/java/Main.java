@@ -33,7 +33,6 @@ public class Main {
     public static void verifyChorProgramSemantics(SPparserRich spp){
         var spc = new SPcheckerRich();
         var r = spp.program().accept(spc);
-        System.out.println(spc.processCommunicationsMap());
     }
 
     public static void verifyRichChorProgramSemantics(SPparserRich spp){
@@ -42,6 +41,7 @@ public class Main {
         System.out.println("Your program is well-formed : "+spc.noSelfCom());
         System.out.println("Your program contains those unknown processes : " + spc.unknownProcesses());
         System.out.println("Your program contains those unknown recursive variables : " + spc.unknownVariables());
+        System.out.println(spc.compilerCtx.getComms());
     }
 
     public static void compileToQuarkusServices(SPparserRich spp){
