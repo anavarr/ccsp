@@ -10,21 +10,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     public static class Context{
         //the current process studied
-        String currentProcess;
+        public String currentProcess;
         //a list of recursive variables
-        ArrayList<String> recVars = new ArrayList<>();
+        public ArrayList<String> recVars = new ArrayList<>();
         //a list of communications
-        HashMap<String, List<String>> comms = new HashMap<>();
+        public List<Session> sessions = new ArrayList<>();
         //maps a recursive variable to a process
-        HashMap<String, String> recvar2proc = new HashMap<>();
+        public HashMap<String, String> recvar2proc = new HashMap<>();
     }
     public Context compilerCtx = new Context();
 
     // check that no process sends or receive a message to or from itself
     public boolean noSelfCom() {
-        Set<String> keys = compilerCtx.comms.keySet();
-        for (String k : keys) {
-            if ((compilerCtx.comms.get(k)).contains(k)){
+        for (Session session : compilerCtx.sessions) {
+            if(session.isSelfComm()){
                 return false;
             }
         }
@@ -33,10 +32,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     // check that all the processes mentioned are defined in the network
     public List<String> unknownProcesses(){
-        return compilerCtx.comms.values()
-                .stream()
-                .flatMap(v -> v.stream().distinct())
-                .filter(v -> !compilerCtx.comms.containsKey(v)).toList();
+        var inNetwork = compilerCtx.sessions.stream().map(Session::peerA).toList();
+        return compilerCtx.sessions.stream().map(Session::peerB).filter(it -> !inNetwork.contains(it)).toList();
     }
 
     // check that all the recursive variables called in behaviours are defined
@@ -51,10 +48,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 1 : ':'
         // 2 : behaviour
         compilerCtx.recVars.add(ctx.getChild(0).getText());
-        String process = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
-        compilerCtx.currentProcess = process;
+        compilerCtx.currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
         var processes = ctx.getChild(2).accept(this);
-        compilerCtx.comms.get(process).addAll(processes);
+//        completely redo it
+//        compilerCtx.comms.get(process).addAll(processes);
         compilerCtx.currentProcess = null;
         return super.visitRecdef(ctx);
     }
@@ -72,7 +69,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             var name = ctx.getChild(i).getText();
             compilerCtx.currentProcess = name;
             var processes = ctx.getChild(i +2).accept(this);
-            compilerCtx.comms.put(name, processes);
+//            compilerCtx.comms.put(name, processes);
         }
         compilerCtx.currentProcess = null;
         return null;
@@ -101,24 +98,41 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     @Override
     public List<String> visitSnd(SPparserRich.SndContext ctx) {
-        return visitComm(ctx);
+        return visitComm(ctx, new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
     }
     @Override
     public List<String> visitRcv(SPparserRich.RcvContext ctx) {
-        return visitComm(ctx);
+        return visitComm(ctx, new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE));
     }
-    public <T extends SPparserRich.BehaviourContext> List<String> visitComm(T ctx){
+    public <T extends SPparserRich.BehaviourContext> List<String> visitComm(T ctx, Communication communication){
         // 0: dest
-        // 1: !
+        // 1: !/?
         // 2: expr
         // 3: @
-        // 4: !
+        // 4: !/?
         // 5: ann
         // 6: seq
         // 7: behaviour
-        var procs = ctx.getChild(7).accept(this);
-        procs.add(ctx.getChild(0).getText());
-        return procs;
+        if(compilerCtx.currentProcess == null){
+            System.err.println("Current Process can't be null in a communication");
+            return new ArrayList<>();
+        }
+        System.out.println("hoho");
+        var dest = ctx.getChild(0).getText();
+        var source = compilerCtx.currentProcess;
+        var session = compilerCtx.sessions.stream()
+                .filter(s -> s.peerA().equals(source) && s.peerB().equals(dest))
+                .toList();
+        if(session.size() == 0){
+            System.out.println("no session with same ends");
+            compilerCtx.sessions.add(new Session(source, dest, List.of(communication)));
+        }else{
+            System.out.println("a session has been saved");
+            System.out.println(compilerCtx.sessions);
+            session.get(0).addComm(communication);
+            System.out.println(compilerCtx.sessions);
+        }
+        return new ArrayList<>();
     }
 
     @Override

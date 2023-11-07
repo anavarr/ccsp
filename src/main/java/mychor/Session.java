@@ -26,6 +26,12 @@ public record Session(String peerA, String peerB, List<Communication> communicat
         return (peerA.equals(peerAP) || peerA.equals(peerBP)) & (peerB.equals(peerAP) || peerB.equals(peerBP));
     }
 
+    public boolean isSelfComm(){
+        return peerA.equals(peerB);
+    }
+    public void addComm(Communication com){
+        communications.add(com);
+    }
     public boolean isComplementary(Session comp){
         if (!areEnds(comp.peerA, comp.peerB)){
             System.out.println("not the same peers");

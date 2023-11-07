@@ -22,7 +22,7 @@ public class Main {
             SPlexer spl = new SPlexer(cs);
             CommonTokenStream tokens = new CommonTokenStream(spl);
             var spp = new SPparserRich(tokens);
-            verifyRichChorProgramSemantics();
+            verifyRichChorProgramSemantics(spp);
             spp.reset();
             compileToQuarkusServices(spp);
         } catch (IOException | AssertionError e) {
@@ -30,8 +30,9 @@ public class Main {
         }
     }
 
-    public static void verifyRichChorProgramSemantics(){
+    public static void verifyRichChorProgramSemantics(SPparserRich spp){
         var spc = new SPcheckerRich();
+        spp.program().accept(spc);
         System.out.println("Your program is well-formed : "+spc.noSelfCom());
         System.out.println("Your program contains those unknown processes : " + spc.unknownProcesses());
         System.out.println("Your program contains those unknown recursive variables : " + spc.unknownVariables());
