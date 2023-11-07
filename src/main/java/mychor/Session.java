@@ -1,10 +1,11 @@
 package mychor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public record Session(String peerA, String peerB, List<Communication> communications) {
+public record Session(String peerA, String peerB, ArrayList<Communication> communications) {
     public Session {
         Objects.requireNonNull(peerA, "peerA cannot be null");
         Objects.requireNonNull(peerB, "peerB cannot be null");

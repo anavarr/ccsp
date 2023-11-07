@@ -3,7 +3,6 @@ package mychor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
@@ -125,7 +124,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 .toList();
         if(session.size() == 0){
             System.out.println("no session with same ends");
-            compilerCtx.sessions.add(new Session(source, dest, List.of(communication)));
+            var ar = new ArrayList<Communication>();
+            ar.add(communication);
+            compilerCtx.sessions.add(new Session(source, dest, ar));
         }else{
             System.out.println("a session has been saved");
             System.out.println(compilerCtx.sessions);
