@@ -1,5 +1,9 @@
 server [ Call Server ]
 
+|
+
+client [ Call Client ]
+
 Server:
     #
     client &
@@ -97,3 +101,7 @@ Server:
                 Call Server
             )
         }
+
+Client:
+    server + "/text:GET" @ + "";
+    End
