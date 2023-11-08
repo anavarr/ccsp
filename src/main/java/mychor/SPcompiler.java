@@ -98,7 +98,7 @@ public class SPcompiler extends SPparserRichBaseVisitor<ArrayList<String>>{
         System.out.println("\n\n\n ===== content after pasting code ===== \n");
         System.out.println(resourceRecvars);
         System.out.println(applicationd);
-        return null;
+        return new ArrayList<>();
     }
 
     public void createQuarkusApplication(String service){
@@ -121,7 +121,7 @@ public class SPcompiler extends SPparserRichBaseVisitor<ArrayList<String>>{
             applicationd.put(currentProcess, hm);
             currentProcess = null;
         }
-        return null;
+        return new ArrayList<>();
     }
 
     HashMap<String, HashMap<String, ArrayList<String>>>  distinguishEndpoints(HashMap<String, ArrayList<String>> code){
@@ -284,6 +284,7 @@ public class SPcompiler extends SPparserRichBaseVisitor<ArrayList<String>>{
         );
 
         var continuation = (ctx.getChild(7).accept(this));
+        System.out.println(continuation);
         l.addAll(continuation);
         return l;
     }

@@ -9,20 +9,27 @@ import java.util.Set;
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
+    //a list of recursive variables
+    public Set<String> recVars = new HashSet<>();
+    static String ERROR_RECVAR_ADD(String key, String boundProcess, String newProcess){
+        return String.format(
+                "Procedure %s is already bound to process %s, can't bind it to %s",
+                key,
+                boundProcess,
+                newProcess);
+    }
     public static class Context{
         public String currentRecVar;
         //the current process studied
         public String currentProcess;
-        //a list of recursive variables
-        public Set<String> recVars = new HashSet<>();
         //a list of communications
         public List<Session> sessions = new ArrayList<>();
         //maps a recursive variable to a process
-        public HashMap<String, List<String>> recvar2proc = new HashMap<>();
+        public HashMap<String, String> recvar2proc = new HashMap<>();
         //a list of errors
         public List<String> errors = new ArrayList<>();
 
-        public Context nextContext;
+        public List<Context> childContext;
     }
     public Context compilerCtx = new Context();
 
@@ -45,7 +52,19 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     // check that all the recursive variables called in behaviours are defined
     public List<String> unknownVariables(){
         return compilerCtx.recvar2proc.keySet().stream()
-                .filter(vari -> !compilerCtx.recVars.contains(vari)).toList();
+                .filter(vari -> !recVars.contains(vari)).toList();
+    }
+
+    private Context mergeContexts(Context superCtx, Context context){
+        superCtx.errors.addAll(context.errors);
+        superCtx.sessions.addAll(context.sessions);
+        for (String key : context.recvar2proc.keySet()){
+            if (superCtx.recvar2proc.containsKey(key) &
+                    !superCtx.recvar2proc.get(key).equals(context.recvar2proc.get(key))) {
+                superCtx.errors.add(ERROR_RECVAR_ADD(key, superCtx.recvar2proc.get(key), context.recvar2proc.get(key)));
+            }
+        }
+        return superCtx;
     }
 
     @Override
@@ -53,27 +72,17 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 0 : name
         // 1 : ':'
         // 2 : behaviour
-        compilerCtx.recVars.add(ctx.getChild(0).getText());
+        recVars.add(ctx.getChild(0).getText());
 //        big problem with the way recvars are handled
 //        compilerCtx.currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
         var superContext= compilerCtx;
+
         compilerCtx = new Context();
         compilerCtx.errors.addAll(ctx.getChild(2).accept(this));
         compilerCtx = mergeContexts(superContext, compilerCtx);
         compilerCtx.currentProcess = null;
         return super.visitRecdef(ctx);
     }
-
-    private Context mergeContexts(Context superCtx, Context context){
-        superCtx.recVars.addAll(context.recVars);
-        superCtx.errors.addAll(context.errors);
-        superCtx.sessions.addAll(context.sessions);
-        for (String key : context.recvar2proc.keySet()){
-            superCtx.recvar2proc.merge(key, context.recvar2proc.get(key), Utils::addL2ToL1);
-        }
-        return superCtx;
-    }
-
     @Override
     public List<String> visitNetwork(SPparserRich.NetworkContext ctx) {
         // 0 : first process name
@@ -191,11 +200,18 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
         // 1 : name
-        var al = new ArrayList<String>();
-        al.add(compilerCtx.currentProcess);
+        var process_name = compilerCtx.currentProcess;
         var key = ctx.getChild(1).getText();
-        compilerCtx.recvar2proc.merge(key, al, Utils::addL2ToL1);
-        return new ArrayList<>();
+        var el = new ArrayList<String>();
+        if (compilerCtx.recvar2proc.containsKey(key)){
+            if  (!compilerCtx.recvar2proc.get(key).equals(process_name)){
+                el.add(ERROR_RECVAR_ADD(key, compilerCtx.recvar2proc.get(key), process_name));
+            }
+            // else it is already in we just call it again
+        }else{
+            compilerCtx.recvar2proc.put(key, process_name);
+        }
+        return el;
     }
 
     @Override
