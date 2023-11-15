@@ -58,7 +58,7 @@ public class SPcheckerTest {
     @Test
     public void exampleNoUnknownProcess(){
         try{
-            var spc = testFile("noEmptyAnn.sp");
+            var spc = testFile("noUnknownProcess.sp");
             assertEquals(spc.unknownProcesses().size(), 0);
         } catch (IOException e) {
             e.printStackTrace();
@@ -67,7 +67,7 @@ public class SPcheckerTest {
     @Test
     public void exampleUnknownProcess(){
         try{
-            var spc = testFile("emptyAnn.sp");
+            var spc = testFile("unknownProcess.sp");
             assertEquals(spc.unknownProcesses().size(), 1);
             assertEquals(spc.unknownProcesses().get(0), "proxy");
         } catch (IOException e) {
@@ -77,11 +77,23 @@ public class SPcheckerTest {
 
     @Test
     public void exampleUnknownVariable(){
-        assertTrue(false);
+        try {
+            var spc = testFile("unknownVariable.sp");
+            assertEquals(spc.unknownVariables().size(), 1);
+            assertEquals(spc.unknownVariables().get(0), "Client");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     public void exampleNoUnknownVariable(){
-        assertTrue(false);
+        SPcheckerRich spc = null;
+        try {
+            spc = testFile("noUnknownVariable.sp");
+            assertEquals(spc.unknownVariables().size(), 0);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
