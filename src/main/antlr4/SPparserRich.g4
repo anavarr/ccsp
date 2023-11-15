@@ -2,7 +2,7 @@ parser grammar SPparserRich;
 
 options { tokenVocab=SPlexer; }
 
-program : network (recdef)+ EOF;
+program : network (recdef)* EOF;
 
 network : IDENTIFIER '[' behaviour ']' ( '|' IDENTIFIER '[' behaviour ']' )*;
 

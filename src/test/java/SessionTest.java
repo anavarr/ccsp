@@ -27,7 +27,6 @@ public class SessionTest {
     @Test
     public void sessionValidityIsCommutative(){
         assertTrue(a.areEnds("client", "server"));
-        assertTrue(a.areEnds("client", "server"));
         assertTrue(a.areEnds("server", "client"));
     }
 

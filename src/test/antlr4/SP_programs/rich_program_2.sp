@@ -1,11 +1,9 @@
 server [ Call Server ]
-
-|
-
+ |
 client [ Call Client ]
 
 Server:
-    #
+    # smldqjf
     client &
         { "/text:GET" :  #GET all the texts
             Some(
@@ -101,7 +99,3 @@ Server:
                 Call Server
             )
         }
-
-Client:
-    server + "/text:GET" @ + "";
-    End

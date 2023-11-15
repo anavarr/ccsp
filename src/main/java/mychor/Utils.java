@@ -5,7 +5,9 @@ import java.util.List;
 public class Utils {
     public enum Direction{
         SEND,
-        RECEIVE
+        RECEIVE,
+        SELECT,
+        BRANCH
     }
 
     public static <V>List<V> addL2ToL1(List<V> l1, List<V> l2){
