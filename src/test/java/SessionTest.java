@@ -5,15 +5,14 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionTest {
 
-    Session a = new Session("client", "server", new ArrayList<>());
-    Session b = new Session("client", "server", new ArrayList<>(List.of(
-            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
-    ));
+    Session a = new Session("client", "server", new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
+    Session b = new Session("client", "server", new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
 
     Session clientSide = new Session("client", "server", new ArrayList<>(List.of(
             new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
@@ -47,12 +46,7 @@ public class SessionTest {
     @Test
     public void sessionFirstSenderIsInitiator(){
         var presence = b.getInitiator();
-        assertTrue(presence.isPresent() & presence.get().equals("client"));
-    }
-
-    @Test
-    public void nullCommunicationsReturnEmptyInitiator(){
-        assertTrue(a.getInitiator().isEmpty());
+        assertEquals(presence, "client");
     }
 
     @Test

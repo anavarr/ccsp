@@ -13,6 +13,7 @@ Server:
                     Call ProcessStuff
                 Else
                     client!sendError() @!"";
+                    client!sendError() @!"";
                     Call ProcessStuff
             )
         }
@@ -28,9 +29,6 @@ Server:
         //
         { "/text/<id>:GET": #GET the text <id>
             Some(
-                client?req @?"";
-                #what about authentication ?
-                client!getAllTexts() @!"";
                 Call Server
             )
         }
