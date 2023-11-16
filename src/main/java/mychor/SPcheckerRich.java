@@ -146,6 +146,23 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         ctx.getChild(5).accept(this);
         var contextElse = compilerCtx;
 
+        var sessionsThen = contextThen.sessions;
+        var sessionsELse = contextElse.sessions;
+
+        for (int i = 0; i < contextThen.sessions.size(); i++) {
+            var communicationsThen = contextThen.sessions.get(i).communications();
+            for (Communication communication : communicationsThen) {
+                if (communication.isSelect() || communication.isBranch()) {
+                    //must look for it in the other context
+                    for (int i1 = 0; i1 < contextElse.sessions.size(); i1++) {
+                        var communicationsElse = contextElse.sessions.get(i).communications();
+                        for (Communication communication1 : communicationsElse) {
+                            
+                        }
+                    }
+                }
+            }
+        }
         // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
         return new ArrayList<>();
     }
@@ -182,6 +199,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 7: behaviour
         var dest = ctx.getChild(0).getText();
         var source = compilerCtx.currentProcess;
+        System.out.println(source);
         var session = compilerCtx.sessions.stream()
                 .filter(s -> s.peerA().equals(source) && s.peerB().equals(dest))
                 .toList();

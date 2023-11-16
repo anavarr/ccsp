@@ -14,8 +14,6 @@ public class Main {
 
         var input_path = Path.of("/home/arnavarr/Documents/thesis/prog/antlr4/" +
                 "ccsp/src/test/antlr4/SP_programs/rich_program_2.sp");
-        var output_path = Path.of("/home/arnavarr/Documents/thesis/prog/antlr4/" +
-                "ccsp/src/main/resources");
 
         try{
             CharStream cs = CharStreams.fromPath(input_path);

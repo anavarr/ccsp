@@ -1,6 +1,4 @@
 server [ Call Server ]
- |
-client [ Call Client ]
 
 Server:
     # smldqjf
