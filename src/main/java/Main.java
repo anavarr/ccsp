@@ -2,6 +2,7 @@ import mychor.SPcheckerRich;
 import mychor.SPcodeGenerator;
 import mychor.SPlexer;
 import mychor.SPparserRich;
+import mychor.Session;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -12,8 +13,8 @@ import java.nio.file.Path;
 public class Main {
     public static void main(String[] args){
 
-        var input_path = Path.of("/home/arnavarr/Documents/thesis/prog/antlr4/" +
-                "ccsp/src/test/antlr4/SP_programs/rich_program_2.sp");
+        String inputPrefix = "/home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/test/antlr4";
+        var input_path = Path.of(inputPrefix, "SP_programs/IP_protocol.sp");
 
         try{
             CharStream cs = CharStreams.fromPath(input_path);
@@ -32,9 +33,17 @@ public class Main {
         var spc = new SPcheckerRich();
         spp.program().accept(spc);
         spc.displayContext();
-        System.out.println("Your program is well-formed : "+spc.noSelfCom());
+        System.out.println("Your program has no self communications : "+spc.noSelfCom());
         System.out.println("Your program contains those unknown processes : " + spc.unknownProcesses());
         System.out.println("Your program contains those unknown recursive variables : " + spc.unknownVariables());
+        for (Session session : spc.compilerCtx.sessions) {
+            for (Session session1 : spc.compilerCtx.sessions) {
+                if(session.areEnds(session1.peerA(), session1.peerB())  && session1 != session){
+                    System.out.printf("%s-%s and %s-%s are complementary\n",
+                            session.peerA(), session.peerB(), session1.peerA(), session1.peerB());
+                }
+            }
+        }
     }
 
     public static void compileToQuarkusServices(SPparserRich spp){

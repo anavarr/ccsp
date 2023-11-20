@@ -1,10 +1,7 @@
 import mychor.Communication;
 import mychor.SPcheckerRich;
-import mychor.SPlexer;
-import mychor.SPparserRich;
 import mychor.Session;
 import mychor.Utils;
-import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
