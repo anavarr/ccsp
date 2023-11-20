@@ -1,5 +1,4 @@
-// Generated from /home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/main/antlr4/SPlexer.g4 by ANTLR 4.12.0
-package mychor;
+// Generated from /home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/main/antlr4/CommonLexer.g4 by ANTLR 4.12.0
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -10,7 +9,7 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
-public class SPlexer extends Lexer {
+public class CommonLexer extends Lexer {
 	static { RuntimeMetaData.checkVersion("4.12.0", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
@@ -92,13 +91,13 @@ public class SPlexer extends Lexer {
 	}
 
 
-	public SPlexer(CharStream input) {
+	public CommonLexer(CharStream input) {
 		super(input);
 		_interp = new LexerATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 
 	@Override
-	public String getGrammarFileName() { return "SPlexer.g4"; }
+	public String getGrammarFileName() { return "CommonLexer.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }

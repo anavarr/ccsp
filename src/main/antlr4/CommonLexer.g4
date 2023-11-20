@@ -27,11 +27,12 @@ NONE : 'None';
 SOME : 'Some';
 END : 'End';
 
-LABEL : UpLetter SimpleLetter*;
+LABEL : UpLetter LabelLetter*;
 IDENTIFIER : SimpleLetter SimpleLetterOrDigit*;
 BLABEL: '"'(AddressLetter)+'"';
 
 fragment AddressLetter : SimpleLetterOrDigit | '/' | '.' | ':' | '<' | '>';
+fragment LabelLetter : SimpleLetterOrDigit | '_';
 fragment UpLetter: [A-Z];
 fragment SimpleLetter : [a-zA-Z];
 fragment SimpleLetterOrDigit : [a-zA-Z]
