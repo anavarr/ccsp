@@ -1,24 +1,21 @@
 package mychor;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
+
+import static mychor.Utils.ERROR_NULL_PROCESS;
+import static mychor.Utils.ERROR_RECVAR_ADD;
 
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     //a list of recursive variables
     public Set<String> recVars = new HashSet<>();
-    static String ERROR_RECVAR_ADD(String key, String boundProcess, String newProcess){
-        return String.format(
-                "Procedure %s is already bound to process %s, can't bind it to %s",
-                key,
-                boundProcess,
-                newProcess);
-    }
 
     public void displayComplementarySessions() {
         var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
@@ -56,23 +53,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return nonComplementarySessions;
     }
 
-    public static class Context{
-        public String currentRecVar;
-        //the current process studied
-        public String currentProcess;
-        //a set of processes
-        public Set<String> processes = new HashSet<>();
-        //a list of communications
-        public ArrayList<Session> sessions = new ArrayList<>();
-        //maps a recursive variable to a process
-        public HashMap<String, String> recvar2proc = new HashMap<>();
-        //a list of errors
-        public List<String> errors = new ArrayList<>();
-    }
-
     //sessions and errors are not duplicated
-    Context duplicateContextSessionLessErrorLess(Context ctx){
-        var c = new Context();
+    CompilerContext duplicateContextSessionLessErrorLess(CompilerContext ctx){
+        var c = new CompilerContext();
         c.currentProcess = ctx.currentProcess;
         c.currentRecVar = ctx.currentRecVar;
         c.processes.addAll(ctx.processes);
@@ -80,7 +63,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return c;
     }
 
-    public Context compilerCtx = new Context();
+    public CompilerContext compilerCtx = new CompilerContext();
 
     public void displayContext() {
         System.out.println("Sessions:");
@@ -115,8 +98,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 .filter(vari -> !recVars.contains(vari)).toList();
     }
 
-    private Context mergeContexts(Context superCtx, Context context,
-                                  BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger){
+    private CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
+                                  BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
+                                  ParserRuleContext ctx){
         superCtx.errors.addAll(context.errors);
         superCtx.sessions = sessionMerger.apply(superCtx.sessions, context.sessions);
         for (String key : context.recvar2proc.keySet()){
@@ -124,7 +108,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 var superValue = superCtx.recvar2proc.get(key);
                 var value = context.recvar2proc.get(key);
                 if(!superValue.equals(value)){
-                    superCtx.errors.add(ERROR_RECVAR_ADD(key, superValue, value));
+                    superCtx.errors.add(ERROR_RECVAR_ADD(key, superValue, value, ctx));
                 }
             }
         }
@@ -182,13 +166,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var recVar = ctx.getChild(0).getText();
         recVars.add(recVar);
         var superContext= compilerCtx;
-
         var currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
-        compilerCtx = new Context();
+
+        //the procedure has already been defined in the Network
+        compilerCtx = new CompilerContext();
         compilerCtx.currentProcess = currentProcess;
         compilerCtx.currentRecVar = recVar;
         var errors = (ctx.getChild(2).accept(this));
-        compilerCtx = mergeContexts(superContext, compilerCtx, this::mergeSessionsVertical);
+        superContext.errors.addAll(errors);
+        compilerCtx = mergeContexts(superContext, compilerCtx, this::mergeSessionsVertical, ctx);
         compilerCtx.currentProcess = null;
         return errors;
     }
@@ -240,10 +226,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var contextElse = compilerCtx;
 
         //we merge the "horizontal contexts to create one context corresponding to the conditional
-        var mergedContext = mergeContexts(contextThen, contextElse, this::mergeSessionsHorizontal);
+        var mergedContext = mergeContexts(contextThen, contextElse, this::mergeSessionsHorizontal, ctx);
         var errors = mergedContext.errors;
         //we merge it
-        compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical);
+        compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical, ctx);
 
         // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
         return errors;
@@ -273,7 +259,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 7: behaviour
         var errors = new ArrayList<String>();
         if(compilerCtx.currentProcess == null){
-            errors.add("Current Process can't be null in a communication");
+            errors.add(ERROR_NULL_PROCESS(ctx));
         }else{
             var dest = ctx.getChild(0).getText();
             var source = compilerCtx.currentProcess;
@@ -299,19 +285,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 5: mBe
         // 6: }
         var oldContext = compilerCtx;
-        var contexts = new ArrayList<Context>();
+        var contexts = new ArrayList<CompilerContext>();
+        var errors = new ArrayList<String>();
         for(int i=5; i< ctx.getChildCount();i+=6){
             compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
-            visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i);
+            errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
             contexts.add(compilerCtx);
         }
         //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
         compilerCtx = contexts.stream().reduce(
-                new Context(),
-                (context1, context2) -> mergeContexts(context1, context2, this::mergeSessionsHorizontal));
-        var errors = compilerCtx.errors;
+                new CompilerContext(),
+                (context1, context2) -> mergeContexts(context1, context2, this::mergeSessionsHorizontal, ctx));
         //we merge it with the previous context
-        compilerCtx = mergeContexts(oldContext, compilerCtx, this::mergeSessionsVertical);
+        compilerCtx = mergeContexts(oldContext, compilerCtx, this::mergeSessionsVertical, ctx);
+        System.out.println("the number of errors is : "+errors.size());
         return errors;
     }
 
@@ -325,7 +312,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var el = new ArrayList<String>();
         if (compilerCtx.recvar2proc.containsKey(varName)){
             if  (!compilerCtx.recvar2proc.get(varName).equals(process_name)){
-                el.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), process_name));
+                el.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), process_name, ctx));
             }
         }else{
             compilerCtx.recvar2proc.put(varName, process_name);

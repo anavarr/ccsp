@@ -2,14 +2,12 @@ import mychor.SPcheckerRich;
 import mychor.SPcodeGenerator;
 import mychor.SPlexer;
 import mychor.SPparserRich;
-import mychor.Session;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args){
@@ -24,7 +22,7 @@ public class Main {
             var spp = new SPparserRich(tokens);
             verifyRichChorProgramSemantics(spp);
             spp.reset();
-            compileToQuarkusServices(spp);
+//            compileToQuarkusServices(spp);
         } catch (IOException | AssertionError e) {
             e.printStackTrace();
         }
@@ -34,6 +32,7 @@ public class Main {
         var spc = new SPcheckerRich();
         spp.program().accept(spc);
         spc.displayContext();
+        spc.displayComplementarySessions();
         System.out.println("Your program has no self communications : "+spc.noSelfCom());
         System.out.println("Your program contains those unknown processes : " + spc.unknownProcesses());
         System.out.println("Your program contains those unknown recursive variables : " + spc.unknownVariables());
