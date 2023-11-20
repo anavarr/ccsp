@@ -9,15 +9,16 @@ import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args){
 
         String inputPrefix = "/home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/test/antlr4";
-        var input_path = Path.of(inputPrefix, "SP_programs/IP_protocol.sp");
+        var inputPath = Path.of(inputPrefix, "SP_programs/IP_protocol.sp");
 
         try{
-            CharStream cs = CharStreams.fromPath(input_path);
+            CharStream cs = CharStreams.fromPath(inputPath);
             SPlexer spl = new SPlexer(cs);
             CommonTokenStream tokens = new CommonTokenStream(spl);
             var spp = new SPparserRich(tokens);
@@ -36,14 +37,7 @@ public class Main {
         System.out.println("Your program has no self communications : "+spc.noSelfCom());
         System.out.println("Your program contains those unknown processes : " + spc.unknownProcesses());
         System.out.println("Your program contains those unknown recursive variables : " + spc.unknownVariables());
-        for (Session session : spc.compilerCtx.sessions) {
-            for (Session session1 : spc.compilerCtx.sessions) {
-                if(session.areEnds(session1.peerA(), session1.peerB())  && session1 != session){
-                    System.out.printf("%s-%s and %s-%s are complementary\n",
-                            session.peerA(), session.peerB(), session1.peerA(), session1.peerB());
-                }
-            }
-        }
+        var nonComplementarySessions = spc.getNonComplementarySessions();
     }
 
     public static void compileToQuarkusServices(SPparserRich spp){

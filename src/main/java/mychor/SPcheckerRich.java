@@ -20,6 +20,42 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 newProcess);
     }
 
+    public void displayComplementarySessions() {
+        var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
+        System.out.println("These sessions are complementary :");
+        for (Session session : compilerCtx.sessions) {
+            for (Session session1 : compilerCtx.sessions) {
+                if(session.areEnds(session1.peerA(), session1.peerB())  && session1 != session){
+                    if (session.isComplementary(session1)){
+                        System.out.printf("\t%s <-> %s and %s <-> %s\n",
+                                session.peerA(), session.peerB(), session1.peerA(), session1.peerB());
+                        nonComplementarySessions.remove(session);
+                        nonComplementarySessions.remove(session1);
+                    }
+                }
+            }
+        }
+        System.out.println("These sessions are not complementary : ");
+        for (Session nonComplementarySession : nonComplementarySessions) {
+            System.out.printf("\t%s <-> %s", nonComplementarySession.peerA(), nonComplementarySession.peerB());
+        }
+    }
+
+    public ArrayList<Session> getNonComplementarySessions() {
+        var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
+        for (Session session : compilerCtx.sessions) {
+            for (Session session1 : compilerCtx.sessions) {
+                if(session.areEnds(session1.peerA(), session1.peerB())  && session1 != session){
+                    if (session.isComplementary(session1)){
+                        nonComplementarySessions.remove(session);
+                        nonComplementarySessions.remove(session1);
+                    }
+                }
+            }
+        }
+        return nonComplementarySessions;
+    }
+
     public static class Context{
         public String currentRecVar;
         //the current process studied

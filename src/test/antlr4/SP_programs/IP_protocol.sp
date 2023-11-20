@@ -6,6 +6,7 @@ X_IP:
     Then
         client+"left" @+"";
         server+"left" @+"";
+        client!token @!"";
         Call Y_IP
     Else
         client+"right" @+"";
