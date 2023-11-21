@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 
 public class CompilerContext {
     public String currentRecVar;
@@ -18,4 +19,5 @@ public class CompilerContext {
     public HashMap<String, String> recvar2proc = new HashMap<>();
     //a list of errors
     public List<String> errors = new ArrayList<>();
+    public HashMap<String,Stack<String>> calledProceduresStacks = new HashMap<>();
 }

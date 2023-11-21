@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.function.BiFunction;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
@@ -75,6 +76,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         System.out.println("\t"+ compilerCtx.recvar2proc);
         System.out.println("Errors:");
         System.out.println("\t"+ compilerCtx.errors);
+        System.out.println("Called procedures stack:");
+        for (String s : compilerCtx.calledProceduresStacks.keySet()) {
+            System.out.println("\t"+s+" : "+compilerCtx.calledProceduresStacks.get(s));
+        }
     }
     // check that no process sends or receive a message to or from itself
     public boolean noSelfCom() {
@@ -307,17 +312,26 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
         // 1 : name
-        var process_name = compilerCtx.currentProcess;
         var varName = ctx.getChild(1).getText();
-        var el = new ArrayList<String>();
-        if (compilerCtx.recvar2proc.containsKey(varName)){
-            if  (!compilerCtx.recvar2proc.get(varName).equals(process_name)){
-                el.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), process_name, ctx));
+        var errors = new ArrayList<String>();
+
+        if (compilerCtx.calledProceduresStacks.containsKey(compilerCtx.currentProcess)){
+            //this process exists and has already called a method
+            if(compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).contains(varName)){
+                System.err.println("we are looping");
             }
         }else{
-            compilerCtx.recvar2proc.put(varName, process_name);
+            compilerCtx.calledProceduresStacks.put(compilerCtx.currentProcess, new Stack<>());
         }
-        return el;
+        compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
+        if (compilerCtx.recvar2proc.containsKey(varName)){
+            if  (!compilerCtx.recvar2proc.get(varName).equals(compilerCtx.currentProcess)){
+                errors.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), compilerCtx.currentProcess, ctx));
+            }
+        }else{
+            compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
+        }
+        return errors;
     }
 
     @Override
