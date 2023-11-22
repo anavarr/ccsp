@@ -1,8 +1,10 @@
 package mychor;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,6 +18,7 @@ import static mychor.Utils.ERROR_RECVAR_ADD;
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     //a list of recursive variables
     public Set<String> recVars = new HashSet<>();
+    public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
     public void displayComplementarySessions() {
@@ -59,6 +62,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         c.currentRecVar = ctx.currentRecVar;
         c.processes.addAll(ctx.processes);
         c.recvar2proc.putAll(ctx.recvar2proc);
+        c.calledProceduresStacks = ctx.calledProceduresStacks;
         return c;
     }
     public void displayContext() {
@@ -155,7 +159,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     @Override
     public List<String> visitProgram(SPparserRich.ProgramContext ctx) {
-        return super.visitProgram(ctx);
+        //0 : network
+        //1+ : recdef
+        //n : EOF
+        var errors = new ArrayList<String>();
+        for (int i = 1; i < ctx.getChildCount()-1; i++) {
+            System.out.println(ctx.getChild(i));
+            var recVar = ctx.getChild(i).getChild(0).getText();
+            var recBehaviour = ctx.getChild(i).getChild(2);
+            recDefs.put(recVar, recBehaviour);
+//            errors.addAll(ctx.getChild(i).accept(this));
+        }
+        errors.addAll(ctx.getChild(0).accept(this));
+        System.out.println(errors);
+        return errors;
     }
     @Override
     public List<String> visitNetwork(SPparserRich.NetworkContext ctx) {
@@ -166,27 +183,29 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 4 : |
         // 5 : second process name
         var children = ctx.getChildCount();
+        var errors = new ArrayList<String>();
         for(int i =0; i < children -1; i+=5){
             var proc = ctx.getChild(i).getText();
             compilerCtx.currentProcess = proc;
             compilerCtx.processes.add(proc);
-            compilerCtx.errors.addAll(ctx.getChild(i +2).accept(this));
+            errors.addAll(ctx.getChild(i +2).accept(this));
         }
         compilerCtx.currentProcess = null;
-        return null;
+        return errors;
     }
     @Override
     public List<String> visitRecdef(SPparserRich.RecdefContext ctx) {
         // 0 : name
         // 1 : ':'
         // 2 : behaviour
+        System.out.println("visiting Recdef");
         var recVar = ctx.getChild(0).getText();
         recVars.add(recVar);
         var superContext= compilerCtx;
         var currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
 
         //the procedure has already been defined in the Network
-        compilerCtx = new CompilerContext();
+        compilerCtx = duplicateContextSessionLessErrorLess(superContext);
         compilerCtx.currentProcess = currentProcess;
         compilerCtx.currentRecVar = recVar;
         var errors = (ctx.getChild(2).accept(this));
@@ -201,23 +220,30 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 1 : name
         var varName = ctx.getChild(1).getText();
         var errors = new ArrayList<String>();
-
+        if(!recDefs.containsKey(varName)) {
+            errors.add(String.format("No recursive variable with the name %s exists", varName));
+            return errors;
+        }
         if (compilerCtx.calledProceduresStacks.containsKey(compilerCtx.currentProcess)){
             //this process exists and has already called a method
             if(compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).contains(varName)){
                 System.err.println("we are looping");
+                compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
+                return errors;
             }
         }else{
             compilerCtx.calledProceduresStacks.put(compilerCtx.currentProcess, new Stack<>());
         }
         compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
-        if (compilerCtx.recvar2proc.containsKey(varName)){
-            if  (!compilerCtx.recvar2proc.get(varName).equals(compilerCtx.currentProcess)){
-                errors.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), compilerCtx.currentProcess, ctx));
-            }
-        }else{
-            compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
-        }
+        errors.addAll(recDefs.get(varName).accept(this));
+//        compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
+//        if (compilerCtx.recvar2proc.containsKey(varName)){
+//            if  (!compilerCtx.recvar2proc.get(varName).equals(compilerCtx.currentProcess)){
+//                errors.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), compilerCtx.currentProcess, ctx));
+//            }
+//        }else{
+//            compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
+//        }
         return errors;
     }
     @Override
