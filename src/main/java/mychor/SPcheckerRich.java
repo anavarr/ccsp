@@ -14,9 +14,9 @@ import static mychor.Utils.ERROR_RECVAR_ADD;
 
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
-
     //a list of recursive variables
     public Set<String> recVars = new HashSet<>();
+    public CompilerContext compilerCtx = new CompilerContext();
 
     public void displayComplementarySessions() {
         var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
@@ -38,7 +38,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             System.out.printf("\t%s <-> %s", nonComplementarySession.peerA(), nonComplementarySession.peerB());
         }
     }
-
     public ArrayList<Session> getNonComplementarySessions() {
         var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
         for (Session session : compilerCtx.sessions) {
@@ -53,7 +52,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         return nonComplementarySessions;
     }
-
     //sessions and errors are not duplicated
     CompilerContext duplicateContextSessionLessErrorLess(CompilerContext ctx){
         var c = new CompilerContext();
@@ -63,9 +61,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         c.recvar2proc.putAll(ctx.recvar2proc);
         return c;
     }
-
-    public CompilerContext compilerCtx = new CompilerContext();
-
     public void displayContext() {
         System.out.println("Sessions:");
         for (Session session : compilerCtx.sessions) {
@@ -90,19 +85,16 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         return true;
     }
-
     // check that all the processes mentioned are defined in the network
     public List<String> unknownProcesses(){
         return compilerCtx.sessions.stream().map(Session::peerB)
                 .filter(it -> !compilerCtx.processes.contains(it)).toList();
     }
-
     // check that all the recursive variables called in behaviours are defined
     public List<String> unknownVariables(){
         return compilerCtx.recvar2proc.keySet().stream()
                 .filter(vari -> !recVars.contains(vari)).toList();
     }
-
     private CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
                                   BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
                                   ParserRuleContext ctx){
@@ -119,7 +111,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         return superCtx;
     }
-
     private ArrayList<Session> mergeSessionsVertical(ArrayList<Session> sessionsSuper, ArrayList<Session> sessions){
         var sessionsToAdd = new ArrayList<>(sessions);
         for (Session sessionSuper : sessionsSuper) {
@@ -151,7 +142,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         sessions1.addAll(sessionsToAdd);
         return sessions1;
     }
-
     private Session getSession(String source, String dest){
         var session = compilerCtx.sessions.stream()
                 .filter(s -> s.peerA().equals(source) && s.peerB().equals(dest))
@@ -163,6 +153,28 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
     }
 
+    @Override
+    public List<String> visitProgram(SPparserRich.ProgramContext ctx) {
+        return super.visitProgram(ctx);
+    }
+    @Override
+    public List<String> visitNetwork(SPparserRich.NetworkContext ctx) {
+        // 0 : first process name
+        // 1 : [
+        // 2 : behaviour
+        // 3 : ]
+        // 4 : |
+        // 5 : second process name
+        var children = ctx.getChildCount();
+        for(int i =0; i < children -1; i+=5){
+            var proc = ctx.getChild(i).getText();
+            compilerCtx.currentProcess = proc;
+            compilerCtx.processes.add(proc);
+            compilerCtx.errors.addAll(ctx.getChild(i +2).accept(this));
+        }
+        compilerCtx.currentProcess = null;
+        return null;
+    }
     @Override
     public List<String> visitRecdef(SPparserRich.RecdefContext ctx) {
         // 0 : name
@@ -183,131 +195,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         compilerCtx.currentProcess = null;
         return errors;
     }
-    @Override
-    public List<String> visitNetwork(SPparserRich.NetworkContext ctx) {
-        // 0 : first process name
-        // 1 : [
-        // 2 : behaviour
-        // 3 : ]
-        // 4 : |
-        // 5 : second process name
-        var children = ctx.getChildCount();
-        for(int i =0; i < children -1; i+=5){
-            var proc = ctx.getChild(i).getText();
-            compilerCtx.currentProcess = proc;
-            compilerCtx.processes.add(proc);
-            compilerCtx.errors.addAll(ctx.getChild(i +2).accept(this));
-        }
-        compilerCtx.currentProcess = null;
-        return null;
-    }
-
-    @Override
-    public List<String> visitNon(SPparserRich.NonContext ctx) {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public List<String> visitSom(SPparserRich.SomContext ctx) {
-        return ctx.getChild(2).accept(this);
-    }
-
-    @Override
-    public List<String> visitCdt(SPparserRich.CdtContext ctx) {
-        // 0: If
-        // 1: expr
-        // 2: Then
-        // 3: behaviour
-        // 4: Else
-        // 5: behaviour
-        var oldContext = compilerCtx;
-
-        compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
-        compilerCtx.errors = ctx.getChild(3).accept(this);
-        var contextThen = compilerCtx;
-
-        compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
-        compilerCtx.errors = ctx.getChild(5).accept(this);
-        var contextElse = compilerCtx;
-
-        //we merge the "horizontal contexts to create one context corresponding to the conditional
-        var mergedContext = mergeContexts(contextThen, contextElse, this::mergeSessionsHorizontal, ctx);
-        var errors = mergedContext.errors;
-        //we merge it
-        compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical, ctx);
-
-        // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
-        return errors;
-    }
-
-    @Override
-    public List<String> visitSnd(SPparserRich.SndContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE), 7);
-    }
-    @Override
-    public List<String> visitRcv(SPparserRich.RcvContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE), 7);
-    }
-    @Override
-    public List<String> visitSel(SPparserRich.SelContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, ctx.getChild(2).getText()), 7);
-    }
-
-    public <T extends SPparserRich.BehaviourContext> List<String> visitComm(T ctx, Communication communication, int continuationIndex){
-        // 0: dest
-        // 1: !/?
-        // 2: expr
-        // 3: @
-        // 4: !/?
-        // 5: ann
-        // 6: seq
-        // 7: behaviour
-        var errors = new ArrayList<String>();
-        if(compilerCtx.currentProcess == null){
-            errors.add(ERROR_NULL_PROCESS(ctx));
-        }else{
-            var dest = ctx.getChild(0).getText();
-            var source = compilerCtx.currentProcess;
-            var session = getSession(source, dest);
-            if(session == null){
-                compilerCtx.sessions.add(new Session(source, dest, communication));
-            }else{
-                session.addLeafCommunicationRoot(communication);
-            }
-        }
-        errors.addAll(ctx.getChild(continuationIndex).accept(this));
-        return errors;
-    }
-
-    @Override
-    public List<String> visitBra(SPparserRich.BraContext ctx) {
-        // proc '&' '{' BLABEL ':' mBehaviour '}'  ('//'  '{' BLABEL ':' mBehaviour '}')+
-        // 0: dest
-        // 1: &
-        // 2: {
-        // 3: BLABEL
-        // 4: :
-        // 5: mBe
-        // 6: }
-        var oldContext = compilerCtx;
-        var contexts = new ArrayList<CompilerContext>();
-        var errors = new ArrayList<String>();
-        for(int i=5; i< ctx.getChildCount();i+=6){
-            compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
-            errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
-            contexts.add(compilerCtx);
-        }
-        //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
-        compilerCtx = contexts.stream().reduce(
-                new CompilerContext(),
-                (context1, context2) -> mergeContexts(context1, context2, this::mergeSessionsHorizontal, ctx));
-        //we merge it with the previous context
-        compilerCtx = mergeContexts(oldContext, compilerCtx, this::mergeSessionsVertical, ctx);
-        System.out.println("the number of errors is : "+errors.size());
-        return errors;
-    }
-
-
     @Override
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
@@ -333,7 +220,96 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         return errors;
     }
+    @Override
+    public List<String> visitCdt(SPparserRich.CdtContext ctx) {
+        // 0: 'If'
+        // 1: expr
+        // 2: 'Then'
+        // 3: behaviour
+        // 4: 'Else'
+        // 5: behaviour
+        var oldContext = compilerCtx;
 
+        compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
+        compilerCtx.errors = ctx.getChild(3).accept(this);
+        var contextThen = compilerCtx;
+
+        compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
+        compilerCtx.errors = ctx.getChild(5).accept(this);
+        var contextElse = compilerCtx;
+
+        //we merge the "horizontal contexts to create one context corresponding to the conditional
+        var mergedContext = mergeContexts(contextThen, contextElse, this::mergeSessionsHorizontal, ctx);
+        var errors = mergedContext.errors;
+        //we merge it
+        compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical, ctx);
+
+        // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
+        return errors;
+    }
+    @Override
+    public List<String> visitSnd(SPparserRich.SndContext ctx) {
+        return visitComm(ctx, new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE), 7);
+    }
+    @Override
+    public List<String> visitRcv(SPparserRich.RcvContext ctx) {
+        return visitComm(ctx, new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE), 7);
+    }
+    @Override
+    public List<String> visitSel(SPparserRich.SelContext ctx) {
+        return visitComm(ctx, new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, ctx.getChild(2).getText()), 7);
+    }
+    @Override
+    public List<String> visitBra(SPparserRich.BraContext ctx) {
+        // proc '&' '{' BLABEL ':' mBehaviour '}'  ('//'  '{' BLABEL ':' mBehaviour '}')+
+        // 0: dest
+        // 1: &
+        // 2: {
+        // 3: BLABEL
+        // 4: :
+        // 5: mBe
+        // 6: }
+        var oldContext = compilerCtx;
+        var contexts = new ArrayList<CompilerContext>();
+        var errors = new ArrayList<String>();
+        for(int i=5; i< ctx.getChildCount();i+=6){
+            compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
+            errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
+            contexts.add(compilerCtx);
+        }
+        //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
+        compilerCtx = contexts.stream().reduce(
+                new CompilerContext(),
+                (context1, context2) -> mergeContexts(context1, context2, this::mergeSessionsHorizontal, ctx));
+        //we merge it with the previous context
+        compilerCtx = mergeContexts(oldContext, compilerCtx, this::mergeSessionsVertical, ctx);
+        return errors;
+    }
+    @Override
+    public List<String> visitNon(SPparserRich.NonContext ctx) {
+        return new ArrayList<>();
+    }
+    @Override
+    public List<String> visitSom(SPparserRich.SomContext ctx) {
+        return ctx.getChild(2).accept(this);
+    }
+    public <T extends SPparserRich.BehaviourContext> List<String> visitComm(T ctx, Communication communication, int continuationIndex){
+        var errors = new ArrayList<String>();
+        if(compilerCtx.currentProcess == null){
+            errors.add(ERROR_NULL_PROCESS(ctx));
+        }else{
+            var dest = ctx.getChild(0).getText();
+            var source = compilerCtx.currentProcess;
+            var session = getSession(source, dest);
+            if(session == null){
+                compilerCtx.sessions.add(new Session(source, dest, communication));
+            }else{
+                session.addLeafCommunicationRoot(communication);
+            }
+        }
+        errors.addAll(ctx.getChild(continuationIndex).accept(this));
+        return errors;
+    }
     @Override
     public List<String> visitEnd(SPparserRich.EndContext ctx) {
         return new ArrayList<>();

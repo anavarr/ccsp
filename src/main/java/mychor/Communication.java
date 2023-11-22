@@ -1,6 +1,5 @@
 package mychor;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -100,6 +99,9 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         if(communicationsBranches.size() != comp.communicationsBranches().size()){
             return false;
         }
+        if(!Objects.equals(label, comp.label)){
+            return false;
+        }
         for (int i = 0; i < communicationsBranches.size(); i++) {
             var c1 = communicationsBranches.get(i);
             var c2 = comp.communicationsBranches().get(i);
@@ -109,7 +111,6 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         }
         return true;
     }
-
     public boolean isEqual(Communication comp){
         if(!(direction == comp.direction() && arity == comp.arity() && Objects.equals(label, comp.label))) return false;
         if(communicationsBranches.size() != comp.communicationsBranches().size()) return false;
@@ -118,21 +119,6 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         }
         return true;
     }
-
-    public static Communication list2chain(List<Communication> communications){
-        if(communications == null){
-            return null;
-        }
-        if(communications.size() == 0){
-            return null;
-        }
-        Communication root = communications.get(0);
-        for (int i = 1; i < communications.size(); i++) {
-            root.addLeafCommunication(communications.get(i));
-        }
-        return root;
-    }
-
     public boolean expandLeafCommunicationRoots(ArrayList<Communication> communicationsRoots) {
         if(communicationsBranches.size() == 0){
             return false;

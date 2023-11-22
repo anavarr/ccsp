@@ -21,8 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SPcheckerTest {
     SPcheckerRich spr = new SPcheckerRich();
     CompilerContext ctx = new CompilerContext();
-
     String path_prefix = "/home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/test/antlr4/SP_programs/";
+    private SPcheckerRich testFile(String filename) throws IOException {
+        var path = Path.of(path_prefix, filename);
+        SPlexer spl = new SPlexer(CharStreams.fromPath(path));
+        var spp = new SPparserRich(new CommonTokenStream(spl));
+        var spc = new SPcheckerRich();
+        spp.program().accept(spc);
+        return spc;
+    }
 
     @Test
     public void exampleSelfComm(){
@@ -45,15 +52,6 @@ public class SPcheckerTest {
                 new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)))));
 
         assertTrue(spr.noSelfCom());
-    }
-
-    private SPcheckerRich testFile(String filename) throws IOException {
-        var path = Path.of(path_prefix, filename);
-        SPlexer spl = new SPlexer(CharStreams.fromPath(path));
-        var spp = new SPparserRich(new CommonTokenStream(spl));
-        var spc = new SPcheckerRich();
-        spp.program().accept(spc);
-        return spc;
     }
     @Test
     public void exampleNoUnknownProcess(){
@@ -88,9 +86,8 @@ public class SPcheckerTest {
 
     @Test
     public void exampleNoUnknownVariable(){
-        SPcheckerRich spc;
         try {
-            spc = testFile("noUnknownVariable.sp");
+            var spc = testFile("noUnknownVariable.sp");
             assertEquals(spc.unknownVariables().size(), 0);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -99,9 +96,8 @@ public class SPcheckerTest {
 
     @Test
     public void exampleProcessNullInComm(){
-        SPcheckerRich spc;
         try {
-            spc = testFile("nullProcessInComm.sp");
+            var spc = testFile("nullProcessInComm.sp");
             assertEquals(spc.compilerCtx.errors.size(), 1);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -110,14 +106,58 @@ public class SPcheckerTest {
 
     @Test
     public void exampleProcessNullInBraComm(){
-        SPcheckerRich spc;
         try {
-            spc = testFile("nullProcessInBraComm.sp");
+            var spc = testFile("nullProcessInBraComm.sp");
             for (String error : spc.compilerCtx.errors) {
                 System.out.println(error);
             }
             assertEquals(spc.compilerCtx.errors.size(), 4);
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    @Test
+    public void complementarySessionsSndRcv(){
+        try{
+            var spc = testFile("complementarySessionsSndRcv.sp");
+            assertEquals(spc.getNonComplementarySessions().size(), 0);
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+    @Test
+    public void complementarySessionsSelectBranch(){
+        try{
+            var spc = testFile("complementarySessionsSelectBranch.sp");
+            assertEquals(spc.getNonComplementarySessions().size(), 0);
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+    @Test
+    public void nonComplementarySessionsSelectBranchLabels(){
+        try{
+            var spc = testFile("nonComplementarySessionsSelectBranchLabels.sp");
+            assertEquals(spc.getNonComplementarySessions().size(), 2);
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+    @Test
+    public void nonComplementarySessionsSelectBranchNumbers(){
+        try{
+            var spc = testFile("nonComplementarySessionsSelectBranchNumbers.sp");
+            assertEquals(spc.getNonComplementarySessions().size(), 2);
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+    @Test
+    public void complementaryComplexSession(){
+        try{
+            var spc = testFile("complementaryComplexSession.sp");
+            assertEquals(spc.getNonComplementarySessions().size(), 2);
+        } catch (IOException e){
             throw new RuntimeException(e);
         }
     }
