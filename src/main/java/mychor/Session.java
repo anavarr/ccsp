@@ -115,9 +115,9 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder("\nSession[\n");
-        s.append(String.format("\tpeerA=%s\n\tpeerB=%s\n\tcommunicationsRoots=[\n", peerA, peerB));
+        s.append(String.format("\tpeerA=%s\n\tpeerB=%s\n\tcommunicationsRoots=[", peerA, peerB));
         for (Communication communicationsRoot : communicationsRoots) {
-            s.append("\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
+            s.append("\n\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
         }
         return s.append("\n\t]\n]").toString();
     }
