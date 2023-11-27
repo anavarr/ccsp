@@ -59,23 +59,6 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         return arity == INFINITE;
     }
 
-    public void addLeafCommunication(Communication communication){
-        if(communicationsBranches.size() == 0){
-            communicationsBranches.add(communication);
-            return;
-        }
-        communicationsBranches.get(0).addLeafCommunication(communication);
-    }
-
-    public void addLeafCommunications(ArrayList<Communication> communications){
-        if(communicationsBranches.size() == 0){
-            communicationsBranches.addAll(communications);
-            return;
-        }
-        communicationsBranches.get(0).addLeafCommunications(communications);
-    }
-
-
     public int getBranchesDepth(){
         int c = 0;
         for (Communication communicationsBranch : communicationsBranches) {
@@ -93,21 +76,13 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     public boolean isComplementary(Communication comp){
         if (!(isSend() ? comp.isReceive() :
                 (isReceive() ? comp.isSend() :
-                        (isBranch() ? comp.isSelect() : comp.isBranch())))){
-            return false;
-        }
-        if(communicationsBranches.size() != comp.communicationsBranches().size()){
-            return false;
-        }
-        if(!Objects.equals(label, comp.label)){
-            return false;
-        }
+                        (isBranch() ? comp.isSelect() : comp.isBranch())))) return false;
+        if(communicationsBranches.size() != comp.communicationsBranches().size()) return false;
+        if(!Objects.equals(label, comp.label)) return false;
         for (int i = 0; i < communicationsBranches.size(); i++) {
             var c1 = communicationsBranches.get(i);
             var c2 = comp.communicationsBranches().get(i);
-            if(!c1.isComplementary(c2)){
-                return false;
-            }
+            if(!c1.isComplementary(c2)) return false;
         }
         return true;
     }
@@ -119,14 +94,22 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         }
         return true;
     }
-    public boolean expandLeafCommunicationRoots(ArrayList<Communication> communicationsRoots) {
+    public boolean expandLeafCommunicationRoots(ArrayList<Communication> roots) {
         if(communicationsBranches.size() == 0){
             return false;
         }else{
-            if(!communicationsBranches.get(0).expandLeafCommunicationRoots(communicationsRoots)){
-                communicationsBranches.addAll(communicationsRoots);
+            if(!communicationsBranches.get(0).expandLeafCommunicationRoots(roots)){
+                communicationsBranches.addAll(roots);
             }
         }
         return true;
+    }
+
+    public void addLeafCommunicationRoots(ArrayList<Communication> roots){
+        if(communicationsBranches.size() == 0){
+            communicationsBranches.addAll(roots);
+            return;
+        }
+        communicationsBranches.get(0).addLeafCommunicationRoots(roots);
     }
 }

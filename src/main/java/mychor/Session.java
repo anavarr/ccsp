@@ -83,32 +83,24 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         return true;
     }
 
-    public void expandCommunicationRoots(ArrayList<Communication> roots){
+    public void expandTopCommunicationRoots(ArrayList<Communication> roots){
         communicationsRoots.addAll(roots);
     }
 
-    public void addLeafCommunicationRoot(Communication communication) {
+    public void addLeafCommunicationRoots(ArrayList<Communication> roots) {
         if(communicationsRoots.size() == 0){
-            communicationsRoots.add(communication);
+            communicationsRoots.addAll(roots);
         }else{
-            communicationsRoots.get(0).addLeafCommunication(communication);
+            communicationsRoots.get(0).addLeafCommunicationRoots(roots);
         }
     }
 
-    public void addLeafCommunicationRoots(ArrayList<Communication> communications) {
+    public void expandLeafCommunicationRoots(ArrayList<Communication> roots) {
         if(communicationsRoots.size() == 0){
-            communicationsRoots.addAll(communications);
+            expandTopCommunicationRoots(roots);
         }else{
-            communicationsRoots.get(0).addLeafCommunications(communications);
-        }
-    }
-
-    public void expandLeafCommunicationRoots(ArrayList<Communication> communicationsRoots) {
-        if(communicationsRoots.size() == 0){
-            expandCommunicationRoots(communicationsRoots);
-        }else{
-            if(!communicationsRoots.get(0).expandLeafCommunicationRoots(communicationsRoots)){
-                communicationsRoots.addAll(communicationsRoots);
+            if(!communicationsRoots.get(0).expandLeafCommunicationRoots(roots)){
+                communicationsRoots.addAll(roots);
             }
         }
     }

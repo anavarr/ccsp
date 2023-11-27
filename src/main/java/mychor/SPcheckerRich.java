@@ -135,7 +135,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 if(session1.hasSameEnds(session2)){
                     //if both session (left and right) are the same then we don't need to have two different paths
                     if (!session1.isEqual(session2)) {
-                        session1.expandCommunicationRoots(session2.communicationsRoots());
+                        session1.expandTopCommunicationRoots(session2.communicationsRoots());
                     }else{
                         session1.expandLeafCommunicationRoots(session2.communicationsRoots());
                     }
@@ -330,7 +330,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             if(session == null){
                 compilerCtx.sessions.add(new Session(source, dest, communication));
             }else{
-                session.addLeafCommunicationRoot(communication);
+                session.addLeafCommunicationRoots(new ArrayList<>(List.of(communication)));
             }
         }
         errors.addAll(ctx.getChild(continuationIndex).accept(this));
