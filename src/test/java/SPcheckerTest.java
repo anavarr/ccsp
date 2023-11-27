@@ -132,4 +132,14 @@ public class SPcheckerTest {
         var spc = testFile("sessionBranchingValid3.sp");
         assertTrue(spc.sessionsBranchingAreValid());
     }
+    @Test
+    public void sessionBranchingValidNoBranching() throws IOException {
+        var spc = testFile("sessionBranchingValid4.sp");
+        assertTrue(spc.sessionsBranchingAreValid());
+    }
+    @Test
+    public void sessionBranchingNotValid() throws IOException {
+        var spc = testFile("sessionBranchingNotValid.sp");
+        assertFalse(spc.sessionsBranchingAreValid());
+    }
 }
