@@ -98,15 +98,17 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     public boolean isBranchingValid() {
         if(communicationsBranches.size() == 0) return true;
         if(communicationsBranches.size() == 1) return communicationsBranches.get(0).isBranchingValid();
-        //if the comm is a branch, then anything following is valid
-        if(direction == Utils.Direction.BRANCH) return true;
-        //else, branching is valid if all branches are the same, or...
-        var allBranchesAreIdentical = communicationsBranches.stream()
-                .allMatch(item -> item.isEqual(communicationsBranches.get(0)));
-        if(allBranchesAreIdentical) return true;
-        //... if all the branches start with a select to propagate choice
-        return communicationsBranches.stream()
+        //if the branches are all SELECT, then anything following is valid
+        var allSelect = communicationsBranches.stream()
                 .allMatch(item -> item.direction == Utils.Direction.SELECT);
+        if (allSelect) return true;
+        //if the branches are all BRANCH, then anything following is valid
+        var allBranch = communicationsBranches.stream()
+                .allMatch(item -> item.direction == Utils.Direction.BRANCH);
+        if (allBranch) return true;
+        //else, branching is valid if all branches are the same
+        return  communicationsBranches.stream()
+                .allMatch(item -> item.isEqual(communicationsBranches.get(0)));
     }
 
     public boolean expandLeafCommunicationRoots(ArrayList<Communication> roots) {
