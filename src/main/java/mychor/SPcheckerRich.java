@@ -21,6 +21,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
+    public boolean sessionsBranchingAreValid(){
+        return compilerCtx.sessions.stream().allMatch(Session::isBranchingValid);
+    }
     public void displayComplementarySessions() {
         var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
         System.out.println("These sessions are complementary :");

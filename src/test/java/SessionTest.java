@@ -58,4 +58,5 @@ public class SessionTest {
     public void sessionNonComplementarityExample(){
         assertFalse(b.isComplementary(serverSide));
     }
+
 }

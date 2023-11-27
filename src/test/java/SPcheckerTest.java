@@ -54,111 +54,82 @@ public class SPcheckerTest {
         assertTrue(spr.noSelfCom());
     }
     @Test
-    public void exampleNoUnknownProcess(){
-        try{
-            var spc = testFile("noUnknownProcess.sp");
-            assertEquals(spc.unknownProcesses().size(), 0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void exampleNoUnknownProcess() throws IOException {
+        var spc = testFile("noUnknownProcess.sp");
+        assertEquals(spc.unknownProcesses().size(), 0);
     }
     @Test
-    public void exampleUnknownProcess(){
-        try{
-            var spc = testFile("unknownProcess.sp");
-            assertEquals(spc.unknownProcesses().size(), 1);
-            assertEquals(spc.unknownProcesses().get(0), "proxy");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void exampleUnknownProcess() throws IOException {
+        var spc = testFile("unknownProcess.sp");
+        assertEquals(spc.unknownProcesses().size(), 1);
+        assertEquals(spc.unknownProcesses().get(0), "proxy");
     }
 
     @Test
-    public void exampleUnknownVariable(){
-        try {
-            var spc = testFile("unknownVariable.sp");
-            assertEquals(spc.unknownVariables().size(), 1);
-            assertEquals(spc.unknownVariables().get(0), "Client");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void exampleUnknownVariable() throws IOException {
+        var spc = testFile("unknownVariable.sp");
+        assertEquals(spc.unknownVariables().size(), 1);
+        assertEquals(spc.unknownVariables().get(0), "Client");
     }
 
     @Test
-    public void exampleNoUnknownVariable(){
-        try {
-            var spc = testFile("noUnknownVariable.sp");
-            assertEquals(spc.unknownVariables().size(), 0);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void exampleNoUnknownVariable() throws IOException {
+        var spc = testFile("noUnknownVariable.sp");
+        assertEquals(spc.unknownVariables().size(), 0);
     }
 
     @Test
-    public void exampleProcessNullInComm(){
-        try {
-            var spc = testFile("nullProcessInComm.sp");
-            assertEquals(spc.compilerCtx.errors.size(), 1);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void exampleProcessNullInComm() throws IOException {
+        var spc = testFile("nullProcessInComm.sp");
+        assertEquals(spc.compilerCtx.errors.size(), 1);
     }
 
     @Test
-    public void exampleProcessNullInBraComm(){
-        try {
-            var spc = testFile("nullProcessInBraComm.sp");
-            for (String error : spc.compilerCtx.errors) {
-                System.out.println(error);
-            }
-            assertEquals(spc.compilerCtx.errors.size(), 4);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public void exampleProcessNullInBraComm() throws IOException {
+        var spc = testFile("nullProcessInBraComm.sp");
+        for (String error : spc.compilerCtx.errors) {
+            System.out.println(error);
         }
+        assertEquals(spc.compilerCtx.errors.size(), 4);
     }
     @Test
-    public void complementarySessionsSndRcv(){
-        try{
-            var spc = testFile("complementarySessionsSndRcv.sp");
-            assertEquals(spc.getNonComplementarySessions().size(), 0);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
+    public void complementarySessionsSndRcv() throws IOException {
+        var spc = testFile("complementarySessionsSndRcv.sp");
+        assertEquals(spc.getNonComplementarySessions().size(), 0);
     }
     @Test
-    public void complementarySessionsSelectBranch(){
-        try{
-            var spc = testFile("complementarySessionsSelectBranch.sp");
-            assertEquals(spc.getNonComplementarySessions().size(), 0);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
+    public void complementarySessionsSelectBranch() throws IOException {
+        var spc = testFile("complementarySessionsSelectBranch.sp");
+        assertEquals(spc.getNonComplementarySessions().size(), 0);
     }
     @Test
-    public void nonComplementarySessionsSelectBranchLabels(){
-        try{
+    public void nonComplementarySessionsSelectBranchLabels() throws IOException {
             var spc = testFile("nonComplementarySessionsSelectBranchLabels.sp");
             assertEquals(spc.getNonComplementarySessions().size(), 2);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
     }
     @Test
-    public void nonComplementarySessionsSelectBranchNumbers(){
-        try{
+    public void nonComplementarySessionsSelectBranchNumbers() throws IOException {
             var spc = testFile("nonComplementarySessionsSelectBranchNumbers.sp");
             assertEquals(spc.getNonComplementarySessions().size(), 2);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
     }
     @Test
-    public void complementaryComplexSession(){
-        try{
+    public void complementaryComplexSession() throws IOException {
             var spc = testFile("complementaryComplexSession.sp");
             assertEquals(spc.getNonComplementarySessions().size(), 2);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
+    }
+    @Test
+    public void sessionBranchingValidCdtBranch() throws IOException {
+        var spc = testFile("sessionBranchingValid1.sp");
+        assertTrue(spc.sessionsBranchingAreValid());
+    }
+    @Test
+    public void sessionBranchingValidCdtSelect() throws IOException {
+            var spc = testFile("sessionBranchingValid2.sp");
+            assertTrue(spc.sessionsBranchingAreValid());
+    }
+    @Test
+    public void sessionBranchingValidCdtSame() throws IOException {
+        var spc = testFile("sessionBranchingValid3.sp");
+        assertTrue(spc.sessionsBranchingAreValid());
     }
 }
