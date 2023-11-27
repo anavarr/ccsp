@@ -136,12 +136,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         for (Session session1 : sessions1) {
             for (Session session2 : sessions2) {
                 if(session1.hasSameEnds(session2)){
-                    //if both session (left and right) are the same then we don't need to have two different paths
-                    if (!session1.isEqual(session2)) {
-                        session1.expandTopCommunicationRoots(session2.communicationsRoots());
-                    }else{
-                        session1.expandLeafCommunicationRoots(session2.communicationsRoots());
-                    }
+                    session1.expandTopCommunicationRoots(session2.communicationsRoots());
                     sessionsToAdd.remove(session2);
                 }
             }
