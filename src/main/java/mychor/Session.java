@@ -104,13 +104,13 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         }
     }
 
-    public void expandLeafCommunicationRoots(ArrayList<Communication> roots) {
-        if(communicationsRoots.size() == 0){
-            expandTopCommunicationRoots(roots);
-        }else{
-            if(!communicationsRoots.get(0).expandLeafCommunicationRoots(roots)){
-                communicationsRoots.addAll(roots);
-            }
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder("\nSession[\n");
+        s.append(String.format("\tpeerA=%s\n\tpeerB=%s\n\tcommunicationsRoots=[\n", peerA, peerB));
+        for (Communication communicationsRoot : communicationsRoots) {
+            s.append("\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
         }
+        return s.append("\n\t]\n]").toString();
     }
 }

@@ -126,4 +126,14 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         }
         communicationsBranches.get(0).addLeafCommunicationRoots(roots);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder("Communication[\n");
+        s.append(String.format("\tdirection=%s\n\tarity=%s\n\tlabel=%s\n\tcommunicationsBranches=[", direction, arity, label));
+        for (Communication communicationsRoot : communicationsBranches) {
+            s.append("\n\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
+        }
+        return s.append("\n\t]\n]").toString();
+    }
 }
