@@ -94,10 +94,24 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         }
         return true;
     }
+
+    public boolean isBranchingValid() {
+        if(communicationsBranches.size() == 0) return true;
+        if(communicationsBranches.size() == 1) return communicationsBranches.get(0).isBranchingValid();
+        //if the comm is a branch, then anything following is valid
+        if(direction == Utils.Direction.BRANCH) return true;
+        //else, branching is valid if all branches are the same, or...
+        var allBranchesAreIdentical = communicationsBranches.stream()
+                .allMatch(item -> item.isEqual(communicationsBranches.get(0)));
+        if(allBranchesAreIdentical) return true;
+        //... if all the branches start with a select to propagate choice
+        return communicationsBranches.stream()
+                .allMatch(item -> item.direction == Utils.Direction.SELECT);
+    }
+
     public boolean expandLeafCommunicationRoots(ArrayList<Communication> roots) {
-        if(communicationsBranches.size() == 0){
-            return false;
-        }else{
+        if(communicationsBranches.size() == 0) return false;
+        else{
             if(!communicationsBranches.get(0).expandLeafCommunicationRoots(roots)){
                 communicationsBranches.addAll(roots);
             }

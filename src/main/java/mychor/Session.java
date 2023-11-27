@@ -70,6 +70,15 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         return true;
     }
 
+    public boolean isBranchingValid(){
+        for (Communication communicationsRoot : communicationsRoots) {
+            if(!communicationsRoot.isBranchingValid()){
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean hasSameEnds(Session comp) {
         return peerA.equals(comp.peerA()) && peerB.equals(comp.peerB());
     }
