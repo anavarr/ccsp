@@ -72,19 +72,17 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
 
     public boolean isBranchingValid(){
         if(communicationsRoots.size() == 0) return true;
-        if(communicationsRoots.size() == 1) return communicationsRoots.get(0).isBranchingValid();
         //if the branches are all SELECT, then anything following is valid
         var allSelect = communicationsRoots.stream()
                 .allMatch(item -> item.direction() == Utils.Direction.SELECT);
-        if (allSelect) return true;
         //if the branches are all BRANCH, then anything following is valid
         var allBranch = communicationsRoots.stream()
                 .allMatch(item -> item.direction() == Utils.Direction.BRANCH);
-        if (allBranch) return true;
         //else, branching is valid if all branches are the same
-        return  communicationsRoots.stream()
+        var allSame = communicationsRoots.stream()
                 .allMatch(item -> item.isEqual(communicationsRoots.get(0)));
-
+        if(!(allSame || allSelect || allBranch)) return false;
+        return communicationsRoots.stream().allMatch(Communication::isBranchingValid);
     }
 
     public boolean hasSameEnds(Session comp) {
