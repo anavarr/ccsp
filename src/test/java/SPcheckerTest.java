@@ -65,33 +65,52 @@ public class SPcheckerTest {
         assertEquals(spc.unknownProcesses().get(0), "proxy");
     }
 
+    // UNKNOWN AND UNUSED RECURSIVE VARIABLES
     @Test
     public void exampleUnknownVariable() throws IOException {
         var spc = testFile("unknownVariable.sp");
         assertEquals(spc.unknownVariables().size(), 1);
         assertEquals(spc.unknownVariables().get(0), "Client");
     }
-
+    @Test
+    public void exampleUnknownVariableBra() throws IOException {
+        var spc = testFile("unknownVariableBra.sp");
+        assertEquals(spc.unknownVariables().size(), 1);
+        assertEquals(spc.unknownVariables().get(0), "Client");
+    }
+    @Test
+    public void exampleUnknownVariableComm() throws IOException {
+        var spc = testFile("unknownVariableComm.sp");
+        assertEquals(spc.unknownVariables().size(), 1);
+        assertEquals(spc.unknownVariables().get(0), "Routine");
+    }
+    @Test
+    public void exampleUnknownVariableCdt() throws IOException {
+        var spc = testFile("unknownVariableComm.sp");
+        assertEquals(spc.unknownVariables().size(), 1);
+        assertEquals(spc.unknownVariables().get(0), "Routine");
+    }
     @Test
     public void exampleNoUnknownVariable() throws IOException {
         var spc = testFile("noUnknownVariable.sp");
         assertEquals(spc.unknownVariables().size(), 0);
     }
-
     @Test
-    public void exampleProcessNullInComm() throws IOException {
+    public void unusedVariableComm() throws IOException {
         var spc = testFile("nullProcessInComm.sp");
         assertEquals(spc.compilerCtx.errors.size(), 1);
     }
-
     @Test
-    public void exampleProcessNullInBraComm() throws IOException {
+    public void unusedVariableBraComm() throws IOException {
         var spc = testFile("nullProcessInBraComm.sp");
         for (String error : spc.compilerCtx.errors) {
             System.out.println(error);
         }
         assertEquals(spc.compilerCtx.errors.size(), 4);
     }
+
+
+
     @Test
     public void complementarySessionsSndRcv() throws IOException {
         var spc = testFile("complementarySessionsSndRcv.sp");

@@ -18,7 +18,6 @@ import static mychor.Utils.ERROR_RECVAR_UNKNOWN;
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     //a list of recursive variables
-    public Set<String> recVars = new HashSet<>();
     public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
@@ -101,7 +100,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     // check that all the recursive variables called in behaviours are defined
     public List<String> unknownVariables(){
         return compilerCtx.recvar2proc.keySet().stream()
-                .filter(vari -> !recVars.contains(vari)).toList();
+                .filter(vari -> !recDefs.containsKey(vari)).toList();
     }
     private CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
                                   BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
@@ -115,6 +114,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 if(!superValue.equals(value)){
                     superCtx.errors.add(ERROR_RECVAR_ADD(key, superValue, value, ctx));
                 }
+            }else{
+                superCtx.recvar2proc.put(key, context.recvar2proc.get(key));
             }
         }
         return superCtx;
@@ -207,14 +208,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         //n : EOF
         var errors = new ArrayList<String>();
         for (int i = 1; i < ctx.getChildCount()-1; i++) {
-            System.out.println(ctx.getChild(i));
             var recVar = ctx.getChild(i).getChild(0).getText();
             var recBehaviour = ctx.getChild(i).getChild(2);
             recDefs.put(recVar, recBehaviour);
 //            errors.addAll(ctx.getChild(i).accept(this));
         }
         errors.addAll(ctx.getChild(0).accept(this));
-        System.out.println(errors);
         return errors;
     }
     @Override
@@ -241,9 +240,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 0 : name
         // 1 : ':'
         // 2 : behaviour
-        System.out.println("visiting Recdef");
         var recVar = ctx.getChild(0).getText();
-        recVars.add(recVar);
         var superContext= compilerCtx;
         var currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
 
@@ -263,11 +260,26 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 1 : name
         var varName = ctx.getChild(1).getText();
         var errors = new ArrayList<String>();
+
+        //we check if the variable is already mapped
+        if (compilerCtx.recvar2proc.containsKey(varName)){
+            //if it is it can't be mapped to another process
+            if  (!compilerCtx.recvar2proc.get(varName).equals(compilerCtx.currentProcess)){
+                errors.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), compilerCtx.currentProcess, ctx));
+            }
+        }else{
+            //else we simply map it
+            compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
+        }
+
+        //if the variable is not in the set of recursive variable definitions we add an error and return
         if(!recDefs.containsKey(varName)) {
             errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
             compilerCtx.errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
             return errors;
         }
+
+        //we handle recursion here
         if (compilerCtx.calledProceduresStacks.containsKey(compilerCtx.currentProcess)){
             //this process exists and has already called a method
             if(compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).contains(varName)){
@@ -279,15 +291,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             compilerCtx.calledProceduresStacks.put(compilerCtx.currentProcess, new Stack<>());
         }
         compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
+
+        //we visit the code of the recursive definition
         errors.addAll(recDefs.get(varName).accept(this));
-//        compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
-//        if (compilerCtx.recvar2proc.containsKey(varName)){
-//            if  (!compilerCtx.recvar2proc.get(varName).equals(compilerCtx.currentProcess)){
-//                errors.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), compilerCtx.currentProcess, ctx));
-//            }
-//        }else{
-//            compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
-//        }
         return errors;
     }
     @Override
@@ -313,7 +319,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var errors = mergedContext.errors;
         //we merge it
         compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical, ctx);
-        System.out.println(compilerCtx.sessions);
         // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
         return errors;
     }
