@@ -5,7 +5,7 @@ server [
         proxy?myData @?"";
         End
     Else
-        server!myData @!"";
-        server?myData @?"";
+        otherServer!myData @!"";
+        otherServer?myData @?"";
         End
 ]

@@ -144,6 +144,50 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         sessions1.addAll(sessionsToAdd);
         return sessions1;
     }
+    private ArrayList<Session> mergeSessionsHorizontalStub(ArrayList<Session> sessions1, ArrayList<Session> sessions2){
+        var leftOnly = sessions1.stream()
+                .filter(s1 -> sessions2.stream().noneMatch(s2 -> s2.hasSameEnds(s1)));
+        var rightOnly = sessions2.stream()
+                .filter(s2 -> sessions1.stream().noneMatch(s1 -> s1.hasSameEnds(s2)));
+        var common = new ArrayList<>(sessions1.stream()
+                .filter(s1 -> sessions2.stream().anyMatch(s2 -> s2.hasSameEnds(s1)))
+                .map(s1 -> {
+                    var toAdd = sessions2.stream().filter(s2 -> s2.hasSameEnds(s1)).findFirst().get();
+                    s1.expandTopCommunicationRoots(toAdd.communicationsRoots());
+                    return s1;
+                })
+                .toList());
+
+        common.addAll(new ArrayList<>(leftOnly.map(s -> {
+            s.expandTopCommunicationRoots(
+                    new ArrayList<>(
+                            List.of(
+                                    new Communication(
+                                            Utils.Direction.VOID,
+                                            Utils.Arity.SINGLE,
+                                            new ArrayList<>(),
+                                            null)
+                            )
+                    )
+            );
+            return s;
+        }).toList()));
+        common.addAll(new ArrayList<>(rightOnly.map(s -> {
+            s.expandTopCommunicationRoots(
+                    new ArrayList<>(
+                            List.of(
+                                    new Communication(
+                                            Utils.Direction.VOID,
+                                            Utils.Arity.SINGLE,
+                                            new ArrayList<>(),
+                                            null)
+                            )
+                    )
+            );
+            return s;
+        }).toList()));
+        return common;
+    }
     private Session getSession(String source, String dest){
         var session = compilerCtx.sessions.stream()
                 .filter(s -> s.peerA().equals(source) && s.peerB().equals(dest))
@@ -261,13 +305,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
         compilerCtx.errors = ctx.getChild(5).accept(this);
         var contextElse = compilerCtx;
-
         //we merge the "horizontal contexts to create one context corresponding to the conditional
-        var mergedContext = mergeContexts(contextThen, contextElse, this::mergeSessionsHorizontal, ctx);
+        var mergedContext = mergeContexts(contextThen, contextElse,
+                this::mergeSessionsHorizontalStub, ctx);
         var errors = mergedContext.errors;
         //we merge it
         compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical, ctx);
-
+        System.out.println(compilerCtx.sessions);
         // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
         return errors;
     }
