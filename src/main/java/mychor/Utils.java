@@ -32,6 +32,13 @@ public class Utils {
                 newProcess), ctx);
     }
 
+    static String ERROR_RECVAR_UNKNOWN(String vname, ParserRuleContext ctx){
+        return ERROR_DEFAULT(String.format(
+                "No recursive variable with the name %s exists",
+                vname
+        ), ctx);
+    }
+
     static String ERROR_DEFAULT(String error, ParserRuleContext ctx){
         return String.format("%s:\n\t %s %s:%s", error,
                 ctx.getText(), ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());

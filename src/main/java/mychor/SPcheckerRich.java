@@ -13,6 +13,7 @@ import java.util.function.BiFunction;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
+import static mychor.Utils.ERROR_RECVAR_UNKNOWN;
 
 
 public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
@@ -263,7 +264,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var varName = ctx.getChild(1).getText();
         var errors = new ArrayList<String>();
         if(!recDefs.containsKey(varName)) {
-            errors.add(String.format("No recursive variable with the name %s exists", varName));
+            errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
+            compilerCtx.errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
             return errors;
         }
         if (compilerCtx.calledProceduresStacks.containsKey(compilerCtx.currentProcess)){
