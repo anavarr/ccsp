@@ -1,3 +1,5 @@
+import mychor.ProceduresCallGraph;
+import mychor.ProceduresCallGraphMap;
 import mychor.StackFrame;
 import org.junit.jupiter.api.Test;
 
@@ -6,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
+import static mychor.ProceduresCallGraphMap.mergeCalledProceduresHorizontal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class StackFrameTest {
@@ -17,34 +20,38 @@ public class StackFrameTest {
 
     @Test
     public void exampleHorizontalMergingSameProcess(){
-        var callGraph1 = new HashMap<String, ArrayList<StackFrame>>();
-        var callGraph2 = new HashMap<String, ArrayList<StackFrame>>();
-        callGraph1.put(
+        var callGraphs1 = new ProceduresCallGraphMap();
+        var callGraphs2 = new ProceduresCallGraphMap();
+        callGraphs1.put(
                 "client",
-                new ArrayList<>(List.of(
-                        new StackFrame(
-                                "X_Client_GET",
-                                new ArrayList<>(List.of(
-                                      new StackFrame("X_CLient_GET_success"),
-                                      new StackFrame("X_Client_GET_failure")
-                                ))
-                        )
-                ))
-        );
-        callGraph2.put(
-                "client",
-                new ArrayList<>(List.of(
-                        new StackFrame(
-                                "X_Client_POST",
-                                new ArrayList<>(List.of(
-                                        new StackFrame("X_CLient_POST_success"),
-                                        new StackFrame("X_Client_POST_failure")
-                                ))
-                        ))
+                new ProceduresCallGraph(
+                    new ArrayList<>(List.of(
+                            new StackFrame(
+                                    "X_Client_GET",
+                                    new ArrayList<>(List.of(
+                                          new StackFrame("X_CLient_GET_success"),
+                                          new StackFrame("X_Client_GET_failure")
+                                    ))
+                            )
+                    ))
                 )
         );
-        var callGraphMerged = new HashMap<String, ArrayList<StackFrame>>();
-        callGraphMerged.put("client", new ArrayList<>(List.of(
+        callGraphs2.put(
+                "client",
+                new ProceduresCallGraph(
+                        new ArrayList<>(List.of(
+                                new StackFrame(
+                                        "X_Client_POST",
+                                        new ArrayList<>(List.of(
+                                                new StackFrame("X_CLient_POST_success"),
+                                                new StackFrame("X_Client_POST_failure")
+                                        ))
+                                ))
+                        )
+                )
+        );
+        var callGraphsMerged = new ProceduresCallGraphMap();
+        callGraphsMerged.put("client", new ProceduresCallGraph(new ArrayList<>(List.of(
                 new StackFrame(
                         "X_Client_GET",
                         new ArrayList<>(List.of(
@@ -58,9 +65,8 @@ public class StackFrameTest {
                                 new StackFrame("X_CLient_POST_success"),
                                 new StackFrame("X_Client_POST_failure")
                         ))
-                ))
-        ));
-
-        assertEquals(StackFrame.mergeCalledProceduresHorizontal(callGraph1, callGraph2), callGraphMerged);
+                ))))
+        );
+        assertEquals(mergeCalledProceduresHorizontal(callGraphs1, callGraphs2), callGraphsMerged);
     }
 }
