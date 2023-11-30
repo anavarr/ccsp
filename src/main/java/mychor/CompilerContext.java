@@ -1,10 +1,15 @@
 package mychor;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
+
+import static mychor.Utils.ERROR_RECVAR_ADD;
 
 public class CompilerContext {
     public String currentRecVar;
@@ -20,34 +25,44 @@ public class CompilerContext {
     public List<String> errors = new ArrayList<>();
     public HashMap<String,ArrayList<StackFrame>> calledProceduresGraph = new HashMap<>();
 
-    public static class StackFrame{
-        private ArrayList<StackFrame> nextFrames;
-        public String varName;
-        public StackFrame(String varName, ArrayList<StackFrame> nextFrames){
-            this.varName = varName;
-            this.nextFrames = nextFrames;
-        }
-
-        public StackFrame(String varName){
-            this.varName = varName;
-            this.nextFrames = new ArrayList<>();
-        }
-
-        public void addNextFrames(ArrayList<StackFrame> stackFrames){
-            nextFrames.addAll(stackFrames);
-        }
-
-        public void addLeafFrame(StackFrame stackFrame){
-            if (nextFrames.size() == 0){
-                nextFrames.add(stackFrame);
-                return;
-            }
-            nextFrames.get(0).addLeafFrame(stackFrame);
-        }
-
-        public boolean isVarNameInGraph(String var){
-            if(this.varName.equals(var)) return true;
-            return nextFrames.stream().anyMatch(item -> item.isVarNameInGraph(var));
-        }
+    CompilerContext duplicateContext(){
+        var c = new CompilerContext();
+        c.currentProcess = this.currentProcess;
+        c.currentRecVar = this.currentRecVar;
+        c.processes.addAll(this.processes);
+        c.recvar2proc.putAll(this.recvar2proc);
+        c.calledProceduresGraph = new HashMap<>(this.calledProceduresGraph);
+        return c;
     }
+
+    public static CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
+                                          BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
+                                          BiFunction<
+                                                  HashMap<String,ArrayList<StackFrame>>,
+                                                  HashMap<String,ArrayList<StackFrame>>,
+                                                  HashMap<String,ArrayList<StackFrame>>
+                                                  > calledGraphMerger,
+                                          ParserRuleContext ctx){
+        superCtx.errors.addAll(context.errors);
+        superCtx.sessions = sessionMerger.apply(superCtx.sessions, context.sessions);
+        superCtx.calledProceduresGraph = calledGraphMerger
+                .apply(superCtx.calledProceduresGraph, context.calledProceduresGraph);
+        //merge recvar2proc
+        for (String key : context.recvar2proc.keySet()){
+            if (superCtx.recvar2proc.containsKey(key)){
+                var superValue = superCtx.recvar2proc.get(key);
+                var value = context.recvar2proc.get(key);
+                if(!superValue.equals(value)){
+                    superCtx.errors.add(ERROR_RECVAR_ADD(key, superValue, value, ctx));
+                }
+            }else{
+                superCtx.recvar2proc.put(key, context.recvar2proc.get(key));
+            }
+        }
+
+        //merge calledProceduresGraph
+        return superCtx;
+    }
+
+
 }

@@ -1,13 +1,10 @@
 package mychor;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Stack;
-import java.util.function.BiFunction;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -57,15 +54,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return nonComplementarySessions;
     }
     //sessions and errors are not duplicated
-    CompilerContext duplicateContext(CompilerContext ctx){
-        var c = new CompilerContext();
-        c.currentProcess = ctx.currentProcess;
-        c.currentRecVar = ctx.currentRecVar;
-        c.processes.addAll(ctx.processes);
-        c.recvar2proc.putAll(ctx.recvar2proc);
-        c.calledProceduresGraph = new HashMap<>(ctx.calledProceduresGraph);
-        return c;
-    }
+
     public void displayContext() {
         System.out.println("Sessions:");
         for (Session session : compilerCtx.sessions) {
@@ -100,142 +89,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return compilerCtx.recvar2proc.keySet().stream()
                 .filter(vari -> !recDefs.containsKey(vari)).toList();
     }
-    private CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
-                                  BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
-                                  BiFunction<
-                                          HashMap<String,ArrayList<CompilerContext.StackFrame>>,
-                                          HashMap<String,ArrayList<CompilerContext.StackFrame>>,
-                                          HashMap<String,ArrayList<CompilerContext.StackFrame>>
-                                          > calledGraphMerger,
-                                  ParserRuleContext ctx){
-        superCtx.errors.addAll(context.errors);
-        superCtx.sessions = sessionMerger.apply(superCtx.sessions, context.sessions);
-        superCtx.calledProceduresGraph = calledGraphMerger
-                .apply(superCtx.calledProceduresGraph, context.calledProceduresGraph);
-        //merge recvar2proc
-        for (String key : context.recvar2proc.keySet()){
-            if (superCtx.recvar2proc.containsKey(key)){
-                var superValue = superCtx.recvar2proc.get(key);
-                var value = context.recvar2proc.get(key);
-                if(!superValue.equals(value)){
-                    superCtx.errors.add(ERROR_RECVAR_ADD(key, superValue, value, ctx));
-                }
-            }else{
-                superCtx.recvar2proc.put(key, context.recvar2proc.get(key));
-            }
-        }
 
-        //merge calledProceduresGraph
-        return superCtx;
-    }
-    private HashMap<String, ArrayList<CompilerContext.StackFrame>> mergeCalledProceduresHorizontal(
-            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures1,
-            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures2
-    ){
-        var toAdd = calledProcedures2.keySet();
-        var res = new HashMap<>(calledProcedures1);
-        for (String s : res.keySet()) {
-            if(calledProcedures2.containsKey(s)){
-                res.get(s).addAll(calledProcedures2.get(s));
-                toAdd.remove(s);
-            }
-        }
-        for (String s : toAdd) {
-            res.put(s, calledProcedures2.get(s));
-        }
-        return res;
-    }
-    private HashMap<String, ArrayList<CompilerContext.StackFrame>> mergeCalledProceduresVertical(
-            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures1,
-            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures2
-    ){
-        var toAdd = calledProcedures2.keySet();
-        var res = new HashMap<>(calledProcedures1);
-        for (String s : res.keySet()) {
-            if(calledProcedures2.containsKey(s)){
-                if(res.get(s).size() > 0){
-                    res.get(s).get(0).addNextFrames(calledProcedures2.get(s));
-                }else{
-                    res.get(s).addAll(calledProcedures2.get(s));
-                }
-                toAdd.remove(s);
-            }
-        }
-        for (String s : toAdd) {
-            res.put(s, calledProcedures2.get(s));
-        }
-        return res;
-    }
-    private ArrayList<Session> mergeSessionsVertical(ArrayList<Session> sessionsSuper, ArrayList<Session> sessions){
-        var sessionsToAdd = new ArrayList<>(sessions);
-        for (Session sessionSuper : sessionsSuper) {
-            for (Session session : sessions) {
-                if(sessionSuper.hasSameEnds(session)){
-                    sessionSuper.addLeafCommunicationRoots(session.communicationsRoots());
-                    sessionsToAdd.remove(session);
-                }
-            }
-        }
-        sessionsSuper.addAll(sessionsToAdd);
-        return sessionsSuper;
-    }
-    private ArrayList<Session> mergeSessionsHorizontal(ArrayList<Session> sessions1, ArrayList<Session> sessions2){
-        var sessionsToAdd = new ArrayList<>(sessions2);
-        for (Session session1 : sessions1) {
-            for (Session session2 : sessions2) {
-                if(session1.hasSameEnds(session2)){
-                    session1.expandTopCommunicationRoots(session2.communicationsRoots());
-                    sessionsToAdd.remove(session2);
-                }
-            }
-        }
-        sessions1.addAll(sessionsToAdd);
-        return sessions1;
-    }
-    private ArrayList<Session> mergeSessionsHorizontalStub(ArrayList<Session> sessions1, ArrayList<Session> sessions2){
-        var leftOnly = sessions1.stream()
-                .filter(s1 -> sessions2.stream().noneMatch(s2 -> s2.hasSameEnds(s1)));
-        var rightOnly = sessions2.stream()
-                .filter(s2 -> sessions1.stream().noneMatch(s1 -> s1.hasSameEnds(s2)));
-        var common = new ArrayList<>(sessions1.stream()
-                .filter(s1 -> sessions2.stream().anyMatch(s2 -> s2.hasSameEnds(s1)))
-                .map(s1 -> {
-                    var toAdd = sessions2.stream().filter(s2 -> s2.hasSameEnds(s1)).findFirst().get();
-                    s1.expandTopCommunicationRoots(toAdd.communicationsRoots());
-                    return s1;
-                })
-                .toList());
-
-        common.addAll(new ArrayList<>(leftOnly.map(s -> {
-            s.expandTopCommunicationRoots(
-                    new ArrayList<>(
-                            List.of(
-                                    new Communication(
-                                            Utils.Direction.VOID,
-                                            Utils.Arity.SINGLE,
-                                            new ArrayList<>(),
-                                            null)
-                            )
-                    )
-            );
-            return s;
-        }).toList()));
-        common.addAll(new ArrayList<>(rightOnly.map(s -> {
-            s.expandTopCommunicationRoots(
-                    new ArrayList<>(
-                            List.of(
-                                    new Communication(
-                                            Utils.Direction.VOID,
-                                            Utils.Arity.SINGLE,
-                                            new ArrayList<>(),
-                                            null)
-                            )
-                    )
-            );
-            return s;
-        }).toList()));
-        return common;
-    }
     private Session getSession(String source, String dest){
         var session = compilerCtx.sessions.stream()
                 .filter(s -> s.peerA().equals(source) && s.peerB().equals(dest))
@@ -291,13 +145,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
 
         //the procedure has already been defined in the Network
-        compilerCtx = duplicateContext(superContext);
+        compilerCtx = superContext.duplicateContext();
         compilerCtx.currentProcess = currentProcess;
         compilerCtx.currentRecVar = recVar;
         var errors = (ctx.getChild(2).accept(this));
         superContext.errors.addAll(errors);
-        compilerCtx = mergeContexts(superContext, compilerCtx, this::mergeSessionsVertical,
-                this::mergeCalledProceduresVertical, ctx);
+        compilerCtx = CompilerContext.mergeContexts(superContext, compilerCtx, Session::mergeSessionsVertical,
+                StackFrame::mergeCalledProceduresVertical, ctx);
         compilerCtx.currentProcess = null;
         return errors;
     }
@@ -327,19 +181,18 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
 
         //we handle recursion here
-        if (compilerCtx.calledProceduresGraph.containsKey(compilerCtx.currentProcess)){
+        var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
+        if (callGraph != null){
             //this process exists and has already called a method
-            var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
             if(callGraph.stream().anyMatch(sf -> sf.isVarNameInGraph(varName))){
                 System.err.println("we are looping");
-                callGraph.get(0).addLeafFrame(new CompilerContext.StackFrame(varName));
+                callGraph.get(0).addLeafFrame(new StackFrame(varName));
                 return errors;
             }
         }else{
             compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, new ArrayList<>(List.of(
-                    new CompilerContext.StackFrame(varName)
+                    new StackFrame(varName)
             )));
-
         }
         //we visit the code of the recursive definition
         errors.addAll(recDefs.get(varName).accept(this));
@@ -355,20 +208,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 5: behaviour
         var oldContext = compilerCtx;
 
-        compilerCtx = duplicateContext(oldContext);
+        compilerCtx = oldContext.duplicateContext();
         compilerCtx.errors = ctx.getChild(3).accept(this);
         var contextThen = compilerCtx;
 
-        compilerCtx = duplicateContext(oldContext);
+        compilerCtx = oldContext.duplicateContext();
         compilerCtx.errors = ctx.getChild(5).accept(this);
         var contextElse = compilerCtx;
         //we merge the "horizontal contexts to create one context corresponding to the conditional
-        var mergedContext = mergeContexts(contextThen, contextElse,
-                this::mergeSessionsHorizontalStub, this::mergeCalledProceduresHorizontal, ctx);
+        var mergedContext = CompilerContext.mergeContexts(contextThen, contextElse,
+                Session::mergeSessionsHorizontalStub, StackFrame::mergeCalledProceduresHorizontal, ctx);
         var errors = mergedContext.errors;
         //we merge it
-        compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical,
-                this::mergeCalledProceduresVertical, ctx);
+        compilerCtx = CompilerContext.mergeContexts(oldContext, mergedContext, Session::mergeSessionsVertical,
+                StackFrame::mergeCalledProceduresVertical, ctx);
         // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
         return errors;
     }
@@ -398,18 +251,18 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var contexts = new ArrayList<CompilerContext>();
         var errors = new ArrayList<String>();
         for(int i=5; i< ctx.getChildCount();i+=6){
-            compilerCtx = duplicateContext(oldContext);
+            compilerCtx = oldContext.duplicateContext();
             errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
             contexts.add(compilerCtx);
         }
         //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
         compilerCtx = contexts.stream().reduce(
                 new CompilerContext(),
-                (context1, context2) -> mergeContexts(context1, context2, this::mergeSessionsHorizontal,
-                        this::mergeCalledProceduresHorizontal, ctx));
+                (context1, context2) -> CompilerContext.mergeContexts(context1, context2, Session::mergeSessionsHorizontal,
+                        StackFrame::mergeCalledProceduresHorizontal, ctx));
         //we merge it with the previous context
-        compilerCtx = mergeContexts(oldContext, compilerCtx, this::mergeSessionsVertical,
-                this::mergeCalledProceduresVertical, ctx);
+        compilerCtx = CompilerContext.mergeContexts(oldContext, compilerCtx, Session::mergeSessionsVertical,
+                StackFrame::mergeCalledProceduresVertical, ctx);
         //now we check for loops
         return errors;
     }

@@ -119,4 +119,75 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         }
         return s.append("\n\t]\n]").toString();
     }
+
+    public static ArrayList<Session> mergeSessionsVertical(ArrayList<Session> sessionsSuper, ArrayList<Session> sessions){
+        var sessionsToAdd = new ArrayList<>(sessions);
+        for (Session sessionSuper : sessionsSuper) {
+            for (Session session : sessions) {
+                if(sessionSuper.hasSameEnds(session)){
+                    sessionSuper.addLeafCommunicationRoots(session.communicationsRoots());
+                    sessionsToAdd.remove(session);
+                }
+            }
+        }
+        sessionsSuper.addAll(sessionsToAdd);
+        return sessionsSuper;
+    }
+    public static ArrayList<Session> mergeSessionsHorizontal(ArrayList<Session> sessions1, ArrayList<Session> sessions2){
+        var sessionsToAdd = new ArrayList<>(sessions2);
+        for (Session session1 : sessions1) {
+            for (Session session2 : sessions2) {
+                if(session1.hasSameEnds(session2)){
+                    session1.expandTopCommunicationRoots(session2.communicationsRoots());
+                    sessionsToAdd.remove(session2);
+                }
+            }
+        }
+        sessions1.addAll(sessionsToAdd);
+        return sessions1;
+    }
+    public static ArrayList<Session> mergeSessionsHorizontalStub(ArrayList<Session> sessions1, ArrayList<Session> sessions2){
+        var leftOnly = sessions1.stream()
+                .filter(s1 -> sessions2.stream().noneMatch(s2 -> s2.hasSameEnds(s1)));
+        var rightOnly = sessions2.stream()
+                .filter(s2 -> sessions1.stream().noneMatch(s1 -> s1.hasSameEnds(s2)));
+        var common = new ArrayList<>(sessions1.stream()
+                .filter(s1 -> sessions2.stream().anyMatch(s2 -> s2.hasSameEnds(s1)))
+                .map(s1 -> {
+                    var toAdd = sessions2.stream().filter(s2 -> s2.hasSameEnds(s1)).findFirst().get();
+                    s1.expandTopCommunicationRoots(toAdd.communicationsRoots());
+                    return s1;
+                })
+                .toList());
+
+        common.addAll(new ArrayList<>(leftOnly.map(s -> {
+            s.expandTopCommunicationRoots(
+                    new ArrayList<>(
+                            List.of(
+                                    new Communication(
+                                            Utils.Direction.VOID,
+                                            Utils.Arity.SINGLE,
+                                            new ArrayList<>(),
+                                            null)
+                            )
+                    )
+            );
+            return s;
+        }).toList()));
+        common.addAll(new ArrayList<>(rightOnly.map(s -> {
+            s.expandTopCommunicationRoots(
+                    new ArrayList<>(
+                            List.of(
+                                    new Communication(
+                                            Utils.Direction.VOID,
+                                            Utils.Arity.SINGLE,
+                                            new ArrayList<>(),
+                                            null)
+                            )
+                    )
+            );
+            return s;
+        }).toList()));
+        return common;
+    }
 }
