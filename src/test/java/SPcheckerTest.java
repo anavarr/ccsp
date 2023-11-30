@@ -112,7 +112,6 @@ public class SPcheckerTest {
         }
         assertEquals(spc.compilerCtx.errors.size(), 4);
     }
-
     @Test
     public void twiceMappedVariable() throws IOException {
         var spc = testFile("twiceMappedVariable.sp");
