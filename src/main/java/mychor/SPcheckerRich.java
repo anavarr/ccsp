@@ -5,9 +5,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Stack;
 import java.util.function.BiFunction;
 
@@ -59,13 +57,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return nonComplementarySessions;
     }
     //sessions and errors are not duplicated
-    CompilerContext duplicateContextSessionLessErrorLess(CompilerContext ctx){
+    CompilerContext duplicateContext(CompilerContext ctx){
         var c = new CompilerContext();
         c.currentProcess = ctx.currentProcess;
         c.currentRecVar = ctx.currentRecVar;
         c.processes.addAll(ctx.processes);
         c.recvar2proc.putAll(ctx.recvar2proc);
-        c.calledProceduresStacks = ctx.calledProceduresStacks;
+        c.calledProceduresGraph = new HashMap<>(ctx.calledProceduresGraph);
         return c;
     }
     public void displayContext() {
@@ -79,8 +77,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         System.out.println("Errors:");
         System.out.println("\t"+ compilerCtx.errors);
         System.out.println("Called procedures stack:");
-        for (String s : compilerCtx.calledProceduresStacks.keySet()) {
-            System.out.println("\t"+s+" : "+compilerCtx.calledProceduresStacks.get(s));
+        for (String s : compilerCtx.calledProceduresGraph.keySet()) {
+            System.out.println("\t"+s+" : "+compilerCtx.calledProceduresGraph.get(s));
         }
     }
     // check that no process sends or receive a message to or from itself
@@ -104,9 +102,17 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     private CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
                                   BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
+                                  BiFunction<
+                                          HashMap<String,ArrayList<CompilerContext.StackFrame>>,
+                                          HashMap<String,ArrayList<CompilerContext.StackFrame>>,
+                                          HashMap<String,ArrayList<CompilerContext.StackFrame>>
+                                          > calledGraphMerger,
                                   ParserRuleContext ctx){
         superCtx.errors.addAll(context.errors);
         superCtx.sessions = sessionMerger.apply(superCtx.sessions, context.sessions);
+        superCtx.calledProceduresGraph = calledGraphMerger
+                .apply(superCtx.calledProceduresGraph, context.calledProceduresGraph);
+        //merge recvar2proc
         for (String key : context.recvar2proc.keySet()){
             if (superCtx.recvar2proc.containsKey(key)){
                 var superValue = superCtx.recvar2proc.get(key);
@@ -118,7 +124,47 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 superCtx.recvar2proc.put(key, context.recvar2proc.get(key));
             }
         }
+
+        //merge calledProceduresGraph
         return superCtx;
+    }
+    private HashMap<String, ArrayList<CompilerContext.StackFrame>> mergeCalledProceduresHorizontal(
+            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures1,
+            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures2
+    ){
+        var toAdd = calledProcedures2.keySet();
+        var res = new HashMap<>(calledProcedures1);
+        for (String s : res.keySet()) {
+            if(calledProcedures2.containsKey(s)){
+                res.get(s).addAll(calledProcedures2.get(s));
+                toAdd.remove(s);
+            }
+        }
+        for (String s : toAdd) {
+            res.put(s, calledProcedures2.get(s));
+        }
+        return res;
+    }
+    private HashMap<String, ArrayList<CompilerContext.StackFrame>> mergeCalledProceduresVertical(
+            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures1,
+            HashMap<String, ArrayList<CompilerContext.StackFrame>> calledProcedures2
+    ){
+        var toAdd = calledProcedures2.keySet();
+        var res = new HashMap<>(calledProcedures1);
+        for (String s : res.keySet()) {
+            if(calledProcedures2.containsKey(s)){
+                if(res.get(s).size() > 0){
+                    res.get(s).get(0).addNextFrames(calledProcedures2.get(s));
+                }else{
+                    res.get(s).addAll(calledProcedures2.get(s));
+                }
+                toAdd.remove(s);
+            }
+        }
+        for (String s : toAdd) {
+            res.put(s, calledProcedures2.get(s));
+        }
+        return res;
     }
     private ArrayList<Session> mergeSessionsVertical(ArrayList<Session> sessionsSuper, ArrayList<Session> sessions){
         var sessionsToAdd = new ArrayList<>(sessions);
@@ -245,12 +291,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
 
         //the procedure has already been defined in the Network
-        compilerCtx = duplicateContextSessionLessErrorLess(superContext);
+        compilerCtx = duplicateContext(superContext);
         compilerCtx.currentProcess = currentProcess;
         compilerCtx.currentRecVar = recVar;
         var errors = (ctx.getChild(2).accept(this));
         superContext.errors.addAll(errors);
-        compilerCtx = mergeContexts(superContext, compilerCtx, this::mergeSessionsVertical, ctx);
+        compilerCtx = mergeContexts(superContext, compilerCtx, this::mergeSessionsVertical,
+                this::mergeCalledProceduresVertical, ctx);
         compilerCtx.currentProcess = null;
         return errors;
     }
@@ -280,18 +327,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
 
         //we handle recursion here
-        if (compilerCtx.calledProceduresStacks.containsKey(compilerCtx.currentProcess)){
+        if (compilerCtx.calledProceduresGraph.containsKey(compilerCtx.currentProcess)){
             //this process exists and has already called a method
-            if(compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).contains(varName)){
+            var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
+            if(callGraph.stream().anyMatch(sf -> sf.isVarNameInGraph(varName))){
                 System.err.println("we are looping");
-                compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
+                callGraph.get(0).addLeafFrame(new CompilerContext.StackFrame(varName));
                 return errors;
             }
         }else{
-            compilerCtx.calledProceduresStacks.put(compilerCtx.currentProcess, new Stack<>());
-        }
-        compilerCtx.calledProceduresStacks.get(compilerCtx.currentProcess).push(varName);
+            compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, new ArrayList<>(List.of(
+                    new CompilerContext.StackFrame(varName)
+            )));
 
+        }
         //we visit the code of the recursive definition
         errors.addAll(recDefs.get(varName).accept(this));
         return errors;
@@ -306,19 +355,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 5: behaviour
         var oldContext = compilerCtx;
 
-        compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
+        compilerCtx = duplicateContext(oldContext);
         compilerCtx.errors = ctx.getChild(3).accept(this);
         var contextThen = compilerCtx;
 
-        compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
+        compilerCtx = duplicateContext(oldContext);
         compilerCtx.errors = ctx.getChild(5).accept(this);
         var contextElse = compilerCtx;
         //we merge the "horizontal contexts to create one context corresponding to the conditional
         var mergedContext = mergeContexts(contextThen, contextElse,
-                this::mergeSessionsHorizontalStub, ctx);
+                this::mergeSessionsHorizontalStub, this::mergeCalledProceduresHorizontal, ctx);
         var errors = mergedContext.errors;
         //we merge it
-        compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical, ctx);
+        compilerCtx = mergeContexts(oldContext, mergedContext, this::mergeSessionsVertical,
+                this::mergeCalledProceduresVertical, ctx);
         // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
         return errors;
     }
@@ -348,16 +398,19 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var contexts = new ArrayList<CompilerContext>();
         var errors = new ArrayList<String>();
         for(int i=5; i< ctx.getChildCount();i+=6){
-            compilerCtx = duplicateContextSessionLessErrorLess(oldContext);
+            compilerCtx = duplicateContext(oldContext);
             errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
             contexts.add(compilerCtx);
         }
         //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
         compilerCtx = contexts.stream().reduce(
                 new CompilerContext(),
-                (context1, context2) -> mergeContexts(context1, context2, this::mergeSessionsHorizontal, ctx));
+                (context1, context2) -> mergeContexts(context1, context2, this::mergeSessionsHorizontal,
+                        this::mergeCalledProceduresHorizontal, ctx));
         //we merge it with the previous context
-        compilerCtx = mergeContexts(oldContext, compilerCtx, this::mergeSessionsVertical, ctx);
+        compilerCtx = mergeContexts(oldContext, compilerCtx, this::mergeSessionsVertical,
+                this::mergeCalledProceduresVertical, ctx);
+        //now we check for loops
         return errors;
     }
     @Override
