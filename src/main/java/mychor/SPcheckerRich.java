@@ -136,26 +136,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return errors;
     }
     @Override
-    public List<String> visitRecdef(SPparserRich.RecdefContext ctx) {
-        // 0 : name
-        // 1 : ':'
-        // 2 : behaviour
-        var recVar = ctx.getChild(0).getText();
-        var superContext= compilerCtx;
-        var currentProcess = compilerCtx.recvar2proc.get(ctx.getChild(0).getText());
-
-        //the procedure has already been defined in the Network
-        compilerCtx = superContext.duplicateContext();
-        compilerCtx.currentProcess = currentProcess;
-        compilerCtx.currentRecVar = recVar;
-        var errors = (ctx.getChild(2).accept(this));
-        superContext.errors.addAll(errors);
-        compilerCtx = CompilerContext.mergeContexts(superContext, compilerCtx, Session::mergeSessionsVertical,
-                StackFrame::mergeCalledProceduresVertical, ctx);
-        compilerCtx.currentProcess = null;
-        return errors;
-    }
-    @Override
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
         // 1 : name
