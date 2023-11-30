@@ -2,6 +2,7 @@ package mychor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Stack;
 
 public class StackFrame{
     private final ArrayList<StackFrame> nextFrames;
@@ -28,50 +29,41 @@ public class StackFrame{
         nextFrames.get(0).addLeafFrame(stackFrame);
     }
 
+    public void addLeafFrames(ArrayList<StackFrame> stackFrames){
+        if (nextFrames.size() == 0){
+            nextFrames.addAll(stackFrames);
+            return;
+        }
+        nextFrames.get(0).addLeafFrames(stackFrames);
+    }
+
     public boolean isVarNameInGraph(String var){
         if(this.varName.equals(var)) return true;
         return nextFrames.stream().anyMatch(item -> item.isVarNameInGraph(var));
     }
 
-    public static HashMap<String, ArrayList<StackFrame>> mergeCalledProceduresHorizontal(
-            HashMap<String, ArrayList<StackFrame>> calledProcedures1,
-            HashMap<String, ArrayList<StackFrame>> calledProcedures2
-    ){
-        var toAdd = calledProcedures2.keySet();
-        var res = new HashMap<>(calledProcedures1);
-        for (String s : res.keySet()) {
-            if(calledProcedures2.containsKey(s)){
-                res.get(s).addAll(calledProcedures2.get(s));
-                toAdd.remove(s);
-            }
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder(varName).append("{");
+        for (StackFrame nextFrame : nextFrames) {
+            s.append(String.format("\n\t%s,", nextFrame));
         }
-        for (String s : toAdd) {
-            res.put(s, calledProcedures2.get(s));
+        if(nextFrames.size()>0){
+            s.append("\n");
         }
-        return res;
-    }
-    public static HashMap<String, ArrayList<StackFrame>> mergeCalledProceduresVertical(
-            HashMap<String, ArrayList<StackFrame>> calledProcedures1,
-            HashMap<String, ArrayList<StackFrame>> calledProcedures2
-    ){
-        var toAdd = calledProcedures2.keySet();
-        var res = new HashMap<>(calledProcedures1);
-        for (String s : res.keySet()) {
-            if(calledProcedures2.containsKey(s)){
-                if(res.get(s).size() > 0){
-                    res.get(s).get(0).addNextFrames(calledProcedures2.get(s));
-                }else{
-                    res.get(s).addAll(calledProcedures2.get(s));
-                }
-                toAdd.remove(s);
-            }
-        }
-        for (String s : toAdd) {
-            res.put(s, calledProcedures2.get(s));
-        }
-        return res;
+        s.append("}");
+        return s.toString();
     }
 
-    
-
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof StackFrame comp)){
+            return false;
+        }
+        if(!varName.equals(comp.varName)){
+            System.out.println("not the same name");
+            return false;
+        }
+        return nextFrames.equals(comp.nextFrames);
+    }
 }

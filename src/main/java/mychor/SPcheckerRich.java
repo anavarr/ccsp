@@ -164,15 +164,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
         if (callGraph != null){
             //this process exists and has already called a method
-            if(callGraph.stream().anyMatch(sf -> sf.isVarNameInGraph(varName))){
+            if(callGraph.isVarNameInGraph(varName)){
                 System.err.println("we are looping");
-                callGraph.get(0).addLeafFrame(new StackFrame(varName));
+                callGraph.addLeafFrame(new StackFrame(varName));
                 return errors;
             }
         }else{
-            compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, new ArrayList<>(List.of(
+            compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, new ProceduresCallGraph(new ArrayList<>(List.of(
                     new StackFrame(varName)
-            )));
+            ))));
         }
         //we visit the code of the recursive definition
         errors.addAll(recDefs.get(varName).accept(this));
@@ -197,11 +197,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var contextElse = compilerCtx;
         //we merge the "horizontal contexts to create one context corresponding to the conditional
         var mergedContext = CompilerContext.mergeContexts(contextThen, contextElse,
-                Session::mergeSessionsHorizontalStub, StackFrame::mergeCalledProceduresHorizontal, ctx);
+                Session::mergeSessionsHorizontalStub, ProceduresCallGraphMap::mergeCalledProceduresHorizontal, ctx);
         var errors = mergedContext.errors;
         //we merge it
         compilerCtx = CompilerContext.mergeContexts(oldContext, mergedContext, Session::mergeSessionsVertical,
-                StackFrame::mergeCalledProceduresVertical, ctx);
+                ProceduresCallGraphMap::mergeCalledProceduresVertical, ctx);
         // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
         return errors;
     }
@@ -239,10 +239,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         compilerCtx = contexts.stream().reduce(
                 new CompilerContext(),
                 (context1, context2) -> CompilerContext.mergeContexts(context1, context2, Session::mergeSessionsHorizontal,
-                        StackFrame::mergeCalledProceduresHorizontal, ctx));
+                        ProceduresCallGraphMap::mergeCalledProceduresHorizontal, ctx));
         //we merge it with the previous context
         compilerCtx = CompilerContext.mergeContexts(oldContext, compilerCtx, Session::mergeSessionsVertical,
-                StackFrame::mergeCalledProceduresVertical, ctx);
+                ProceduresCallGraphMap::mergeCalledProceduresVertical, ctx);
         //now we check for loops
         return errors;
     }

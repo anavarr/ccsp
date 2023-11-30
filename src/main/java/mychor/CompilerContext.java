@@ -23,7 +23,7 @@ public class CompilerContext {
     public HashMap<String, String> recvar2proc = new HashMap<>();
     //a list of errors
     public List<String> errors = new ArrayList<>();
-    public HashMap<String,ArrayList<StackFrame>> calledProceduresGraph = new HashMap<>();
+    public ProceduresCallGraphMap calledProceduresGraph = new ProceduresCallGraphMap();
 
     CompilerContext duplicateContext(){
         var c = new CompilerContext();
@@ -31,16 +31,16 @@ public class CompilerContext {
         c.currentRecVar = this.currentRecVar;
         c.processes.addAll(this.processes);
         c.recvar2proc.putAll(this.recvar2proc);
-        c.calledProceduresGraph = new HashMap<>(this.calledProceduresGraph);
+        c.calledProceduresGraph = new ProceduresCallGraphMap(this.calledProceduresGraph);
         return c;
     }
 
     public static CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
                                           BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
                                           BiFunction<
-                                                  HashMap<String,ArrayList<StackFrame>>,
-                                                  HashMap<String,ArrayList<StackFrame>>,
-                                                  HashMap<String,ArrayList<StackFrame>>
+                                                  ProceduresCallGraphMap,
+                                                  ProceduresCallGraphMap,
+                                                  ProceduresCallGraphMap
                                                   > calledGraphMerger,
                                           ParserRuleContext ctx){
         superCtx.errors.addAll(context.errors);
