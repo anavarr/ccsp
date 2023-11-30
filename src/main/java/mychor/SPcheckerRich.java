@@ -113,7 +113,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             recDefs.put(recVar, recBehaviour);
 //            errors.addAll(ctx.getChild(i).accept(this));
         }
-        errors.addAll(ctx.getChild(0).accept(this));
+        compilerCtx.errors.addAll(ctx.getChild(0).accept(this));
         return errors;
     }
     @Override
@@ -130,7 +130,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             var proc = ctx.getChild(i).getText();
             compilerCtx.currentProcess = proc;
             compilerCtx.processes.add(proc);
-            errors.addAll(ctx.getChild(i +2).accept(this));
+            compilerCtx.errors.addAll(ctx.getChild(i +2).accept(this));
         }
         compilerCtx.currentProcess = null;
         return errors;

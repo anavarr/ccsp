@@ -31,6 +31,7 @@ public class SPcheckerTest {
         return spc;
     }
 
+    // SELF COMM
     @Test
     public void exampleSelfComm(){
         spr.compilerCtx = ctx;
@@ -53,6 +54,9 @@ public class SPcheckerTest {
 
         assertTrue(spr.noSelfCom());
     }
+
+
+    // UNKNOWN PROCESSES
     @Test
     public void exampleNoUnknownProcess() throws IOException {
         var spc = testFile("noUnknownProcess.sp");
@@ -109,8 +113,16 @@ public class SPcheckerTest {
         assertEquals(spc.compilerCtx.errors.size(), 4);
     }
 
+    @Test
+    public void twiceMappedVariable() throws IOException {
+        var spc = testFile("twiceMappedVariable.sp");
+        System.out.println(spc.compilerCtx.errors);
+        assertEquals(spc.compilerCtx.errors.size(), 1);
+    }
 
 
+
+    // SESSION RELATED TESTS
     @Test
     public void complementarySessionsSndRcv() throws IOException {
         var spc = testFile("complementarySessionsSndRcv.sp");
@@ -163,7 +175,7 @@ public class SPcheckerTest {
     }
 
 
-
+    // RECURSION TESTS
     @Test
     public void loop() throws IOException {
         var spc = testFile("loop.sp");
@@ -176,4 +188,5 @@ public class SPcheckerTest {
     public void loopCdt() throws IOException {
         var spc = testFile("loopCdt.sp");
     }
+
 }
