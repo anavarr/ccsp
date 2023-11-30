@@ -161,4 +161,19 @@ public class SPcheckerTest {
         var spc = testFile("sessionBranchingNotValid.sp");
         assertFalse(spc.sessionsBranchingAreValid());
     }
+
+
+
+    @Test
+    public void loop() throws IOException {
+        var spc = testFile("loop.sp");
+    }
+    @Test
+    public void loopBra() throws IOException {
+        var spc = testFile("loopBra.sp");
+    }
+    @Test
+    public void loopCdt() throws IOException {
+        var spc = testFile("loopCdt.sp");
+    }
 }
