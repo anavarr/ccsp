@@ -46,7 +46,7 @@ public class StackFrame{
     public String toString() {
         StringBuilder s = new StringBuilder(varName).append("{");
         for (StackFrame nextFrame : nextFrames) {
-            s.append(String.format("\n\t%s,", nextFrame));
+            s.append(String.format("\n\t%s,", nextFrame.toString().replace("\n","\n\t")));
         }
         if(nextFrames.size()>0){
             s.append("\n");
