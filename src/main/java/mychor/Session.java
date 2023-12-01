@@ -53,10 +53,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             System.err.println("not the same initiators");
             return false;
         }
-        if(!getInitiated().equals(comp.getInitiated())){
-            System.err.println("not the same initiated");
-            return false;
-        }
         // then we check everything non-session related
         if(communicationsRoots.size() != comp.communicationsRoots.size()){
             System.err.println("not the same continuation roots size");
@@ -89,7 +85,9 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         return peerA.equals(comp.peerA()) && peerB.equals(comp.peerB());
     }
 
-    public boolean isEqual(Session comp) {
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof Session comp)) return false;
         if (!hasSameEnds(comp)) return false;
         if (communicationsRoots.size() != comp.communicationsRoots().size()) return false;
         for (int i = 0; i < communicationsRoots().size(); i++) {
