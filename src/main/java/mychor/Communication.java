@@ -59,10 +59,10 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         return arity == INFINITE;
     }
 
-    public int getBranchesDepth(){
+    public int getBranchesSize(){
         int c = 0;
         for (Communication communicationsBranch : communicationsBranches) {
-            c+=communicationsBranch.getBranchesDepth();
+            c+=communicationsBranch.getBranchesSize();
         }
         return c+1;
     }
@@ -108,16 +108,6 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
                 .allMatch(item -> item.isEqual(communicationsBranches.get(0)));
         if(!(allSelect || allBranch || allSame)) return false;
         return communicationsBranches.stream().allMatch(Communication::isBranchingValid);
-    }
-
-    public boolean expandLeafCommunicationRoots(ArrayList<Communication> roots) {
-        if(communicationsBranches.size() == 0) return false;
-        else{
-            if(!communicationsBranches.get(0).expandLeafCommunicationRoots(roots)){
-                communicationsBranches.addAll(roots);
-            }
-        }
-        return true;
     }
 
     public void addLeafCommunicationRoots(ArrayList<Communication> roots){

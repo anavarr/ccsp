@@ -39,7 +39,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     public int getCommunicationsSize(){
         int c = 0;
         for (Communication communicationsRoot : communicationsRoots) {
-           c+=communicationsRoot.getBranchesDepth();
+           c+=communicationsRoot.getBranchesSize();
         }
         return c;
     }
