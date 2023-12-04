@@ -79,11 +79,14 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         }
         return true;
     }
-    public boolean isEqual(Communication comp){
+
+    @Override
+    public boolean equals(Object o){
+        if (!(o instanceof Communication comp)) return false;
         if(!(direction == comp.direction() && arity == comp.arity() && Objects.equals(label, comp.label))) return false;
         if(communicationsBranches.size() != comp.communicationsBranches().size()) return false;
         for (int i = 0; i < communicationsBranches.size(); i++) {
-            if(!communicationsBranches.get(i).isEqual(comp.communicationsBranches().get(i))) return false;
+            if(!communicationsBranches.get(i).equals(comp.communicationsBranches().get(i))) return false;
         }
         return true;
     }
@@ -98,7 +101,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
                 .allMatch(item -> item.direction == Utils.Direction.BRANCH);
         //else, branching is valid if all branches are the same
         var allSame = communicationsBranches.stream()
-                .allMatch(item -> item.isEqual(communicationsBranches.get(0)));
+                .allMatch(item -> item.equals(communicationsBranches.get(0)));
         if(!(allSelect || allBranch || allSame)) return false;
         return communicationsBranches.stream().allMatch(Communication::isBranchingValid);
     }

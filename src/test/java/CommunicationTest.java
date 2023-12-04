@@ -3,6 +3,7 @@ import mychor.Utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ public class CommunicationTest {
     public void equalitySingleComm(){
         var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
         var c2 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        assertTrue(c1.isEqual(c2));
+        assertEquals(c1, c2);
     }
     @Test
     public void equalityMultiCommLine(){
@@ -69,7 +70,7 @@ public class CommunicationTest {
                         )
                 )
         );
-        assertTrue(c1.isEqual(c2));
+        assertEquals(c1, c2);
     }
     @Test
     public void inequalityMultiCommLine(){
@@ -87,7 +88,7 @@ public class CommunicationTest {
                         )
                 )
         );
-        assertFalse(c1.isEqual(c2));
+        assertNotEquals(c1, c2);
     }
 
     // SIZE
@@ -184,7 +185,7 @@ public class CommunicationTest {
         var cTotal = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
                 new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE));
 
-        assertTrue(c.isEqual(cTotal));
+        assertEquals(c, cTotal);
     }
     @Test
     public void addRootsSecondLayer(){
@@ -196,7 +197,7 @@ public class CommunicationTest {
         var cTotal = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
                 new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
                         new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)));
-        assertTrue(c.isEqual(cTotal));
+        assertEquals(c, cTotal);
     }
 
 }
