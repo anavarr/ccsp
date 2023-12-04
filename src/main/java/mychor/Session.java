@@ -25,13 +25,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     public boolean areEnds(String peerAP, String peerBP){
         return (peerA.equals(peerAP) || peerA.equals(peerBP)) & (peerB.equals(peerAP) || peerB.equals(peerBP));
     }
-
-    public void displayCommunications(String prefix){
-        for (Communication communicationsRoot : communicationsRoots) {
-            communicationsRoot.displayCommunications(prefix);
-        }
-    }
-
     public boolean isSelfComm(){
         return peerA.equals(peerB);
     }

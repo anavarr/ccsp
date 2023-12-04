@@ -59,7 +59,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         System.out.println("Sessions:");
         for (Session session : compilerCtx.sessions) {
             System.out.println("\t"+session.peerA()+" <-> "+session.peerB());
-            session.displayCommunications("\t");
+            System.out.println(session);
         }
         System.out.println("RecVar to Process mapping:");
         System.out.println("\t"+ compilerCtx.recvar2proc);

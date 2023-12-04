@@ -66,13 +66,6 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         }
         return c+1;
     }
-    public void displayCommunications(String prefix) {
-        System.out.println(prefix+direction+"-"+arity+(label != null ? label : ""));
-        for (Communication communicationsBranch : communicationsBranches) {
-            communicationsBranch.displayCommunications(prefix+prefix);
-        }
-    }
-
     public boolean isComplementary(Communication comp){
         if (!(isSend() ? comp.isReceive() :
                 (isReceive() ? comp.isSend() :
