@@ -5,55 +5,42 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class ProceduresCallGraph extends ArrayList<StackFrame>{
-    private final ArrayList<StackFrame> roots;
 
     public ProceduresCallGraph() {
-        this.roots = new ArrayList<>();
+        super();
     }
 
     public ProceduresCallGraph(ArrayList<StackFrame> roots) {
-        this.roots = roots;
-    }
-
-    public ArrayList<StackFrame> getRoots() {
-        return roots;
-    }
-
-    public void addRoot(StackFrame root) {
-        roots.add(root);
+        super(roots);
     }
 
     public void addRoots(ArrayList<StackFrame> roots) {
-        this.roots.addAll(roots);
+        this.addAll(roots);
     }
 
     public boolean isVarNameInGraph(String varName) {
-        return roots.stream().anyMatch(it -> it.isVarNameInGraph(varName));
+        return stream().anyMatch(it -> it.isVarNameInGraph(varName));
     }
 
     public void addLeafFrame(StackFrame stackFrame) {
-        if(roots.size()==0){
-            roots.add(stackFrame);
+        if(size()==0){
+            add(stackFrame);
         }else{
-            roots.get(0).addLeafFrame(stackFrame);
+            get(0).addLeafFrame(stackFrame);
         }
     }
 
-    public int getRootsCount() {
-        return roots.size();
-    }
-
     public void addLeafFrames(ArrayList<StackFrame> frames) {
-        if(roots.size()==0){
-            roots.addAll(frames);
+        if(size()==0){
+            addAll(frames);
         }else{
-            roots.get(0).addLeafFrames(frames);
+            get(0).addLeafFrames(frames);
         }
     }
 
     @Override
     public String toString() {
-        return String.join("\n\t",roots.stream()
+        return String.join("\n\t",stream()
                 .map(item -> item.toString().replace("\n","\n\t"))
                 .toList()
         );
@@ -64,6 +51,14 @@ public class ProceduresCallGraph extends ArrayList<StackFrame>{
         if (!(o instanceof ProceduresCallGraph comp)){
             return false;
         }
-        return roots.equals(comp.roots);
+        return equals(comp);
+    }
+
+    public ProceduresCallGraph duplicate() {
+        var pcg = new ProceduresCallGraph();
+        for (StackFrame stackFrame : this) {
+            pcg.add(stackFrame.duplicate());
+        }
+        return pcg;
     }
 }

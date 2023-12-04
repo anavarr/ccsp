@@ -66,4 +66,8 @@ public class StackFrame{
         }
         return nextFrames.equals(comp.nextFrames);
     }
+
+    public StackFrame duplicate() {
+        return new StackFrame(varName, new ArrayList<>(nextFrames.stream().map(StackFrame::duplicate).toList()));
+    }
 }

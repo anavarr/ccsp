@@ -19,7 +19,7 @@ public class ProceduresCallGraphMap extends HashMap<String, ProceduresCallGraph>
         var res = new ProceduresCallGraphMap(calledProcedures1);
         for (String s : res.keySet()) {
             if(calledProcedures2.containsKey(s)){
-                res.get(s).addRoots(calledProcedures2.get(s).getRoots());
+                res.get(s).addRoots(calledProcedures2.get(s));
                 toAdd.remove(s);
             }
         }
@@ -36,7 +36,7 @@ public class ProceduresCallGraphMap extends HashMap<String, ProceduresCallGraph>
         var res = new ProceduresCallGraphMap(calledProcedures1);
         for (String s : res.keySet()) {
             if(calledProcedures2.containsKey(s)){
-                res.get(s).addLeafFrames(calledProcedures2.get(s).getRoots());
+                res.get(s).addLeafFrames(calledProcedures2.get(s));
                 toAdd.remove(s);
             }
         }
@@ -71,5 +71,13 @@ public class ProceduresCallGraphMap extends HashMap<String, ProceduresCallGraph>
         }
         s.append("\n}");
         return s.toString();
+    }
+
+    public ProceduresCallGraphMap duplicate() {
+        ProceduresCallGraphMap pcgm = new ProceduresCallGraphMap();
+        for (String s : keySet()) {
+            pcgm.put(s, get(s).duplicate());
+        }
+        return pcgm;
     }
 }

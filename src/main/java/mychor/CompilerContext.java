@@ -31,7 +31,7 @@ public class CompilerContext {
         c.currentRecVar = this.currentRecVar;
         c.processes.addAll(this.processes);
         c.recvar2proc.putAll(this.recvar2proc);
-        c.calledProceduresGraph = new ProceduresCallGraphMap(this.calledProceduresGraph);
+        c.calledProceduresGraph = calledProceduresGraph.duplicate();
         return c;
     }
 

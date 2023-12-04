@@ -152,14 +152,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             //else we simply map it
             compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
         }
-
-        //if the variable is not in the set of recursive variable definitions we add an error and return
-        if(!recDefs.containsKey(varName)) {
-            errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
-            compilerCtx.errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
-            return errors;
-        }
-
         //we handle recursion here
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
         if (callGraph != null){
@@ -169,10 +161,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 callGraph.addLeafFrame(new StackFrame(varName));
                 return errors;
             }
+            compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrames(new ArrayList<>(List.of(
+                new StackFrame(varName)
+            )));
         }else{
-            compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, new ProceduresCallGraph(new ArrayList<>(List.of(
+            var pcg = new ProceduresCallGraph(new ArrayList<>(List.of(
                     new StackFrame(varName)
-            ))));
+            )));
+            compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, pcg);
+        }
+        //if the variable is not in the set of recursive variable definitions we add an error and return
+        if(!recDefs.containsKey(varName)) {
+            errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
+            compilerCtx.errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
+            return errors;
         }
         //we visit the code of the recursive definition
         errors.addAll(recDefs.get(varName).accept(this));
