@@ -24,6 +24,7 @@ public class CompilerContext {
     //a list of errors
     public List<String> errors = new ArrayList<>();
     public ProceduresCallGraphMap calledProceduresGraph = new ProceduresCallGraphMap();
+    public ProceduresCallGraphMap phantomGraph = new ProceduresCallGraphMap();
 
     CompilerContext duplicateContext(){
         var c = new CompilerContext();
@@ -31,7 +32,8 @@ public class CompilerContext {
         c.currentRecVar = this.currentRecVar;
         c.processes.addAll(this.processes);
         c.recvar2proc.putAll(this.recvar2proc);
-        c.calledProceduresGraph = calledProceduresGraph.duplicate();
+        c.phantomGraph = this.calledProceduresGraph.duplicate();
+        c.calledProceduresGraph = new ProceduresCallGraphMap();
         return c;
     }
 

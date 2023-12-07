@@ -153,17 +153,26 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
         }
         //we handle recursion here
+        var phantomGraph = compilerCtx.phantomGraph.get(compilerCtx.currentProcess);
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
-        if (callGraph != null){
+        if(phantomGraph != null && phantomGraph.isVarNameInGraph(varName)){ //we first check if the phantom graph exists and contains a loop
+            if(callGraph != null){
+                callGraph.addLeafFrame(new StackFrame(varName));
+            }else{
+                var pcg = new ProceduresCallGraph(new ArrayList<>(List.of(
+                        new StackFrame(varName)
+                )));
+                compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, pcg);
+            }
+            return errors;
+        }
+        if (callGraph != null){ //if the phantom
             //this process exists and has already called a method
             if(callGraph.isVarNameInGraph(varName)){
-                System.err.println("we are looping");
-                callGraph.addLeafFrame(new StackFrame(varName));
+                compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(new StackFrame(varName));
                 return errors;
             }
-            compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrames(new ArrayList<>(List.of(
-                new StackFrame(varName)
-            )));
+            compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(new StackFrame(varName));
         }else{
             var pcg = new ProceduresCallGraph(new ArrayList<>(List.of(
                     new StackFrame(varName)
@@ -189,7 +198,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 4: 'Else'
         // 5: behaviour
         var oldContext = compilerCtx;
-
         compilerCtx = oldContext.duplicateContext();
         compilerCtx.errors = ctx.getChild(3).accept(this);
         var contextThen = compilerCtx;
