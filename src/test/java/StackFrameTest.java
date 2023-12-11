@@ -375,7 +375,7 @@ public class StackFrameTest {
                                 new StackFrame(
                                         "X_Client_GET",
                                         new ArrayList<>(List.of(
-                                                new StackFrame("X_CLient_GET_success"),
+                                                new StackFrame("X_Client_GET_success"),
                                                 new StackFrame("X_Client_GET_failure")
                                         ))
                                 )
@@ -402,7 +402,7 @@ public class StackFrameTest {
                         new StackFrame(
                                 "X_Client_GET",
                                 new ArrayList<>(List.of(
-                                        new StackFrame("X_CLient_GET_success"),
+                                        new StackFrame("X_Client_GET_success"),
                                         new StackFrame("X_Client_GET_failure")
                                 ))
                         )

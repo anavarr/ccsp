@@ -19,7 +19,7 @@ public class ProceduresCallGraphMap extends HashMap<String, ProceduresCallGraph>
         var res = new ProceduresCallGraphMap(calledProcedures1);
         for (String s : res.keySet()) {
             if(calledProcedures2.containsKey(s)){
-                res.get(s).addRoots(calledProcedures2.get(s));
+                res.get(s).addAll(calledProcedures2.get(s));
                 toAdd.remove(s);
             }
         }
@@ -52,15 +52,9 @@ public class ProceduresCallGraphMap extends HashMap<String, ProceduresCallGraph>
             return false;
         }
         if(!Objects.equals(comp.keySet(),this.keySet())){
-            System.out.println("not the same keyset");
             return false;
         }
-        for (String s : this.keySet()) {
-            if(!get(s).equals(comp.get(s))){
-                return false;
-            }
-        }
-        return true;
+        return this.keySet().stream().allMatch(s -> get(s).equals(comp.get(s)));
     }
 
     @Override

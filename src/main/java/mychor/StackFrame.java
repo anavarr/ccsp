@@ -1,8 +1,6 @@
 package mychor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Stack;
 
 public class StackFrame{
     private final ArrayList<StackFrame> nextFrames;
@@ -61,10 +59,9 @@ public class StackFrame{
             return false;
         }
         if(!varName.equals(comp.varName)){
-            System.out.println("not the same name");
             return false;
         }
-        return nextFrames.equals(comp.nextFrames);
+        return nextFrames.containsAll(comp.nextFrames) && comp.nextFrames.containsAll(nextFrames);
     }
 
     public StackFrame duplicate() {

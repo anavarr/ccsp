@@ -1,8 +1,6 @@
 package mychor;
 
-import mychor.StackFrame;
 import java.util.ArrayList;
-import java.util.Stack;
 
 public class ProceduresCallGraph extends ArrayList<StackFrame>{
 
@@ -12,10 +10,6 @@ public class ProceduresCallGraph extends ArrayList<StackFrame>{
 
     public ProceduresCallGraph(ArrayList<StackFrame> roots) {
         super(roots);
-    }
-
-    public void addRoots(ArrayList<StackFrame> roots) {
-        this.addAll(roots);
     }
 
     public boolean isVarNameInGraph(String varName) {
@@ -51,7 +45,7 @@ public class ProceduresCallGraph extends ArrayList<StackFrame>{
         if (!(o instanceof ProceduresCallGraph comp)){
             return false;
         }
-        return equals(comp);
+        return this.containsAll(comp) && comp.containsAll(this);
     }
 
     public ProceduresCallGraph duplicate() {
