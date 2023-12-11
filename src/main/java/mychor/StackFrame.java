@@ -1,6 +1,8 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class StackFrame{
     private final ArrayList<StackFrame> nextFrames;
@@ -66,5 +68,26 @@ public class StackFrame{
 
     public StackFrame duplicate() {
         return new StackFrame(varName, new ArrayList<>(nextFrames.stream().map(StackFrame::duplicate).toList()));
+    }
+
+    public boolean containsSelf() {
+        return nextFrames.stream().anyMatch(sf -> sf.isVarNameInGraph(varName));
+    }
+    // two lists
+    // 0 : called
+    // 1 : looped
+    public List<HashSet<String>> getLoopedVariables() {
+        var called=new HashSet<String>();
+        var looped = new HashSet<String>();
+        for (StackFrame nextFrame : nextFrames) {
+            var ls=nextFrame.getLoopedVariables();
+            called.addAll(nextFrame.getLoopedVariables().get(0));
+            looped.addAll(ls.get(1));
+        }
+        if(called.contains(varName)){
+            looped.add(varName);
+        }
+        called.add(varName);
+        return List.of(called, looped);
     }
 }

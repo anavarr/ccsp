@@ -1,6 +1,8 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ProceduresCallGraph extends ArrayList<StackFrame>{
 
@@ -54,5 +56,17 @@ public class ProceduresCallGraph extends ArrayList<StackFrame>{
             pcg.add(stackFrame.duplicate());
         }
         return pcg;
+    }
+
+    public boolean containsLoop(){
+        return stream().anyMatch(StackFrame::containsSelf);
+    }
+
+    public Set<String> getLoopedVariables(){
+        var looped= new HashSet<String>();
+        for (StackFrame stackFrame : this) {
+            looped.addAll(stackFrame.getLoopedVariables().get(1));
+        }
+        return looped;
     }
 }
