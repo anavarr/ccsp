@@ -33,7 +33,7 @@ public class CompilerContext {
         c.processes.addAll(this.processes);
         c.recvar2proc.putAll(this.recvar2proc);
         c.phantomGraph = this.calledProceduresGraph.duplicate();
-        c.calledProceduresGraph = new ProceduresCallGraphMap();
+        c.calledProceduresGraph = this.calledProceduresGraph.duplicateRootsOnly();
         return c;
     }
 
@@ -61,10 +61,7 @@ public class CompilerContext {
                 superCtx.recvar2proc.put(key, context.recvar2proc.get(key));
             }
         }
-
         //merge calledProceduresGraph
         return superCtx;
     }
-
-
 }
