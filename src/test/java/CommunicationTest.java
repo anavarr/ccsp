@@ -199,5 +199,21 @@ public class CommunicationTest {
                         new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)));
         assertEquals(c, cTotal);
     }
-
+    @Test
+    public void correctLeaves(){
+        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var c2 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        var c3 = new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "left");
+        var c = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
+                new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+                                new ArrayList<>(List.of(c1)), "left"),
+                        new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+                                new ArrayList<>(List.of(c2)), "left"),
+                        c3
+                )));
+        var leaves = c.getLeaves();
+        var leavesExpected = new ArrayList<>(List.of(c1,c2, c3));
+        assertTrue(leaves.containsAll(leavesExpected) && leavesExpected.containsAll(leaves));
+    }
 }

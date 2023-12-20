@@ -107,7 +107,7 @@ public class StackFrameTest {
     //FINDING VARNAMES
     @Test
     public void varNameIsTriviallyPresent(){
-        var sf = new StackFrame("method", new ArrayList<>());
+        var sf = new StackFrame("method", new ArrayList<StackFrame>());
         assertTrue(sf.isVarNameInGraph("method"));
     }
     @Test

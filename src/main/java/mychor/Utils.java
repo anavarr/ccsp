@@ -13,11 +13,6 @@ public class Utils {
         VOID
     }
 
-    public static <V>List<V> addL2ToL1(List<V> l1, List<V> l2){
-        l1.addAll(l2);
-        return l1;
-    }
-
     public enum Arity{
         SINGLE,
         MULTIPLE,

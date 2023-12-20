@@ -74,4 +74,12 @@ public class ProceduresCallGraphMap extends HashMap<String, ProceduresCallGraph>
         }
         return pcgm;
     }
+
+    public ProceduresCallGraphMap duplicateRootsOnly() {
+        var pcgm = new ProceduresCallGraphMap();
+        for (String s : keySet()) {
+            pcgm.put(s, new ProceduresCallGraph());
+        }
+        return pcgm;
+    }
 }

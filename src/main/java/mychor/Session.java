@@ -104,7 +104,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder("\nSession[\n");
-        s.append(String.format("\tpeerA=%s\n\tpeerB=%s\n\tcommunicationsRoots=[", peerA, peerB));
+        s.append(String.format("\tpeerA=%s\n\tpeerB=%s\n\t[", peerA, peerB));
         for (Communication communicationsRoot : communicationsRoots) {
             s.append("\n\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
         }
@@ -180,5 +180,12 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             return s;
         }).toList()));
         return common;
+    }
+
+    public ArrayList<Communication> getLeaves() {
+        if(communicationsRoots.size() == 0) return new ArrayList<>();
+        return communicationsRoots.stream().map(Communication::getLeaves)
+                //reduce List<ArrayList<Communication>> to ArrayList<Communication>
+                .reduce(new ArrayList<>(), (acc, it) -> {acc.addAll(it); return acc;});
     }
 }

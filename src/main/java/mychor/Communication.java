@@ -3,6 +3,7 @@ package mychor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static mychor.Utils.Arity.INFINITE;
 import static mychor.Utils.Arity.MULTIPLE;
@@ -117,10 +118,18 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder("Communication[\n");
-        s.append(String.format("\tdirection=%s\n\tarity=%s\n\tlabel=%s\n\tcommunicationsBranches=[", direction, arity, label));
+        s.append(String.format("\tdirection=%s\n\tarity=%s\n\tlabel=%s\n\t[", direction, arity, label));
         for (Communication communicationsRoot : communicationsBranches) {
             s.append("\n\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
         }
         return s.append("\n\t]\n]").toString();
+    }
+
+    public ArrayList<Communication> getLeaves() {
+        if(communicationsBranches.size() == 0){
+            return new ArrayList<>(List.of(this));
+        }
+        return communicationsBranches.stream().map(Communication::getLeaves).reduce(new ArrayList<>(),
+                (acc, it) -> {acc.addAll(it); return acc;});
     }
 }

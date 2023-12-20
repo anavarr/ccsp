@@ -5,22 +5,25 @@ import java.util.HashSet;
 import java.util.List;
 
 public class StackFrame{
+    ArrayList<Communication> previousCommunications = new ArrayList<>();
     private final ArrayList<StackFrame> nextFrames;
     public String varName;
+    public StackFrame(String varName, ArrayList<StackFrame> nextFrames, ArrayList<Communication> previousCommunications){
+        this.varName = varName;
+        this.previousCommunications.addAll(previousCommunications);
+        this.nextFrames = nextFrames;
+    }
     public StackFrame(String varName, ArrayList<StackFrame> nextFrames){
         this.varName = varName;
         this.nextFrames = nextFrames;
     }
-
     public StackFrame(String varName){
         this.varName = varName;
         this.nextFrames = new ArrayList<>();
     }
-
     public void addNextFrames(ArrayList<StackFrame> stackFrames){
         nextFrames.addAll(stackFrames);
     }
-
     public void addLeafFrame(StackFrame stackFrame){
         if (nextFrames.size() == 0){
             nextFrames.add(stackFrame);
@@ -28,7 +31,6 @@ public class StackFrame{
         }
         nextFrames.get(0).addLeafFrame(stackFrame);
     }
-
     public void addLeafFrames(ArrayList<StackFrame> stackFrames){
         if (nextFrames.size() == 0){
             nextFrames.addAll(stackFrames);
@@ -36,12 +38,10 @@ public class StackFrame{
         }
         nextFrames.get(0).addLeafFrames(stackFrames);
     }
-
     public boolean isVarNameInGraph(String var){
         if(this.varName.equals(var)) return true;
         return nextFrames.stream().anyMatch(item -> item.isVarNameInGraph(var));
     }
-
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder(varName).append("{");
@@ -51,10 +51,9 @@ public class StackFrame{
         if(nextFrames.size()>0){
             s.append("\n");
         }
-        s.append("}");
+        s.append("}").append("-").append(previousCommunications);
         return s.toString();
     }
-
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof StackFrame comp)){
@@ -65,11 +64,9 @@ public class StackFrame{
         }
         return nextFrames.containsAll(comp.nextFrames) && comp.nextFrames.containsAll(nextFrames);
     }
-
     public StackFrame duplicate() {
         return new StackFrame(varName, new ArrayList<>(nextFrames.stream().map(StackFrame::duplicate).toList()));
     }
-
     public boolean containsSelf() {
         return nextFrames.stream().anyMatch(sf -> sf.isVarNameInGraph(varName));
     }

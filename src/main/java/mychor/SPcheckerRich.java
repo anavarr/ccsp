@@ -58,7 +58,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public void displayContext() {
         System.out.println("Sessions:");
         for (Session session : compilerCtx.sessions) {
-            System.out.println("\t"+session.peerA()+" <-> "+session.peerB());
+            System.out.println("\n"+session.peerA()+" <-> "+session.peerB());
             System.out.println(session);
         }
         System.out.println("RecVar to Process mapping:");
@@ -130,6 +130,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             var proc = ctx.getChild(i).getText();
             compilerCtx.currentProcess = proc;
             compilerCtx.processes.add(proc);
+            compilerCtx.calledProceduresGraph.put(proc, new ProceduresCallGraph());
             compilerCtx.errors.addAll(ctx.getChild(i +2).accept(this));
         }
         compilerCtx.currentProcess = null;
@@ -147,38 +148,32 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             //if it is it can't be mapped to another process
             if  (!compilerCtx.recvar2proc.get(varName).equals(compilerCtx.currentProcess)){
                 errors.add(ERROR_RECVAR_ADD(varName, compilerCtx.recvar2proc.get(varName), compilerCtx.currentProcess, ctx));
+                return errors;
             }
         }else{
             //else we simply map it
             compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
         }
+        //we attach it to the good subgraph of sessions
+        var previousCommunications = compilerCtx.sessions.stream().filter(s ->
+                        s.peerA().equals(compilerCtx.currentProcess)
+        ).map(Session::getLeaves).reduce(new ArrayList<>(), (acc, it) ->  {acc.addAll(it); return acc;});
+
         //we handle recursion here
         var phantomGraph = compilerCtx.phantomGraph.get(compilerCtx.currentProcess);
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
         if(phantomGraph != null && phantomGraph.isVarNameInGraph(varName)){ //we first check if the phantom graph exists and contains a loop
-            if(callGraph != null){
-                callGraph.addLeafFrame(new StackFrame(varName));
-            }else{
-                var pcg = new ProceduresCallGraph(new ArrayList<>(List.of(
-                        new StackFrame(varName)
-                )));
-                compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, pcg);
-            }
+            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunications));
             return errors;
         }
-        if (callGraph != null){ //if the phantom
-            //this process exists and has already called a method
-            if(callGraph.isVarNameInGraph(varName)){
-                compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(new StackFrame(varName));
-                return errors;
-            }
-            compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(new StackFrame(varName));
-        }else{
-            var pcg = new ProceduresCallGraph(new ArrayList<>(List.of(
-                    new StackFrame(varName)
-            )));
-            compilerCtx.calledProceduresGraph.put(compilerCtx.currentProcess, pcg);
+        //this process exists and has already called a method
+        if(callGraph.isVarNameInGraph(varName)){
+            compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
+                    new StackFrame(varName, new ArrayList<>(), previousCommunications));
+            return errors;
         }
+        compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
+                new StackFrame(varName, new ArrayList<>(), previousCommunications));
         //if the variable is not in the set of recursive variable definitions we add an error and return
         if(!recDefs.containsKey(varName)) {
             errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));
