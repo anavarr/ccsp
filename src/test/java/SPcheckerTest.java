@@ -18,18 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SPcheckerTest {
-    SPcheckerRich spr = new SPcheckerRich();
-    CompilerContext ctx = new CompilerContext();
-    String path_prefix = "/home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/test/antlr4/SP_programs/";
-    private SPcheckerRich testFile(String filename) throws IOException {
-        var path = Path.of(path_prefix, filename);
-        SPlexer spl = new SPlexer(CharStreams.fromPath(path));
-        var spp = new SPparserRich(new CommonTokenStream(spl));
-        var spc = new SPcheckerRich();
-        spp.program().accept(spc);
-        return spc;
-    }
+public class SPcheckerTest extends ProgramReaderTest{
+
 
     // SELF COMM
     @Test

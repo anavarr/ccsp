@@ -1,20 +1,24 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static mychor.Utils.Arity.INFINITE;
 import static mychor.Utils.Arity.MULTIPLE;
 import static mychor.Utils.Arity.SINGLE;
+import static mychor.Utils.Direction.SELECT;
 
 public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayList<Communication> communicationsBranches, String label) {
 
     public Communication{
         Objects.requireNonNull(direction);
         Objects.requireNonNull(arity);
-        if(direction.equals(Utils.Direction.SELECT) || direction.equals(Utils.Direction.BRANCH)){
+        if(direction.equals(SELECT) || direction.equals(Utils.Direction.BRANCH)){
             Objects.requireNonNull(label);
         }
     }
@@ -41,7 +45,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     }
 
     public boolean isSelect(){
-        return direction == Utils.Direction.SELECT;
+        return direction == SELECT;
     }
 
     public boolean isBranch(){
@@ -96,7 +100,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         if(communicationsBranches.size() == 0) return true;
         //if the branches are all SELECT, then anything following is valid
         var allSelect = communicationsBranches.stream()
-                .allMatch(item -> item.direction == Utils.Direction.SELECT);
+                .allMatch(item -> item.direction == SELECT);
         //if the branches are all BRANCH, then anything following is valid
         var allBranch = communicationsBranches.stream()
                 .allMatch(item -> item.direction == Utils.Direction.BRANCH);
@@ -132,4 +136,13 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         return communicationsBranches.stream().map(Communication::getLeaves).reduce(new ArrayList<>(),
                 (acc, it) -> {acc.addAll(it); return acc;});
     }
+
+    public Set<String> getDirectedLabels(Utils.Direction dir) {
+        var labels = new HashSet<String>();
+        if(label != null && direction == dir) labels.add(label);
+        for (Communication communicationsBranch : communicationsBranches) {
+            labels.addAll(communicationsBranch.getDirectedLabels(dir));
+        }
+        return labels;
+    };
 }

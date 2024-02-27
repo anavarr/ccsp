@@ -16,6 +16,26 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
+    public boolean typeSafety(){
+        // [x] for a selection to be safe, selection can only use a subset of the labels used in branching
+        // [~] for a communication to be safe, the payload type of send must be a subtype of the payload type of recv
+        // [x] for a recursive variable to be safe, its one time unfolding must be safe
+        // [x] if Gamma is safe and Gamma -> Gamma' then Gamma' must be safe
+        // Session is already the fully 1-time unfolded view of the communications between two processes
+        // if all Sessions are type safe then the network is type safe
+        for (Session session : compilerCtx.sessions) {
+            System.out.println(session.peerA()+" - "+session.peerB());
+            var dualSession = compilerCtx.sessions.stream().filter(s -> s.hasDualEnds(session)).toList().get(0);
+            System.out.println(session.getBranchingLabels());
+            System.out.println(dualSession.getSelectionLabels());
+            if(!session.getBranchingLabels().containsAll(dualSession.getSelectionLabels())) return false;
+        }
+        return true;
+    }
+
+    public boolean deadlockFreedom(){
+        return false;
+    }
     public boolean sessionsBranchingAreValid(){
         return compilerCtx.sessions.stream().allMatch(Session::isBranchingValid);
     }
