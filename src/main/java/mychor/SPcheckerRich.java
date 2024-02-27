@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
@@ -24,10 +25,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // Session is already the fully 1-time unfolded view of the communications between two processes
         // if all Sessions are type safe then the network is type safe
         for (Session session : compilerCtx.sessions) {
-            System.out.println(session.peerA()+" - "+session.peerB());
             var dualSession = compilerCtx.sessions.stream().filter(s -> s.hasDualEnds(session)).toList().get(0);
-            System.out.println(session.getBranchingLabels());
-            System.out.println(dualSession.getSelectionLabels());
             if(!session.getBranchingLabels().containsAll(dualSession.getSelectionLabels())) return false;
         }
         return true;
@@ -89,6 +87,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         for (String s : compilerCtx.calledProceduresGraph.keySet()) {
             System.out.println("\t"+s+" : "+compilerCtx.calledProceduresGraph.get(s));
         }
+        System.out.println("Behaviours:");
+        for (String s : compilerCtx.processesDefinition.keySet()) {
+            System.out.println(s);
+            System.out.println(compilerCtx.processesDefinition.get(s));
+        }
     }
     // check that no process sends or receive a message to or from itself
     public boolean noSelfCom() {
@@ -118,6 +121,14 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             return null;
         }else{
             return session.get(0);
+        }
+    }
+
+    private void addBehaviour(Behaviour behaviour){
+        if(compilerCtx.processesDefinition.containsKey(compilerCtx.currentProcess)){
+            compilerCtx.processesDefinition.get(compilerCtx.currentProcess).addBehaviour(behaviour);
+        }else{
+            compilerCtx.processesDefinition.put(compilerCtx.currentProcess, behaviour);
         }
     }
 
@@ -162,6 +173,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // 1 : name
         var varName = ctx.getChild(1).getText();
         var errors = new ArrayList<String>();
+
+        //add behaviour to processDefinition
+        addBehaviour(new Call(compilerCtx.currentProcess, varName));
 
         //we check if the variable is already mapped
         if (compilerCtx.recvar2proc.containsKey(varName)){
@@ -224,10 +238,16 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var mergedContext = CompilerContext.mergeContexts(contextThen, contextElse,
                 Session::mergeSessionsHorizontalStub, ProceduresCallGraphMap::mergeCalledProceduresHorizontal, ctx);
         var errors = mergedContext.errors;
+
         //we merge it
         compilerCtx = CompilerContext.mergeContexts(oldContext, mergedContext, Session::mergeSessionsVertical,
                 ProceduresCallGraphMap::mergeCalledProceduresVertical, ctx);
-        // we get the two contexts, we need to check that they have the same number of SELECT or BRANCHES
+
+        var hm = new HashMap<String, Behaviour>();
+        hm.put("then",contextThen.processesDefinition.get(compilerCtx.currentProcess));
+        hm.put("else",contextElse.processesDefinition.get(compilerCtx.currentProcess));
+        var behaviour = new Cdt(compilerCtx.currentProcess, hm, ctx.getChild(1).getText());
+        addBehaviour(behaviour);
         return errors;
     }
     @Override
@@ -260,11 +280,29 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
             contexts.add(compilerCtx);
         }
+        Behaviour merged = contexts.get(0).processesDefinition.get(compilerCtx.currentProcess);
+        if (contexts.size() > 1) {
+            var ccontexts = contexts.subList(1, contexts.size());
+            merged = ccontexts.stream().map(context -> context.processesDefinition.get(compilerCtx.currentProcess))
+                    .reduce(merged, (acc, newItem) -> {
+                var c = (Comm) newItem;
+                acc.nextBehaviours.putAll(c.nextBehaviours);
+                return acc;
+            });
+        }else{
+            System.err.println("BIG PROBLEM");
+        }
+        if(!oldContext.processesDefinition.containsKey(compilerCtx.currentProcess)){
+            oldContext.processesDefinition.put(compilerCtx.currentProcess, merged);
+        }else{
+            oldContext.processesDefinition.get(compilerCtx.currentProcess).addBehaviour(merged);
+        }
         //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
         compilerCtx = contexts.stream().reduce(
                 new CompilerContext(),
                 (context1, context2) -> CompilerContext.mergeContexts(context1, context2, Session::mergeSessionsHorizontal,
                         ProceduresCallGraphMap::mergeCalledProceduresHorizontal, ctx));
+
         //we merge it with the previous context
         compilerCtx = CompilerContext.mergeContexts(oldContext, compilerCtx, Session::mergeSessionsVertical,
                 ProceduresCallGraphMap::mergeCalledProceduresVertical, ctx);
@@ -273,6 +311,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     @Override
     public List<String> visitNon(SPparserRich.NonContext ctx) {
+        addBehaviour(new None(compilerCtx.currentProcess));
         return new ArrayList<>();
     }
     @Override
@@ -281,11 +320,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     public <T extends SPparserRich.BehaviourContext> List<String> visitComm(T ctx, Communication communication, int continuationIndex){
         var errors = new ArrayList<String>();
+        var dest = ctx.getChild(0).getText();
+        var source = compilerCtx.currentProcess;
         if(compilerCtx.currentProcess == null){
             errors.add(ERROR_NULL_PROCESS(ctx));
         }else{
-            var dest = ctx.getChild(0).getText();
-            var source = compilerCtx.currentProcess;
             var session = getSession(source, dest);
             if(session == null){
                 compilerCtx.sessions.add(new Session(source, dest, communication));
@@ -293,11 +332,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 session.addLeafCommunicationRoots(new ArrayList<>(List.of(communication)));
             }
         }
+        addBehaviour(new Comm(
+                compilerCtx.currentProcess, dest, communication.direction(),
+                communication.arity(), communication.label()));
         errors.addAll(ctx.getChild(continuationIndex).accept(this));
         return errors;
     }
     @Override
     public List<String> visitEnd(SPparserRich.EndContext ctx) {
+        addBehaviour(new End(compilerCtx.currentProcess));
         return new ArrayList<>();
     }
 }

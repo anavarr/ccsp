@@ -177,5 +177,9 @@ public class SPcheckerTest extends ProgramReaderTest{
     public void loopCdt() throws IOException {
         var spc = testFile("loopCdt.sp");
     }
+    @Test
+    public void loopBraCall() throws IOException {
+        var spc = testFile("loopBraCdt.sp");
+    }
 
 }

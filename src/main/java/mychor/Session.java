@@ -209,4 +209,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         return labels;
     }
 
+    public void walk(){
+        
+    }
 }

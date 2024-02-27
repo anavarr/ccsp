@@ -17,4 +17,11 @@ public class PropertiesTest extends ProgramReaderTest{
         var spc = testFile("OAuth2_fragment_nonsafe.sp");
         assertFalse(spc.typeSafety());
     }
+
+    @Test
+    public void ThreeBuyerProtoolIsSafe() throws IOException {
+        var spc = testFile("Three_buyer_protocol.sp");
+        spc.displayContext();
+        assertTrue(spc.typeSafety());
+    }
 }
