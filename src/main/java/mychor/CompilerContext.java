@@ -21,7 +21,7 @@ public class CompilerContext {
     public ArrayList<Session> sessions = new ArrayList<>();
     //maps a recursive variable to a process
     public HashMap<String, String> recvar2proc = new HashMap<>();
-    public HashMap<String, Behaviour> processesDefinition = new HashMap<>();
+    public HashMap<String, Behaviour> behaviours = new HashMap<>();
     //a list of errors
     public List<String> errors = new ArrayList<>();
     public ProceduresCallGraphMap calledProceduresGraph = new ProceduresCallGraphMap();

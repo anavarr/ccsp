@@ -1,8 +1,7 @@
 package mychor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Queue;
 
 public abstract class Behaviour {
     HashMap<String, Behaviour> nextBehaviours = new HashMap<>();
@@ -25,5 +24,25 @@ public abstract class Behaviour {
                 .map(item -> nextBehaviours.get(item).toString().replace("\n","\n\t"))
                 .toList()
         );
+    }
+    public abstract Behaviour reduce(HashMap<String, Behaviour> behaviours, MessageQueues queue);
+
+    @Override
+    public boolean equals(Object b1){
+        if (!(b1 instanceof Behaviour b && b.process.equals(process))) return false;
+        if(!(b).nextBehaviours.keySet().containsAll(nextBehaviours.keySet()) ||
+                !nextBehaviours.keySet().containsAll((b).nextBehaviours.keySet())) return false;
+        for (String s : nextBehaviours.keySet()) {
+            if(!nextBehaviours.get(s).equals((b).nextBehaviours.get(s))) return false;
+        }
+        return true;
+    }
+
+    public boolean isFinal() {
+        if(nextBehaviours.keySet().isEmpty()) return false;
+        for (String s : nextBehaviours.keySet()) {
+            if(!nextBehaviours.get(s).isFinal()) return false;
+        }
+        return true;
     }
 }

@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.HashMap;
+import java.util.Queue;
 
 public class End extends Behaviour{
     public End(String pr) {
@@ -24,5 +25,20 @@ public class End extends Behaviour{
     @Override
     public String toString() {
         return "End";
+    }
+
+    @Override
+    public Behaviour reduce(HashMap<String, Behaviour> behaviours, MessageQueues queues) {
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object b1) {
+        return b1 instanceof End;
+    }
+
+    @Override
+    public boolean isFinal() {
+        return true;
     }
 }

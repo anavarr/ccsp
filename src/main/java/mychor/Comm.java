@@ -1,13 +1,17 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Queue;
 
 public class Comm extends Behaviour {
     Utils.Arity arity;
     Utils.Direction direction;
     List<String> labels = new ArrayList<>();
     String destination;
+    String exploredLabel;
+    boolean hasBeenExplored = false;
 
 
     public Comm(String pr, String dest, Utils.Direction direction, Utils.Arity arity, List<String> labels){
@@ -41,7 +45,38 @@ public class Comm extends Behaviour {
         return s.toString();
     }
 
-
+    @Override
+    public Behaviour reduce(HashMap<String, Behaviour> behaviours, MessageQueues qs) throws RuntimeException{
+        if(!behaviours.containsKey(destination)){
+            return this;
+        }
+        if(direction == Utils.Direction.SEND){
+            qs.add(Utils.Direction.SEND, process, destination, null);
+            return nextBehaviours.get(";");
+        }else if(direction == Utils.Direction.RECEIVE){
+            var m = qs.poll(destination, process);
+            if(m == null) return this;
+            if(m.direction() != Utils.Direction.SEND) return this;
+            return nextBehaviours.get(";");
+        }else if(direction == Utils.Direction.SELECT){
+            var label = labels.get(0);
+            qs.add(Utils.Direction.SELECT, process, destination, label);
+            return nextBehaviours.get(label+";");
+        }else if(direction == Utils.Direction.BRANCH){
+            var m = qs.poll(destination, process);
+            if(m == null) return this;
+            if(m.direction() != Utils.Direction.SELECT) return this;
+            if(!nextBehaviours.containsKey(m.label())) throw new RuntimeException(
+                    String.format(
+                            "Selection process %s requires a label %s not possessed by the branching operator in %s",
+                            destination,
+                            m.label(),
+                            process));
+            return nextBehaviours.get(m.label());
+        }else{
+            return this;
+        }
+    }
     @Override
     public boolean addBehaviour(Behaviour nb) {
         if (nextBehaviours.isEmpty()) {
@@ -81,5 +116,27 @@ public class Comm extends Behaviour {
             }
         }
         return c;
+    }
+
+    @Override
+    public boolean equals(Object b) {
+        if(!(b instanceof Comm comm)) return false;
+        if(!(comm.direction.equals(direction) &&
+                comm.labels.equals(labels) &&
+                comm.destination.equals(destination) &&
+                comm.arity == arity)) return false;
+        return super.equals(b);
+    }
+
+    @Override
+    public boolean isFinal() {
+        if(direction != Utils.Direction.BRANCH){
+            return false;
+        }else{
+            for (String s : nextBehaviours.keySet()) {
+                if(!nextBehaviours.get(s).isFinal()) return false;
+            }
+            return true;
+        }
     }
 }

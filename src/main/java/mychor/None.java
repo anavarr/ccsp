@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.HashMap;
+import java.util.Queue;
 
 public class None extends Behaviour{
     public None(String pr) {
@@ -24,5 +25,20 @@ public class None extends Behaviour{
     @Override
     public String toString() {
         return "None";
+    }
+
+    @Override
+    public Behaviour reduce(HashMap<String, Behaviour> behaviours, MessageQueues queues) {
+        return new End(process);
+    }
+
+    @Override
+    public boolean equals(Object b1) {
+        return b1 instanceof None;
+    }
+
+    @Override
+    public boolean isFinal() {
+        return false;
     }
 }

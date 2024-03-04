@@ -1,8 +1,7 @@
 package mychor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Queue;
 
 public class Call extends Behaviour{
     String variableName;
@@ -43,6 +42,18 @@ public class Call extends Behaviour{
     }
 
     @Override
+    public Behaviour reduce(HashMap<String, Behaviour> behaviours, MessageQueues queues) {
+        if(nextBehaviours.containsKey("unfold")) return nextBehaviours.get("unfold");
+        return new End(process);
+    }
+
+    @Override
+    public boolean equals(Object b) {
+        if(!(b instanceof Call call && call.variableName.equals(variableName))) return false;
+        return super.equals(b);
+    }
+
+    @Override
     Behaviour duplicate() {
         if(nextBehaviours.isEmpty()){
             return new Call(process, variableName);
@@ -52,5 +63,11 @@ public class Call extends Behaviour{
             hm.put("unfold", nb);
             return new Call(process, hm, variableName);
         }
+    }
+
+    @Override
+    public boolean isFinal() {
+        //If no nextBehaviour exist it means we already unfolded this one and we don't need to do it once more
+        return false;
     }
 }

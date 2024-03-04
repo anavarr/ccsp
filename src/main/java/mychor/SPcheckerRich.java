@@ -2,10 +2,14 @@ package mychor;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -17,6 +21,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
+    HashMap<String,Behaviour> reduced = new HashMap<String,Behaviour>();
     public boolean typeSafety(){
         // [x] for a selection to be safe, selection can only use a subset of the labels used in branching
         // [~] for a communication to be safe, the payload type of send must be a subtype of the payload type of recv
@@ -24,15 +29,50 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // [x] if Gamma is safe and Gamma -> Gamma' then Gamma' must be safe
         // Session is already the fully 1-time unfolded view of the communications between two processes
         // if all Sessions are type safe then the network is type safe
-        for (Session session : compilerCtx.sessions) {
-            var dualSession = compilerCtx.sessions.stream().filter(s -> s.hasDualEnds(session)).toList().get(0);
-            if(!session.getBranchingLabels().containsAll(dualSession.getSelectionLabels())) return false;
+        for (String s : compilerCtx.behaviours.keySet()) {
+            reduced.put(s, compilerCtx.behaviours.get(s).duplicate());
         }
+        System.out.println("=======ROUND 0=======");
+        for (String s : reduced.keySet()) {
+            System.out.println(s);
+            System.out.println(reduced.get(s));
+        }
+        var c = 0;
+        var qs = new MessageQueues();
+            while(true){
+                var oldReduced = new HashMap<String,Behaviour>();
+                var oldQs = qs.duplicate();
+                for (String s : reduced.keySet()) {
+                    oldReduced.put(s, reduced.get(s).duplicate());
+                }
+                for (String s : reduced.keySet()) {
+                    try {
+                        var b = reduced.get(s).reduce(reduced, qs);
+                        reduced.put(s, b);
+                    } catch(Exception e){
+                        System.out.println(e);
+                        return false;
+                    }
+
+                }
+                c++;
+                System.out.printf("=======ROUND %d==========%n", c);
+                for (String s : reduced.keySet()) {
+                    System.out.println(s);
+                    System.out.println(reduced.get(s));
+                }
+                System.out.println(qs);
+                if(oldReduced.equals(reduced) && oldQs.equals(qs) ) break;
+            }
         return true;
     }
 
     public boolean deadlockFreedom(){
-        return false;
+        if(!typeSafety()) return false;
+        for (String s : reduced.keySet()) {
+            if(!reduced.get(s).isFinal()) return false;
+        }
+        return true;
     }
     public boolean sessionsBranchingAreValid(){
         return compilerCtx.sessions.stream().allMatch(Session::isBranchingValid);
@@ -88,9 +128,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             System.out.println("\t"+s+" : "+compilerCtx.calledProceduresGraph.get(s));
         }
         System.out.println("Behaviours:");
-        for (String s : compilerCtx.processesDefinition.keySet()) {
+        for (String s : compilerCtx.behaviours.keySet()) {
             System.out.println(s);
-            System.out.println(compilerCtx.processesDefinition.get(s));
+            System.out.println(compilerCtx.behaviours.get(s));
         }
     }
     // check that no process sends or receive a message to or from itself
@@ -125,10 +165,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     private void addBehaviour(Behaviour behaviour){
-        if(compilerCtx.processesDefinition.containsKey(compilerCtx.currentProcess)){
-            compilerCtx.processesDefinition.get(compilerCtx.currentProcess).addBehaviour(behaviour);
+        if(compilerCtx.behaviours.containsKey(compilerCtx.currentProcess)){
+            compilerCtx.behaviours.get(compilerCtx.currentProcess).addBehaviour(behaviour);
         }else{
-            compilerCtx.processesDefinition.put(compilerCtx.currentProcess, behaviour);
+            compilerCtx.behaviours.put(compilerCtx.currentProcess, behaviour);
         }
     }
 
@@ -244,8 +284,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 ProceduresCallGraphMap::mergeCalledProceduresVertical, ctx);
 
         var hm = new HashMap<String, Behaviour>();
-        hm.put("then",contextThen.processesDefinition.get(compilerCtx.currentProcess));
-        hm.put("else",contextElse.processesDefinition.get(compilerCtx.currentProcess));
+        hm.put("then",contextThen.behaviours.get(compilerCtx.currentProcess));
+        hm.put("else",contextElse.behaviours.get(compilerCtx.currentProcess));
         var behaviour = new Cdt(compilerCtx.currentProcess, hm, ctx.getChild(1).getText());
         addBehaviour(behaviour);
         return errors;
@@ -280,10 +320,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
             contexts.add(compilerCtx);
         }
-        Behaviour merged = contexts.get(0).processesDefinition.get(compilerCtx.currentProcess);
+        Behaviour merged = contexts.get(0).behaviours.get(compilerCtx.currentProcess);
         if (contexts.size() > 1) {
             var ccontexts = contexts.subList(1, contexts.size());
-            merged = ccontexts.stream().map(context -> context.processesDefinition.get(compilerCtx.currentProcess))
+            merged = ccontexts.stream().map(context -> context.behaviours.get(compilerCtx.currentProcess))
                     .reduce(merged, (acc, newItem) -> {
                 var c = (Comm) newItem;
                 acc.nextBehaviours.putAll(c.nextBehaviours);
@@ -292,10 +332,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }else{
             System.err.println("BIG PROBLEM");
         }
-        if(!oldContext.processesDefinition.containsKey(compilerCtx.currentProcess)){
-            oldContext.processesDefinition.put(compilerCtx.currentProcess, merged);
+        if(!oldContext.behaviours.containsKey(compilerCtx.currentProcess)){
+            oldContext.behaviours.put(compilerCtx.currentProcess, merged);
         }else{
-            oldContext.processesDefinition.get(compilerCtx.currentProcess).addBehaviour(merged);
+            oldContext.behaviours.get(compilerCtx.currentProcess).addBehaviour(merged);
         }
         //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
         compilerCtx = contexts.stream().reduce(

@@ -17,11 +17,21 @@ public class PropertiesTest extends ProgramReaderTest{
         var spc = testFile("OAuth2_fragment_nonsafe.sp");
         assertFalse(spc.typeSafety());
     }
+    @Test
+    public void OAuth2DeadlockFreeAsync() throws IOException {
+        var spc = testFile("OAuth2_fragment_async.sp");
+        assertTrue(spc.deadlockFreedom());
+    }
 
     @Test
     public void ThreeBuyerProtoolIsSafe() throws IOException {
         var spc = testFile("Three_buyer_protocol.sp");
-        spc.displayContext();
         assertTrue(spc.typeSafety());
+    }
+
+    @Test
+    public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
+        var spc = testFile("Three_buyer_protocol.sp");
+        assertTrue(spc.deadlockFreedom());
     }
 }
