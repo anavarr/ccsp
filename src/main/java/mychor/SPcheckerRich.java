@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -22,6 +23,49 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public CompilerContext compilerCtx = new CompilerContext();
 
     HashMap<String,Behaviour> reduced = new HashMap<String,Behaviour>();
+
+    static private List<Map<String, Behaviour>> generateCombinations(List<Map<String, Behaviour>> configurationsFlat,
+                                                                     Map<String, List<Behaviour>> configurationsDeep,
+                                                                     Map<String, Behaviour> combination,
+                                                                     int index,
+                                                                     ArrayList<String> keySet,
+                                                                     String key){
+        if(index >= configurationsDeep.get(key).size()){
+            return configurationsFlat;
+        }
+        combination.put(key, configurationsDeep.get(key).get(index));
+        //call bottom
+        var nexKeyIndex =keySet.indexOf(key)+1;
+        if(nexKeyIndex < keySet.size()){
+            var nextKey = keySet.get(nexKeyIndex);
+            generateCombinations(configurationsFlat, configurationsDeep, combination,0, keySet, nextKey);
+        }else{
+            configurationsFlat.add(combination);
+        }
+        //call side
+
+        return generateCombinations(configurationsFlat, configurationsDeep, new HashMap<>(combination),
+                index+1, keySet, key);
+    }
+
+    static List<Map<String, Behaviour>> extractCarthesiansBranches(HashMap<String, Behaviour> reducedPaths){
+        int nConfs = 1;
+        var configurationsDeep = new HashMap<String, List<Behaviour>>();
+        for (String s : reducedPaths.keySet()) {
+            var b = reducedPaths.get(s).getBranches();
+            configurationsDeep.put(s, b);
+            nConfs *= b.size();
+        }
+        List<Map<String, Behaviour>> configurationsFlat = new ArrayList<>();
+        var keys = new ArrayList<String>(configurationsDeep.keySet());
+        var key = keys.get(0);
+        var combi = new HashMap<String, Behaviour>();
+        generateCombinations(configurationsFlat, configurationsDeep,combi, 0, keys, key);
+        return configurationsFlat;
+    }
+    public List<Map<String, Behaviour>> getExecutionPaths(){
+        return extractCarthesiansBranches(compilerCtx.behaviours);
+    }
     public boolean typeSafety(){
         // [x] for a selection to be safe, selection can only use a subset of the labels used in branching
         // [~] for a communication to be safe, the payload type of send must be a subtype of the payload type of recv
@@ -29,14 +73,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // [x] if Gamma is safe and Gamma -> Gamma' then Gamma' must be safe
         // Session is already the fully 1-time unfolded view of the communications between two processes
         // if all Sessions are type safe then the network is type safe
+
         for (String s : compilerCtx.behaviours.keySet()) {
             reduced.put(s, compilerCtx.behaviours.get(s).duplicate());
         }
-        System.out.println("=======ROUND 0=======");
-        for (String s : reduced.keySet()) {
-            System.out.println(s);
-            System.out.println(reduced.get(s));
-        }
+        getExecutionPaths();
+
         var c = 0;
         var qs = new MessageQueues();
             while(true){
@@ -50,18 +92,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                         var b = reduced.get(s).reduce(reduced, qs);
                         reduced.put(s, b);
                     } catch(Exception e){
-                        System.out.println(e);
+                        System.err.println(e);
                         return false;
                     }
 
                 }
                 c++;
-                System.out.printf("=======ROUND %d==========%n", c);
-                for (String s : reduced.keySet()) {
-                    System.out.println(s);
-                    System.out.println(reduced.get(s));
-                }
-                System.out.println(qs);
                 if(oldReduced.equals(reduced) && oldQs.equals(qs) ) break;
             }
         return true;

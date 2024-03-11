@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Queue;
 
 public abstract class Behaviour {
@@ -45,4 +46,6 @@ public abstract class Behaviour {
         }
         return true;
     }
+
+    abstract public List<Behaviour> getBranches();
 }

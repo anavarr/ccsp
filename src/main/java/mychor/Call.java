@@ -1,6 +1,8 @@
 package mychor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Queue;
 
 public class Call extends Behaviour{
@@ -69,5 +71,19 @@ public class Call extends Behaviour{
     public boolean isFinal() {
         //If no nextBehaviour exist it means we already unfolded this one and we don't need to do it once more
         return false;
+    }
+
+    @Override
+    public List<Behaviour> getBranches() {
+        if(!nextBehaviours.containsKey("unfold")) return List.of(this);
+
+        var branches = new ArrayList<Behaviour>();
+        var br = nextBehaviours.get("unfold").getBranches();
+        for (Behaviour behaviour : br) {
+            var t = duplicate();
+            t.nextBehaviours.put("unfold", behaviour);
+            branches.add(t);
+        }
+        return branches;
     }
 }

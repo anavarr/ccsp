@@ -1,6 +1,8 @@
 package mychor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Queue;
 
 public class End extends Behaviour{
@@ -40,5 +42,10 @@ public class End extends Behaviour{
     @Override
     public boolean isFinal() {
         return true;
+    }
+
+    @Override
+    public List<Behaviour> getBranches() {
+        return List.of(this);
     }
 }

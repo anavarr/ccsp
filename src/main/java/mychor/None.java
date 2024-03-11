@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Queue;
 
 public class None extends Behaviour{
@@ -40,5 +41,10 @@ public class None extends Behaviour{
     @Override
     public boolean isFinal() {
         return false;
+    }
+
+    @Override
+    public List<Behaviour> getBranches() {
+        return List.of(this);
     }
 }

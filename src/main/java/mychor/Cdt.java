@@ -88,4 +88,16 @@ public class Cdt extends Behaviour {
         if (!(b instanceof Cdt && ((Cdt) b).expr.equals(expr))) return false;
         return super.equals(b);
     }
+
+    @Override
+    public List<Behaviour> getBranches() {
+        List<Behaviour> branches= new ArrayList<>();
+        if(nextBehaviours.containsKey("then")){
+            branches.addAll(nextBehaviours.get("then").getBranches());
+        }
+        if(nextBehaviours.containsKey("else")){
+            branches.addAll(nextBehaviours.get("else").getBranches());
+        }
+        return branches;
+    }
 }

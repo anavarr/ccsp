@@ -1,9 +1,14 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Comm extends Behaviour {
     Utils.Arity arity;
@@ -137,6 +142,51 @@ public class Comm extends Behaviour {
                 if(!nextBehaviours.get(s).isFinal()) return false;
             }
             return true;
+        }
+    }
+
+    @Override
+    public List<Behaviour> getBranches() {
+        if(direction == Utils.Direction.BRANCH){
+            HashMap<String, List<Behaviour>> subBranches = new HashMap<>();
+            for (String s : nextBehaviours.keySet()) {
+                subBranches.put(s, nextBehaviours.get(s).getBranches());
+            }
+            return generateCombinations(subBranches);
+        }else{
+            List<Behaviour> branches = new ArrayList<Behaviour>();
+            for (String s : nextBehaviours.keySet()) {
+                var br = nextBehaviours.get(s).getBranches();
+                Behaviour b;
+                for (Behaviour behaviour : br) {
+                    b = duplicate();
+                    b.nextBehaviours.put(s, behaviour);
+                    branches.add(b);
+                }
+            }
+            return branches;
+        }
+    }
+
+    public List<Behaviour> generateCombinations(HashMap<String, List<Behaviour>> myHashMap) {
+        List<Behaviour> myList = new ArrayList<>();
+        List<Map.Entry<String, List<Behaviour>>> lists = new ArrayList<>(myHashMap.entrySet());
+        generateCombinationsHelper(myList, lists, new HashMap<>(), 0);
+        return myList;
+    }
+
+    public void generateCombinationsHelper(List<Behaviour> myList, List<Map.Entry<String, List<Behaviour>>> lists,
+                                           HashMap<String, Behaviour> combination, int index) {
+        if (index == lists.size()) {
+            var b = duplicate();
+            b.nextBehaviours = combination;
+            myList.add(b.duplicate());
+            return;
+        }
+        for (Behaviour behaviour : lists.get(index).getValue()) {
+            var key = lists.get(index).getKey();
+            combination.put(key, behaviour);
+            generateCombinationsHelper(myList, lists, combination, index + 1);
         }
     }
 }
