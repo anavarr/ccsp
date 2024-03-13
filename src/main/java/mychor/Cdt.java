@@ -3,15 +3,10 @@ package mychor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
 
 public class Cdt extends Behaviour {
     String expr;
-    private List<String> visitedSelections = new ArrayList<String>();
-
-    public Cdt(String pr) {
-        super(pr);
-    }
+    private final List<String> visitedSelections = new ArrayList<>();
 
     @Override
     public boolean addBehaviour(Behaviour nb) {
@@ -68,7 +63,7 @@ public class Cdt extends Behaviour {
     }
 
     @Override
-    Behaviour duplicate() {
+    public Behaviour duplicate() {
         if(nextBehaviours.isEmpty()){
             return new Cdt(process, expr);
         }else{

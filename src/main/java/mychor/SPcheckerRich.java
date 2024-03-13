@@ -2,15 +2,10 @@ package mychor;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -22,7 +17,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
-    HashMap<String,Behaviour> reduced = new HashMap<String,Behaviour>();
+    HashMap<String,Behaviour> reduced = new HashMap<>();
 
     static private List<Map<String, Behaviour>> generateCombinations(List<Map<String, Behaviour>> configurationsFlat,
                                                                      Map<String, List<Behaviour>> configurationsDeep,
@@ -49,15 +44,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     static List<Map<String, Behaviour>> extractCarthesiansBranches(HashMap<String, Behaviour> reducedPaths){
-        int nConfs = 1;
         var configurationsDeep = new HashMap<String, List<Behaviour>>();
         for (String s : reducedPaths.keySet()) {
             var b = reducedPaths.get(s).getBranches();
             configurationsDeep.put(s, b);
-            nConfs *= b.size();
         }
         List<Map<String, Behaviour>> configurationsFlat = new ArrayList<>();
-        var keys = new ArrayList<String>(configurationsDeep.keySet());
+        var keys = new ArrayList<>(configurationsDeep.keySet());
         var key = keys.get(0);
         var combi = new HashMap<String, Behaviour>();
         generateCombinations(configurationsFlat, configurationsDeep,combi, 0, keys, key);
@@ -66,49 +59,63 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public List<Map<String, Behaviour>> getExecutionPaths(){
         return extractCarthesiansBranches(compilerCtx.behaviours);
     }
-    public boolean typeSafety(){
+    public ArrayList<Boolean> typeSafety(){
         // [x] for a selection to be safe, selection can only use a subset of the labels used in branching
         // [~] for a communication to be safe, the payload type of send must be a subtype of the payload type of recv
         // [x] for a recursive variable to be safe, its one time unfolding must be safe
         // [x] if Gamma is safe and Gamma -> Gamma' then Gamma' must be safe
         // Session is already the fully 1-time unfolded view of the communications between two processes
         // if all Sessions are type safe then the network is type safe
-
-        for (String s : compilerCtx.behaviours.keySet()) {
-            reduced.put(s, compilerCtx.behaviours.get(s).duplicate());
+        var paths = getExecutionPaths();
+        var results = new ArrayList<Boolean>();
+        for (Map<String, Behaviour> path : paths) {
+            results.add(typeSafetyOnePath(path));
         }
-        getExecutionPaths();
+        return results;
+    }
 
-        var c = 0;
+    private boolean typeSafetyOnePath(Map<String, Behaviour> path){
+        reduced = new HashMap<>();
+        for (String s : path.keySet()) {
+            reduced.put(s, path.get(s).duplicate());
+        }
         var qs = new MessageQueues();
-            while(true){
-                var oldReduced = new HashMap<String,Behaviour>();
-                var oldQs = qs.duplicate();
-                for (String s : reduced.keySet()) {
-                    oldReduced.put(s, reduced.get(s).duplicate());
-                }
-                for (String s : reduced.keySet()) {
-                    try {
-                        var b = reduced.get(s).reduce(reduced, qs);
-                        reduced.put(s, b);
-                    } catch(Exception e){
-                        System.err.println(e);
-                        return false;
-                    }
-
-                }
-                c++;
-                if(oldReduced.equals(reduced) && oldQs.equals(qs) ) break;
+        var oldReduced = new HashMap<String,Behaviour>();
+        var oldQs = qs.duplicate();
+        do{
+            oldReduced = new HashMap<>();
+            oldQs = qs.duplicate();
+            for (String s : reduced.keySet()) {
+                oldReduced.put(s, reduced.get(s).duplicate());
             }
+            for (String s : reduced.keySet()) {
+                try {
+                    var b = reduced.get(s).reduce(reduced, qs);
+                    reduced.put(s, b);
+                } catch(Exception e){
+                    System.err.println(e.getMessage());
+                    return false;
+                }
+            }
+        }while(!oldReduced.equals(reduced) || !oldQs.equals(qs));
         return true;
     }
 
-    public boolean deadlockFreedom(){
-        if(!typeSafety()) return false;
-        for (String s : reduced.keySet()) {
-            if(!reduced.get(s).isFinal()) return false;
+    public List<Boolean> deadlockFreedom(){
+        var paths = getExecutionPaths();
+        var results = new ArrayList<Boolean>();
+        for (Map<String, Behaviour> path : paths) {
+            if(!typeSafetyOnePath(path)){
+                results.add(false);
+            }else{
+                var r = true;
+                for (String s : reduced.keySet()) {
+                    if(!reduced.get(s).isFinal()) r = false; break;
+                }
+                results.add(r);
+            }
         }
-        return true;
+        return results;
     }
     public boolean sessionsBranchingAreValid(){
         return compilerCtx.sessions.stream().allMatch(Session::isBranchingValid);
@@ -193,7 +200,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var session = compilerCtx.sessions.stream()
                 .filter(s -> s.peerA().equals(source) && s.peerB().equals(dest))
                 .toList();
-        if(session.size() == 0){
+        if(session.isEmpty()){
             return null;
         }else{
             return session.get(0);

@@ -2,10 +2,9 @@ package mychor;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
 
 public abstract class Behaviour {
-    HashMap<String, Behaviour> nextBehaviours = new HashMap<>();
+    public HashMap<String, Behaviour> nextBehaviours = new HashMap<>();
     String process;
     public Behaviour(String pr){
         process = pr;
@@ -17,7 +16,7 @@ public abstract class Behaviour {
     public abstract boolean addBehaviour(Behaviour nb);
 
 
-    abstract Behaviour duplicate();
+    abstract public Behaviour duplicate();
     @Override
     public String toString() {
         if(nextBehaviours == null) return "";

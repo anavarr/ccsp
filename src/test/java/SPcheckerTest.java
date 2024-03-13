@@ -1,16 +1,9 @@
 import mychor.Communication;
-import mychor.CompilerContext;
-import mychor.SPcheckerRich;
-import mychor.SPlexer;
-import mychor.SPparserRich;
 import mychor.Session;
 import mychor.Utils;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 

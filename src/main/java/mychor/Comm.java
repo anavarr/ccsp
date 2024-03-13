@@ -1,22 +1,15 @@
 package mychor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Comm extends Behaviour {
     Utils.Arity arity;
     Utils.Direction direction;
     List<String> labels = new ArrayList<>();
     String destination;
-    String exploredLabel;
-    boolean hasBeenExplored = false;
 
 
     public Comm(String pr, String dest, Utils.Direction direction, Utils.Arity arity, List<String> labels){
@@ -33,6 +26,15 @@ public class Comm extends Behaviour {
         this.direction = direction;
         this.arity = arity;
         if(label != null) labels.add(label);
+    }
+
+    public Comm(String pr, String dest, HashMap<String, Behaviour> branches){
+        super(pr);
+        this.destination = dest;
+        this.direction = Utils.Direction.BRANCH;
+        this.arity = Utils.Arity.SINGLE;
+        this.nextBehaviours = branches;
+        this.labels = branches.keySet().stream().toList();
     }
 
     @Override
@@ -107,7 +109,7 @@ public class Comm extends Behaviour {
     }
 
     @Override
-    Behaviour duplicate() {
+    public Behaviour duplicate() {
         var c = new Comm(process, destination, direction, arity, labels);
         if (!nextBehaviours.isEmpty()){
             if(direction != Utils.Direction.BRANCH && direction != Utils.Direction.SELECT) {
@@ -154,7 +156,7 @@ public class Comm extends Behaviour {
             }
             return generateCombinations(subBranches);
         }else{
-            List<Behaviour> branches = new ArrayList<Behaviour>();
+            List<Behaviour> branches = new ArrayList<>();
             for (String s : nextBehaviours.keySet()) {
                 var br = nextBehaviours.get(s).getBranches();
                 Behaviour b;

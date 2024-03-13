@@ -1,17 +1,11 @@
 package mychor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
 
 public class End extends Behaviour{
     public End(String pr) {
         super(pr);
-    }
-
-    public End(String pr, HashMap<String, Behaviour> nb) {
-        super(pr, nb);
     }
 
     @Override
@@ -20,7 +14,7 @@ public class End extends Behaviour{
     }
 
     @Override
-    Behaviour duplicate() {
+    public Behaviour duplicate() {
         return new End(process);
     }
 

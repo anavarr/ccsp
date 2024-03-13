@@ -25,14 +25,14 @@ public class StackFrame{
         nextFrames.addAll(stackFrames);
     }
     public void addLeafFrame(StackFrame stackFrame){
-        if (nextFrames.size() == 0){
+        if (nextFrames.isEmpty()){
             nextFrames.add(stackFrame);
             return;
         }
         nextFrames.get(0).addLeafFrame(stackFrame);
     }
     public void addLeafFrames(ArrayList<StackFrame> stackFrames){
-        if (nextFrames.size() == 0){
+        if (nextFrames.isEmpty()){
             nextFrames.addAll(stackFrames);
             return;
         }
@@ -48,7 +48,7 @@ public class StackFrame{
         for (StackFrame nextFrame : nextFrames) {
             s.append(String.format("\n\t%s,", nextFrame.toString().replace("\n","\n\t")));
         }
-        if(nextFrames.size()>0){
+        if(!nextFrames.isEmpty()){
             s.append("\n");
         }
         s.append("}").append("-").append(previousCommunications);

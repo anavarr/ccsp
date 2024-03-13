@@ -4,9 +4,7 @@ import mychor.StackFrame;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Stack;
 
 import static mychor.ProceduresCallGraphMap.mergeCalledProceduresHorizontal;
 import static mychor.ProceduresCallGraphMap.mergeCalledProceduresVertical;

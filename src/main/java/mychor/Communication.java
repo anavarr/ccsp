@@ -1,12 +1,10 @@
 package mychor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static mychor.Utils.Arity.INFINITE;
 import static mychor.Utils.Arity.MULTIPLE;
@@ -97,7 +95,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     }
 
     public boolean isBranchingValid() {
-        if(communicationsBranches.size() == 0) return true;
+        if(communicationsBranches.isEmpty()) return true;
         //if the branches are all SELECT, then anything following is valid
         var allSelect = communicationsBranches.stream()
                 .allMatch(item -> item.direction == SELECT);
@@ -112,7 +110,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     }
 
     public void addLeafCommunicationRoots(ArrayList<Communication> roots){
-        if(communicationsBranches.size() == 0){
+        if(communicationsBranches.isEmpty()){
             communicationsBranches.addAll(roots);
             return;
         }
@@ -130,7 +128,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     }
 
     public ArrayList<Communication> getLeaves() {
-        if(communicationsBranches.size() == 0){
+        if(communicationsBranches.isEmpty()){
             return new ArrayList<>(List.of(this));
         }
         return communicationsBranches.stream().map(Communication::getLeaves).reduce(new ArrayList<>(),
@@ -144,5 +142,5 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
             labels.addAll(communicationsBranch.getDirectedLabels(dir));
         }
         return labels;
-    };
+    }
 }

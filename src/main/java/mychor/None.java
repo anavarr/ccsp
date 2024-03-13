@@ -2,15 +2,10 @@ package mychor;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
 
 public class None extends Behaviour{
     public None(String pr) {
         super(pr);
-    }
-
-    public None(String pr, HashMap<String, Behaviour> nb) {
-        super(pr, nb);
     }
 
     @Override
@@ -19,7 +14,7 @@ public class None extends Behaviour{
     }
 
     @Override
-    Behaviour duplicate() {
+    public Behaviour duplicate() {
         return new None(process);
     }
 

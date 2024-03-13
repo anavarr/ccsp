@@ -35,8 +35,6 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
 
     public boolean areEmpty(){
         for (String s : keySet()) {
-            System.out.println(s);
-            System.out.println(get(s).isEmpty());
             if (!get(s).isEmpty()) return false;
         }
         return true;

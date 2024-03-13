@@ -62,7 +62,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     }
 
     public boolean isBranchingValid(){
-        if(communicationsRoots.size() == 0) return true;
+        if(communicationsRoots.isEmpty()) return true;
         //if the branches are all SELECT, then anything following is valid
         var allSelect = communicationsRoots.stream()
                 .allMatch(item -> item.direction() == Utils.Direction.SELECT);
@@ -99,7 +99,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     }
 
     public void addLeafCommunicationRoots(ArrayList<Communication> roots) {
-        if(communicationsRoots.size() == 0){
+        if(communicationsRoots.isEmpty()){
             communicationsRoots.addAll(roots);
         }else{
             communicationsRoots.get(0).addLeafCommunicationRoots(roots);
@@ -149,46 +149,39 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                 .filter(s2 -> sessions1.stream().noneMatch(s1 -> s1.hasSameEnds(s2)));
         var common = new ArrayList<>(sessions1.stream()
                 .filter(s1 -> sessions2.stream().anyMatch(s2 -> s2.hasSameEnds(s1)))
-                .map(s1 -> {
+                .peek(s1 -> {
                     var toAdd = sessions2.stream().filter(s2 -> s2.hasSameEnds(s1)).findFirst().get();
                     s1.expandTopCommunicationRoots(toAdd.communicationsRoots());
-                    return s1;
                 })
                 .toList());
 
-        common.addAll(new ArrayList<>(leftOnly.map(s -> {
-            s.expandTopCommunicationRoots(
-                    new ArrayList<>(
-                            List.of(
-                                    new Communication(
-                                            Utils.Direction.VOID,
-                                            Utils.Arity.SINGLE,
-                                            new ArrayList<>(),
-                                            null)
-                            )
-                    )
-            );
-            return s;
-        }).toList()));
-        common.addAll(new ArrayList<>(rightOnly.map(s -> {
-            s.expandTopCommunicationRoots(
-                    new ArrayList<>(
-                            List.of(
-                                    new Communication(
-                                            Utils.Direction.VOID,
-                                            Utils.Arity.SINGLE,
-                                            new ArrayList<>(),
-                                            null)
-                            )
-                    )
-            );
-            return s;
-        }).toList()));
+        common.addAll(new ArrayList<>(leftOnly.peek(s -> s.expandTopCommunicationRoots(
+                new ArrayList<>(
+                        List.of(
+                                new Communication(
+                                        Utils.Direction.VOID,
+                                        Utils.Arity.SINGLE,
+                                        new ArrayList<>(),
+                                        null)
+                        )
+                )
+        )).toList()));
+        common.addAll(new ArrayList<>(rightOnly.peek(s -> s.expandTopCommunicationRoots(
+                new ArrayList<>(
+                        List.of(
+                                new Communication(
+                                        Utils.Direction.VOID,
+                                        Utils.Arity.SINGLE,
+                                        new ArrayList<>(),
+                                        null)
+                        )
+                )
+        )).toList()));
         return common;
     }
 
     public ArrayList<Communication> getLeaves() {
-        if(communicationsRoots.size() == 0) return new ArrayList<>();
+        if(communicationsRoots.isEmpty()) return new ArrayList<>();
         return communicationsRoots.stream().map(Communication::getLeaves)
                 //reduce List<ArrayList<Communication>> to ArrayList<Communication>
                 .reduce(new ArrayList<>(), (acc, it) -> {acc.addAll(it); return acc;});

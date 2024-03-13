@@ -3,7 +3,6 @@ package mychor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
 
 public class Call extends Behaviour{
     String variableName;
@@ -56,7 +55,7 @@ public class Call extends Behaviour{
     }
 
     @Override
-    Behaviour duplicate() {
+    public Behaviour duplicate() {
         if(nextBehaviours.isEmpty()){
             return new Call(process, variableName);
         }else{
