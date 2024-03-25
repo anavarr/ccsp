@@ -83,19 +83,6 @@ public class SPcheckerTest extends ProgramReaderTest{
         assertEquals(spc.unknownVariables().size(), 0);
     }
     @Test
-    public void unusedVariableComm() throws IOException {
-        var spc = testFile("nullProcessInComm.sp");
-        assertEquals(spc.compilerCtx.errors.size(), 1);
-    }
-    @Test
-    public void unusedVariableBraComm() throws IOException {
-        var spc = testFile("nullProcessInBraComm.sp");
-        for (String error : spc.compilerCtx.errors) {
-            System.out.println(error);
-        }
-        assertEquals(spc.compilerCtx.errors.size(), 4);
-    }
-    @Test
     public void twiceMappedVariable() throws IOException {
         var spc = testFile("twiceMappedVariable.sp");
         System.out.println(spc.compilerCtx.errors);

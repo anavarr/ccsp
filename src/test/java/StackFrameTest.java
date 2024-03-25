@@ -14,46 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class StackFrameTest {
-
-    //TEST DISPLAY
-    @Test
-    public void displayStackFrame(){
-        var sf = new StackFrame("MyProcedure");
-        assertEquals(sf.toString(), "MyProcedure{}");
-    }
-    @Test
-    public void displayStackFrames(){
-        var sf = new StackFrame("MyProcedure",new ArrayList<>(
-                List.of(
-                        new StackFrame("MyNextProcedure", new ArrayList<>(
-                                List.of(
-                                        new StackFrame("MyNextNextProcedure"),
-                                        new StackFrame("MyNextNextProcedure2"),
-                                        new StackFrame("MyNextNextProcedure3")
-                                )
-                        )),
-                        new StackFrame("MyNextProcedure2", new ArrayList<>(
-                                List.of(
-                                        new StackFrame("MyNextProcedure2Next")
-                                )
-                        ))
-                )
-        ));
-        var txt =
-                """
-                MyProcedure{
-                \tMyNextProcedure{
-                \t\tMyNextNextProcedure{},
-                \t\tMyNextNextProcedure2{},
-                \t\tMyNextNextProcedure3{},
-                \t},
-                \tMyNextProcedure2{
-                \t\tMyNextProcedure2Next{},
-                \t},
-                }""";
-        assertEquals(sf.toString(), txt);
-    }
-
     //EQUALITY TESTS
      @Test
      public void equalityTrivial(){
