@@ -296,9 +296,9 @@ public class BehaviourTest {
     @Nested
     class FinalityTest{
         @Test
-        public void emptyCdtIsFinal(){
+        public void emptyCdtIsNotFinal(){
             var cdt = new Cdt("myProcess", "check(x)");
-            assertTrue(cdt.isFinal());
+            assertFalse(cdt.isFinal());
         }
         @Test
         public void nonEmptyCdtIsNotFinal(){

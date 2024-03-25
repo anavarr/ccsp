@@ -30,7 +30,8 @@ public class None extends Behaviour{
 
     @Override
     public boolean equals(Object b1) {
-        return b1 instanceof None;
+        if (!(b1 instanceof None)) return false;
+        return process.equals(((None) b1).process);
     }
 
     @Override

@@ -85,6 +85,11 @@ public class Cdt extends Behaviour {
     }
 
     @Override
+    public boolean isFinal() {
+        return false;
+    }
+
+    @Override
     public List<Behaviour> getBranches() {
         List<Behaviour> branches= new ArrayList<>();
         if(nextBehaviours.containsKey("then")){
