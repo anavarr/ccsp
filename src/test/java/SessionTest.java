@@ -296,6 +296,7 @@ public class SessionTest {
 
         assertEquals(merged, totalSessions);
     }
+    @SuppressWarnings("ExtractMethodRecommender")
     @Test
     public void compareHorizontalStubMerging(){
         var sessionSet1 = new ArrayList<Session>();

@@ -21,6 +21,7 @@ public class CompilerContext {
     public ArrayList<Session> sessions = new ArrayList<>();
     //maps a recursive variable to a process
     public HashMap<String, String> recvar2proc = new HashMap<>();
+    public HashMap<String, Behaviour> behaviours = new HashMap<>();
     //a list of errors
     public List<String> errors = new ArrayList<>();
     public ProceduresCallGraphMap calledProceduresGraph = new ProceduresCallGraphMap();
@@ -32,7 +33,8 @@ public class CompilerContext {
         c.currentRecVar = this.currentRecVar;
         c.processes.addAll(this.processes);
         c.recvar2proc.putAll(this.recvar2proc);
-        c.phantomGraph = this.calledProceduresGraph.duplicate();
+        c.phantomGraph = ProceduresCallGraphMap
+                .mergeCalledProceduresVertical(this.phantomGraph.duplicate(), this.calledProceduresGraph.duplicate());
         c.calledProceduresGraph = this.calledProceduresGraph.duplicateRootsOnly();
         return c;
     }

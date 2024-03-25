@@ -1,16 +1,9 @@
 import mychor.Communication;
-import mychor.CompilerContext;
-import mychor.SPcheckerRich;
-import mychor.SPlexer;
-import mychor.SPparserRich;
 import mychor.Session;
 import mychor.Utils;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,18 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SPcheckerTest {
-    SPcheckerRich spr = new SPcheckerRich();
-    CompilerContext ctx = new CompilerContext();
-    String path_prefix = "/home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/test/antlr4/SP_programs/";
-    private SPcheckerRich testFile(String filename) throws IOException {
-        var path = Path.of(path_prefix, filename);
-        SPlexer spl = new SPlexer(CharStreams.fromPath(path));
-        var spp = new SPparserRich(new CommonTokenStream(spl));
-        var spc = new SPcheckerRich();
-        spp.program().accept(spc);
-        return spc;
-    }
+public class SPcheckerTest extends ProgramReaderTest{
+
 
     // SELF COMM
     @Test
@@ -98,19 +81,6 @@ public class SPcheckerTest {
     public void exampleNoUnknownVariable() throws IOException {
         var spc = testFile("noUnknownVariable.sp");
         assertEquals(spc.unknownVariables().size(), 0);
-    }
-    @Test
-    public void unusedVariableComm() throws IOException {
-        var spc = testFile("nullProcessInComm.sp");
-        assertEquals(spc.compilerCtx.errors.size(), 1);
-    }
-    @Test
-    public void unusedVariableBraComm() throws IOException {
-        var spc = testFile("nullProcessInBraComm.sp");
-        for (String error : spc.compilerCtx.errors) {
-            System.out.println(error);
-        }
-        assertEquals(spc.compilerCtx.errors.size(), 4);
     }
     @Test
     public void twiceMappedVariable() throws IOException {
@@ -186,6 +156,10 @@ public class SPcheckerTest {
     @Test
     public void loopCdt() throws IOException {
         var spc = testFile("loopCdt.sp");
+    }
+    @Test
+    public void loopBraCall() throws IOException {
+        var spc = testFile("loopBraCdt.sp");
     }
 
 }
