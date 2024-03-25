@@ -35,8 +35,9 @@ public class PatternDetector {
         this.ctx = ctx;
     }
 
-    public void detectCompatibleFrameworks() {
+    public List<String> detectCompatibleFrameworks() {
         for (Session pattern : patterns) {
         }
+        return null;
     }
 }
