@@ -1,4 +1,4 @@
-SIMPLE_EXCHANGE:
+SIMPLE_EXCHANGE
 "
-a -> b;
+a -> b
 "
