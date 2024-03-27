@@ -1,12 +1,13 @@
 package mychor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PatternDetector {
 
     CompilerContext ctx;
 
-    List<Session> patterns;
+    List<Session> patterns = new ArrayList<>();
 
 
 

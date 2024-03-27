@@ -1,5 +1,6 @@
 import mychor.Communication;
 import mychor.MessagePatternLexer;
+import mychor.MessagePatternMaker;
 import mychor.MessagePatternParser;
 import mychor.Session;
 import mychor.Utils;
@@ -42,12 +43,17 @@ public class MessagePatternParsingTest {
     }
 
     @Test
-    public void simpleExchangeGivesOneElementSession() throws IOException {
-        Session s = new Session("a", "b", new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
+    public void simpleExchangeGivesOneElementSessions() throws IOException {
+        Session sa = new Session("a", "b", new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
+        Session sb = new Session("b", "a", new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE));
         var spp = testFile("simple_exchange.txt");
         //turn spp into a using a MessagePatternVisitor
-        var a = new HashMap<String, Session>();
-        assertTrue(a.containsKey("SIMPLE_EXCHANGE"));
-        assertTrue(a.get("SIMPLE_EXCHANGE").equals(s));
+        var mpm = new MessagePatternMaker();
+        spp.pattern().accept(mpm);
+        var a = mpm.getSessionsMap();
+        assertTrue(a.containsKey("SIMPLE_EXCHANGE_a"));
+        assertTrue(a.containsKey("SIMPLE_EXCHANGE_b"));
+        assertEquals(a.get("SIMPLE_EXCHANGE_a"), sa);
+        assertEquals(a.get("SIMPLE_EXCHANGE_b"), sb);
     }
 }
