@@ -56,4 +56,28 @@ public class MessagePatternParsingTest {
         assertEquals(a.get("SIMPLE_EXCHANGE_a"), sa);
         assertEquals(a.get("SIMPLE_EXCHANGE_b"), sb);
     }
+
+    @Test
+    public void patternsListShouldReturnAllPatternNamesTwice() throws IOException {
+        var spp = testFile("misc_pattern_test.txt");
+        //turn spp into a using a MessagePatternVisitor
+        var mpm = new MessagePatternMaker();
+        spp.pattern().accept(mpm);
+        var a = mpm.getSessionsMap();
+        assertEquals(a.keySet().size(), 14);
+        assertTrue(a.containsKey("REST_client"));
+        assertTrue(a.containsKey("REST_server"));
+        assertTrue(a.containsKey("ReactiveStreams_client"));
+        assertTrue(a.containsKey("ReactiveStreams_server"));
+        assertTrue(a.containsKey("GRPC_un_un_client"));
+        assertTrue(a.containsKey("GRPC_un_un_server"));
+        assertTrue(a.containsKey("GRPC_un_st_client"));
+        assertTrue(a.containsKey("GRPC_un_st_server"));
+        assertTrue(a.containsKey("GRPC_st_un_client"));
+        assertTrue(a.containsKey("GRPC_st_un_server"));
+        assertTrue(a.containsKey("GRPC_st_st_client"));
+        assertTrue(a.containsKey("GRPC_st_st_server"));
+        assertTrue(a.containsKey("RandomlyIntricateOne_a"));
+        assertTrue(a.containsKey("RandomlyIntricateOne_b"));
+    }
 }

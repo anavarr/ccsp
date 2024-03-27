@@ -37,8 +37,8 @@ client -> server;
 
 RandomlyIntricateOne
 "
-(client -> server ; (server -> client)*)+;
-(client -> server | server -> client)?;
-client -> server;
-(server -> client)+
+(a -> b ; (b -> a)*)+;
+(a -> b | b -> a)?;
+a -> b;
+(b -> a)+
 "

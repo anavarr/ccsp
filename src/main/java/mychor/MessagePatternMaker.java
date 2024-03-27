@@ -47,6 +47,12 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
             if(currentEnds[0] == null || currentEnds[1] == null) return Optional.empty();
             return Optional.of(currentEnds);
         }
+
+        public void reset() {
+            resetEnds();
+            currentTitle = null;
+            firstExchange = true;
+        }
     }
 
     public HashMap<String, Session> getSessionsMap(){
@@ -79,6 +85,7 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         // 1 "
         // 2 expression
         // 3 "
+        vctx.reset();
         vctx.setCurrentTitle(ctx.getChild(0).getText());
         return super.visitPattern_single(ctx);
     }
