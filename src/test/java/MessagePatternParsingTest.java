@@ -1,3 +1,4 @@
+import mychor.Comm;
 import mychor.Communication;
 import mychor.MessagePatternLexer;
 import mychor.MessagePatternMaker;
@@ -7,12 +8,16 @@ import mychor.Utils;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Test;
+
+import static mychor.Utils.Arity.SINGLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class MessagePatternParsingTest {
     String path_prefix = "/home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/test/antlr4/Patterns/";
@@ -44,17 +49,17 @@ public class MessagePatternParsingTest {
 
     @Test
     public void simpleExchangeGivesOneElementSessions() throws IOException {
-        Session sa = new Session("a", "b", new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
-        Session sb = new Session("b", "a", new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE));
+        Session sa = new Session("a", "b", new Communication(Utils.Direction.SEND, SINGLE));
+        Session sb = new Session("b", "a", new Communication(Utils.Direction.RECEIVE, SINGLE));
         var spp = testFile("simple_exchange.txt");
         //turn spp into a using a MessagePatternVisitor
         var mpm = new MessagePatternMaker();
         spp.pattern().accept(mpm);
-        var a = mpm.getSessionsMap();
-        assertTrue(a.containsKey("SIMPLE_EXCHANGE_a"));
-        assertTrue(a.containsKey("SIMPLE_EXCHANGE_b"));
-        assertEquals(a.get("SIMPLE_EXCHANGE_a"), sa);
-        assertEquals(a.get("SIMPLE_EXCHANGE_b"), sb);
+        var map = mpm.getSessionsMap();
+        assertTrue(map.containsKey("SIMPLE_EXCHANGE_a"));
+        assertTrue(map.containsKey("SIMPLE_EXCHANGE_b"));
+        assertEquals(map.get("SIMPLE_EXCHANGE_a"), sa);
+        assertEquals(map.get("SIMPLE_EXCHANGE_b"), sb);
     }
 
     @Test
@@ -63,21 +68,93 @@ public class MessagePatternParsingTest {
         //turn spp into a using a MessagePatternVisitor
         var mpm = new MessagePatternMaker();
         spp.pattern().accept(mpm);
-        var a = mpm.getSessionsMap();
-        assertEquals(a.keySet().size(), 14);
-        assertTrue(a.containsKey("REST_client"));
-        assertTrue(a.containsKey("REST_server"));
-        assertTrue(a.containsKey("ReactiveStreams_client"));
-        assertTrue(a.containsKey("ReactiveStreams_server"));
-        assertTrue(a.containsKey("GRPC_un_un_client"));
-        assertTrue(a.containsKey("GRPC_un_un_server"));
-        assertTrue(a.containsKey("GRPC_un_st_client"));
-        assertTrue(a.containsKey("GRPC_un_st_server"));
-        assertTrue(a.containsKey("GRPC_st_un_client"));
-        assertTrue(a.containsKey("GRPC_st_un_server"));
-        assertTrue(a.containsKey("GRPC_st_st_client"));
-        assertTrue(a.containsKey("GRPC_st_st_server"));
-        assertTrue(a.containsKey("RandomlyIntricateOne_a"));
-        assertTrue(a.containsKey("RandomlyIntricateOne_b"));
+        var map = mpm.getSessionsMap();
+        assertEquals(map.keySet().size(), 14);
+        assertTrue(map.containsKey("REST_client"));
+        assertTrue(map.containsKey("REST_server"));
+        assertTrue(map.containsKey("ReactiveStreams_client"));
+        assertTrue(map.containsKey("ReactiveStreams_server"));
+        assertTrue(map.containsKey("GRPC_un_un_client"));
+        assertTrue(map.containsKey("GRPC_un_un_server"));
+        assertTrue(map.containsKey("GRPC_un_st_client"));
+        assertTrue(map.containsKey("GRPC_un_st_server"));
+        assertTrue(map.containsKey("GRPC_st_un_client"));
+        assertTrue(map.containsKey("GRPC_st_un_server"));
+        assertTrue(map.containsKey("GRPC_st_st_client"));
+        assertTrue(map.containsKey("GRPC_st_st_server"));
+        assertTrue(map.containsKey("RandomlyIntricateOne_a"));
+        assertTrue(map.containsKey("RandomlyIntricateOne_b"));
+    }
+
+    @Test
+    public void choicePatternShouldReturnMultiRootSessions() throws IOException {
+        var spp = testFile("choice_pattern.txt");
+        var mpm = new MessagePatternMaker();
+        spp.pattern().accept(mpm);
+        var map = mpm.getSessionsMap();
+        Session choice_a = new Session("a", "b", new ArrayList<>(List.of(
+                new Communication(Utils.Direction.SEND, SINGLE),
+                new Communication(Utils.Direction.RECEIVE, SINGLE)
+        )));
+        Session choice_b = new Session("b", "a", new ArrayList<>(List.of(
+                new Communication(Utils.Direction.RECEIVE, SINGLE),
+                new Communication(Utils.Direction.SEND, SINGLE)
+        )));
+        assertTrue(map.containsKey("CHOICE_a"));
+        assertTrue(map.containsKey("CHOICE_b"));
+        assertEquals(map.get("CHOICE_a"), choice_a);
+        assertEquals(map.get("CHOICE_a"), choice_b);
+    }
+
+    @Test
+    public void repetitionPatternShouldReturnMultiRootSessions() throws IOException {
+        var spp = testFile("repetition_pattern.txt");
+        var mpm = new MessagePatternMaker();
+        spp.pattern().accept(mpm);
+        var map = mpm.getSessionsMap();
+        var send = new Communication(Utils.Direction.SEND, SINGLE);
+        send.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                new Communication(Utils.Direction.VOID, SINGLE),
+                send
+        )));
+        var recv = new Communication(Utils.Direction.RECEIVE, SINGLE);
+        recv.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                recv,
+                new Communication(Utils.Direction.VOID, SINGLE)
+        )));
+        Session repetition_a = new Session("a", "b", send);
+        Session repetition_b = new Session("b", "a", recv);
+        assertTrue(map.containsKey("Repetition_a"));
+        assertTrue(map.containsKey("Repetition_b"));
+        assertEquals(map.get("Repetition_a"), repetition_a);
+        assertEquals(map.get("Repetition_a"), repetition_b);
+    }
+
+    @Test
+    public void atLeastOncePatternShouldReturnMultiRootSessions() throws IOException {
+        var spp = testFile("repetition_at_least_once.txt");
+        var mpm = new MessagePatternMaker();
+        spp.pattern().accept(mpm);
+        var map = mpm.getSessionsMap();
+        var send = new Communication(Utils.Direction.SEND, SINGLE);
+        var send2 = new Communication(Utils.Direction.SEND, SINGLE);
+        send.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
+        send.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                new Communication(Utils.Direction.VOID, SINGLE),
+                send2
+        )));
+        var recv = new Communication(Utils.Direction.RECEIVE, SINGLE);
+        var recv2 = new Communication(Utils.Direction.RECEIVE, SINGLE);
+        recv.addLeafCommunicationRoots(new ArrayList<>(List.of(recv2)));
+        recv.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                recv2,
+                new Communication(Utils.Direction.VOID, SINGLE)
+        )));
+        Session repetition_a = new Session("alice", "bob", send);
+        Session repetition_b = new Session("bob", "alice", recv);
+        assertTrue(map.containsKey("AtLeastOnce_alice"));
+        assertTrue(map.containsKey("AtLeastOnce_bob"));
+        assertEquals(map.get("AtLeastOnce_alice"), repetition_a);
+        assertEquals(map.get("AtLeastOnce_bob"), repetition_b);
     }
 }
