@@ -10,6 +10,7 @@ import static mychor.Utils.Arity.INFINITE;
 import static mychor.Utils.Arity.MULTIPLE;
 import static mychor.Utils.Arity.SINGLE;
 import static mychor.Utils.Direction.SELECT;
+import static mychor.Utils.Direction.VOID;
 
 public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayList<Communication> communicationsBranches, String label) {
 
@@ -89,7 +90,8 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         if(!(direction == comp.direction() && arity == comp.arity() && Objects.equals(label, comp.label))) return false;
         if(communicationsBranches.size() != comp.communicationsBranches().size()) return false;
         for (int i = 0; i < communicationsBranches.size(); i++) {
-            if(!communicationsBranches.get(i).equals(comp.communicationsBranches().get(i))) return false;
+            if(!(communicationsBranches.contains(comp.communicationsBranches().get(i))
+                    & comp.communicationsBranches().contains(communicationsBranches.get(i)))) return false;
         }
         return true;
     }
@@ -112,9 +114,13 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     public void addLeafCommunicationRoots(ArrayList<Communication> roots){
         if(communicationsBranches.isEmpty()){
             communicationsBranches.addAll(roots);
-            return;
+        }else{
+            if(roots.contains(new Communication(VOID, SINGLE))){
+                //can't add any continuation if there is already a void
+                return;
+            }
+            communicationsBranches.get(0).addLeafCommunicationRoots(roots);
         }
-        communicationsBranches.get(0).addLeafCommunicationRoots(roots);
     }
 
     @Override
