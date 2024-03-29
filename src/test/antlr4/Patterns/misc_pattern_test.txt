@@ -42,3 +42,10 @@ RandomlyIntricateOne
 a -> b;
 (b -> a)+
 "
+
+RandomlyIntricateOne2
+"
+((a -> b) | (b -> a))*;
+a -> b;
+(b -> a)+
+"
