@@ -8,6 +8,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -45,6 +46,47 @@ public class CommunicationTest {
                                     new Communication(Utils.Direction.RECEIVE))
                     )), "left")
     ));
+
+    // CONSTRUCTION
+    @Test
+    public void createSend(){
+        var c1 = new Communication(Utils.Direction.SEND);
+        assert(c1.isSend());
+    }
+    @Test
+    public void createReceive(){
+        var c1 = new Communication(Utils.Direction.RECEIVE);
+        assert(c1.isReceive());
+    }
+    @Test
+    public void createSelect(){
+        var c1 = new Communication(Utils.Direction.SELECT, "GET");
+        assert(c1.isSelect());
+    }
+    @Test
+    public void createSelectDoesntWorkIfNoLabel(){
+        assertThrows(NullPointerException.class, () -> new Communication(Utils.Direction.SELECT));
+    }
+    @Test
+    public void createBranching(){
+        var c1 = new Communication(Utils.Direction.BRANCH, "GET");
+        assert(c1.isBranch());
+    }
+    @Test
+    public void createBranchingDoesntWorkIfNoLabel(){
+        assertThrows(NullPointerException.class, () -> new Communication(Utils.Direction.BRANCH));
+    }
+    @Test
+    public void createCommunicationWithBranchesPossessingPreviousShouldWork(){
+        var cChild = new Communication(Utils.Direction.SEND);
+        var cParent = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(cChild)));
+        var cParent2 = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(cChild)));
+        assertTrue(cParent.containsDirectNextNode(cChild));
+        assertTrue(cParent2.containsDirectNextNode(cChild));
+
+        assertTrue(cChild.containsDirectPreviousNode(cParent2));
+        assertTrue(cChild.containsDirectPreviousNode(cParent));
+    }
 
     // EQUALITY
     @Test
@@ -206,13 +248,28 @@ public class CommunicationTest {
         var c = new Communication(Utils.Direction.SEND,
                 new ArrayList<>(List.of(
                         new Communication(Utils.Direction.SELECT,
-                                new ArrayList<>(List.of(c1)), "left", null),
+                                new ArrayList<>(List.of(c1)), "left"),
                         new Communication(Utils.Direction.SELECT,
-                                new ArrayList<>(List.of(c2)), "left", null),
+                                new ArrayList<>(List.of(c2)), "left"),
                         c3
                 )));
         var leaves = c.getLeaves();
         var leavesExpected = new ArrayList<>(List.of(c1,c2, c3));
         assertTrue(leaves.containsAll(leavesExpected) && leavesExpected.containsAll(leaves));
+    }
+    @Test
+    public void previousTest(){
+        var cChild = new Communication(Utils.Direction.SEND);
+        var cParent = new Communication(Utils.Direction.RECEIVE);
+        var cPParent = new Communication(Utils.Direction.SEND);
+        cParent.addLeafCommunicationRoots(new ArrayList<>(List.of(cChild)));
+        cPParent.addLeafCommunicationRoots(new ArrayList<>(List.of(cParent)));
+        assertTrue(cPParent.containsDirectNextNode(cParent));
+        assertTrue(cParent.containsDirectNextNode(cChild));
+        assertTrue(cChild.containsDirectPreviousNode(cParent));
+        assertTrue(cParent.containsDirectPreviousNode(cPParent));
+        assertTrue(cChild.nodeIsAbove(cPParent));
+        assertTrue(cChild.nodeIsAbove(cParent));;
+        assertTrue(cPParent.nodeIsBelow(cChild));
     }
 }

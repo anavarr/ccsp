@@ -236,11 +236,13 @@ public class SessionTest {
                 new Communication(Utils.Direction.RECEIVE)
         )));
         Communication c1 = new Communication(Utils.Direction.SEND);
+        Communication c1prime = new Communication(Utils.Direction.SEND);
         Communication c2 = new Communication(Utils.Direction.RECEIVE);
+        Communication c2prime = new Communication(Utils.Direction.RECEIVE);
         s.addLeafCommunicationRoots(new ArrayList<>(List.of(c1,c2)));
         Session totalSession = new Session("client", "server", new ArrayList<>(List.of(
                 new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
-                        c1,c2
+                        c1prime, c2prime
                 )))
         )));
         assertEquals(s, totalSession);
