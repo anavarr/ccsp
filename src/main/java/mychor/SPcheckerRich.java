@@ -335,15 +335,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     @Override
     public List<String> visitSnd(SPparserRich.SndContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE), 7);
+        return visitComm(ctx, new Communication(Utils.Direction.SEND), 7);
     }
     @Override
     public List<String> visitRcv(SPparserRich.RcvContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE), 7);
+        return visitComm(ctx, new Communication(Utils.Direction.RECEIVE), 7);
     }
     @Override
     public List<String> visitSel(SPparserRich.SelContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, ctx.getChild(2).getText()), 7);
+        return visitComm(ctx, new Communication(Utils.Direction.SELECT, ctx.getChild(2).getText()), 7);
     }
     @Override
     public List<String> visitBra(SPparserRich.BraContext ctx) {
@@ -360,7 +360,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var errors = new ArrayList<String>();
         for(int i=5; i< ctx.getChildCount();i+=6){
             compilerCtx = oldContext.duplicateContext();
-            errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, ctx.getChild(i-2).getText()), i));
+            errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, ctx.getChild(i-2).getText()), i));
             contexts.add(compilerCtx);
         }
         Behaviour merged = contexts.get(0).behaviours.get(compilerCtx.currentProcess);
@@ -416,8 +416,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
         }
         addBehaviour(new Comm(
-                compilerCtx.currentProcess, dest, communication.direction(),
-                communication.arity(), communication.label()));
+                compilerCtx.currentProcess, dest, communication.direction(), communication.label()));
         errors.addAll(ctx.getChild(continuationIndex).accept(this));
         return errors;
     }

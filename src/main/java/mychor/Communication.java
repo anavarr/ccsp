@@ -6,33 +6,29 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import static mychor.Utils.Arity.INFINITE;
-import static mychor.Utils.Arity.MULTIPLE;
-import static mychor.Utils.Arity.SINGLE;
 import static mychor.Utils.Direction.SELECT;
 import static mychor.Utils.Direction.VOID;
 
-public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayList<Communication> communicationsBranches, String label) {
+public record Communication(Utils.Direction direction, ArrayList<Communication> communicationsBranches, String label) {
 
     public Communication{
         Objects.requireNonNull(direction);
-        Objects.requireNonNull(arity);
         if(direction.equals(SELECT) || direction.equals(Utils.Direction.BRANCH)){
             Objects.requireNonNull(label);
         }
     }
 
-    public Communication(Utils.Direction direction, Utils.Arity arity, String label){
-        this(direction, arity, new ArrayList<>(), label);
+    public Communication(Utils.Direction direction, String label){
+        this(direction, new ArrayList<>(), label);
     }
-    public Communication(Utils.Direction direction, Utils.Arity arity, ArrayList<Communication> communicationsBranches){
-        this(direction, arity, communicationsBranches, null);
+    public Communication(Utils.Direction direction, ArrayList<Communication> communicationsBranches){
+        this(direction, communicationsBranches, null);
     }
-    public Communication(Utils.Direction direction, Utils.Arity arity, Communication nextCommunication){
-        this(direction, arity, new ArrayList<>(List.of(nextCommunication)));
+    public Communication(Utils.Direction direction, Communication nextCommunication){
+        this(direction, new ArrayList<>(List.of(nextCommunication)));
     }
-    public Communication(Utils.Direction direction, Utils.Arity arity){
-        this(direction, arity, new ArrayList<>());
+    public Communication(Utils.Direction direction){
+        this(direction, new ArrayList<>());
     }
 
     public boolean isSend(){
@@ -49,18 +45,6 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
 
     public boolean isBranch(){
         return direction == Utils.Direction.BRANCH;
-    }
-
-    public boolean isSingle(){
-        return arity == SINGLE;
-    }
-
-    public boolean isMultiple(){
-        return arity == MULTIPLE;
-    }
-
-    public boolean isInfinite(){
-        return arity == INFINITE;
     }
 
     public int getBranchesSize(){
@@ -87,7 +71,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     @Override
     public boolean equals(Object o){
         if (!(o instanceof Communication comp)) return false;
-        if(!(direction == comp.direction() && arity == comp.arity() && Objects.equals(label, comp.label))) return false;
+        if(!(direction == comp.direction() && Objects.equals(label, comp.label))) return false;
         if(communicationsBranches.size() != comp.communicationsBranches().size()) return false;
         for (int i = 0; i < communicationsBranches.size(); i++) {
             if(!(communicationsBranches.contains(comp.communicationsBranches().get(i))
@@ -115,7 +99,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
         if(communicationsBranches.isEmpty()){
             communicationsBranches.addAll(roots);
         }else{
-            if(roots.contains(new Communication(VOID, SINGLE))){
+            if(roots.contains(new Communication(VOID))){
                 //can't add any continuation if there is already a void
                 return;
             }
@@ -126,7 +110,7 @@ public record Communication(Utils.Direction direction, Utils.Arity arity, ArrayL
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder("Communication[\n");
-        s.append(String.format("\tdirection=%s\n\tarity=%s\n\tlabel=%s\n\t[", direction, arity, label));
+        s.append(String.format("\tdirection=%s\n\tlabel=%s\n\t[", direction, label));
         for (Communication communicationsRoot : communicationsBranches) {
             s.append("\n\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
         }

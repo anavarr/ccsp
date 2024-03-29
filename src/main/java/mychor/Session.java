@@ -160,7 +160,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                         List.of(
                                 new Communication(
                                         Utils.Direction.VOID,
-                                        Utils.Arity.SINGLE,
                                         new ArrayList<>(),
                                         null)
                         )
@@ -171,7 +170,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                         List.of(
                                 new Communication(
                                         Utils.Direction.VOID,
-                                        Utils.Arity.SINGLE,
                                         new ArrayList<>(),
                                         null)
                         )

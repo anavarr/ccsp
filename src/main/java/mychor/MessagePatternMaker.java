@@ -64,8 +64,8 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
     public String visitExchange(MessagePatternParser.ExchangeContext ctx) {
         var sender = ctx.getChild(0).getText();
         var rcver = ctx.getChild(2).getText();
-        var comA = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        var comB = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        var comA = new Communication(Utils.Direction.SEND);
+        var comB = new Communication(Utils.Direction.RECEIVE);
         if(vctx.firstExchange){
             vctx.setCurrentEnds(sender, rcver);
             vctx.sessions.put(vctx.getCurrentTitles()[0], new Session(sender, rcver, comA));

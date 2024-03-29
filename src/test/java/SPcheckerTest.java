@@ -19,11 +19,11 @@ public class SPcheckerTest extends ProgramReaderTest{
     public void exampleSelfComm(){
         spr.compilerCtx = ctx;
         ctx.sessions.add(new Session("client", "server",
-                new ArrayList<>(List.of(new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)))));
+                new ArrayList<>(List.of(new Communication(Utils.Direction.SEND)))));
         ctx.sessions.add(new Session("server", "client",
-                new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)))));
+                new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE)))));
         ctx.sessions.add(new Session("client", "client",
-                new ArrayList<>(List.of(new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)))));
+                new ArrayList<>(List.of(new Communication(Utils.Direction.SEND)))));
 
         assertFalse(spr.noSelfCom());
     }
@@ -31,9 +31,9 @@ public class SPcheckerTest extends ProgramReaderTest{
     public void exampleNoSelfComm(){
         spr.compilerCtx = ctx;
         ctx.sessions.add(new Session("client", "server",
-                new ArrayList<>(List.of(new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)))));
+                new ArrayList<>(List.of(new Communication(Utils.Direction.SEND)))));
         ctx.sessions.add(new Session("server", "client",
-                new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)))));
+                new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE)))));
 
         assertTrue(spr.noSelfCom());
     }

@@ -47,8 +47,8 @@ public class MessagePatternParsingTest {
 
     @Test
     public void simpleExchangeGivesOneElementSessions() throws IOException {
-        Session sa = new Session("a", "b", new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
-        Session sb = new Session("b", "a", new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE));
+        Session sa = new Session("a", "b", new Communication(Utils.Direction.SEND));
+        Session sb = new Session("b", "a", new Communication(Utils.Direction.RECEIVE));
         var spp = testFile("simple_exchange.txt");
         //turn spp into a using a MessagePatternVisitor
         var mpm = new MessagePatternMaker();
@@ -91,12 +91,12 @@ public class MessagePatternParsingTest {
         spp.pattern().accept(mpm);
         var map = mpm.getSessionsMap();
         Session choice_a = new Session("a", "b", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND),
+                new Communication(Utils.Direction.RECEIVE)
         )));
         Session choice_b = new Session("b", "a", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE),
+                new Communication(Utils.Direction.SEND)
         )));
         assertTrue(map.containsKey("CHOICE_a"));
         assertTrue(map.containsKey("CHOICE_b"));
@@ -110,15 +110,15 @@ public class MessagePatternParsingTest {
         var mpm = new MessagePatternMaker();
         spp.pattern().accept(mpm);
         var map = mpm.getSessionsMap();
-        var send = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var send = new Communication(Utils.Direction.SEND);
         send.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.VOID, Utils.Arity.SINGLE),
+                new Communication(Utils.Direction.VOID),
                 send
         )));
-        var recv = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        var recv = new Communication(Utils.Direction.RECEIVE);
         recv.addLeafCommunicationRoots(new ArrayList<>(List.of(
                 recv,
-                new Communication(Utils.Direction.VOID, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.VOID)
         )));
         Session repetition_a = new Session("a", "b", send);
         Session repetition_b = new Session("b", "a", recv);
@@ -134,19 +134,19 @@ public class MessagePatternParsingTest {
         var mpm = new MessagePatternMaker();
         spp.pattern().accept(mpm);
         var map = mpm.getSessionsMap();
-        var send = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        var send2 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var send = new Communication(Utils.Direction.SEND);
+        var send2 = new Communication(Utils.Direction.SEND);
         send.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
         send.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.VOID, Utils.Arity.SINGLE),
+                new Communication(Utils.Direction.VOID),
                 send2
         )));
-        var recv = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
-        var recv2 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        var recv = new Communication(Utils.Direction.RECEIVE);
+        var recv2 = new Communication(Utils.Direction.RECEIVE);
         recv.addLeafCommunicationRoots(new ArrayList<>(List.of(recv2)));
         recv.addLeafCommunicationRoots(new ArrayList<>(List.of(
                 recv2,
-                new Communication(Utils.Direction.VOID, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.VOID)
         )));
         Session repetition_a = new Session("alice", "bob", send);
         Session repetition_b = new Session("bob", "alice", recv);

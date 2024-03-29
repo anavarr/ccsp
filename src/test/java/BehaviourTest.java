@@ -108,39 +108,33 @@ public class BehaviourTest {
             assertNotEquals(n1, n2);
         }
         @Test
-        public void sendsSameEndsSameArityAreEqual(){
-            var s1 = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
-            var s2 = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+        public void sendsSameEndsAreEqual(){
+            var s1 = new Comm("a", "b", Utils.Direction.SEND, "");
+            var s2 = new Comm("a", "b", Utils.Direction.SEND, "");
             assertEquals(s1, s2);
         }
         @Test
-        public void sendsSameEndsDifferentArityAreNotEqual(){
-            var s1 = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
-            var s2 = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.MULTIPLE, "");
-            assertNotEquals(s1, s2);
-        }
-        @Test
-        public void sendsDifferentEndsSameArityAreNotEqual(){
-            var s1 = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
-            var s2 = new Comm("a", "c", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+        public void sendsDifferentEndsAreNotEqual(){
+            var s1 = new Comm("a", "b", Utils.Direction.SEND, "");
+            var s2 = new Comm("a", "c", Utils.Direction.SEND, "");
             assertNotEquals(s1, s2);
         }
         @Test
         public void sendsReceivesAreNotEqual(){
-            var s1 = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
-            var s2 = new Comm("a", "b", Utils.Direction.RECEIVE, Utils.Arity.SINGLE, "");
+            var s1 = new Comm("a", "b", Utils.Direction.SEND, "");
+            var s2 = new Comm("a", "b", Utils.Direction.RECEIVE, "");
             assertNotEquals(s1, s2);
         }
         @Test
         public void sendsSelectsAreNotEqual(){
-            var s1 = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
-            var s2 = new Comm("a", "b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "");
+            var s1 = new Comm("a", "b", Utils.Direction.SEND, "");
+            var s2 = new Comm("a", "b", Utils.Direction.SELECT, "");
             assertNotEquals(s1, s2);
         }
         @Test
         public void receivesSelectsAreNotEqual(){
-            var s1 = new Comm("a", "b", Utils.Direction.RECEIVE, Utils.Arity.SINGLE, "");
-            var s2 = new Comm("a", "b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "");
+            var s1 = new Comm("a", "b", Utils.Direction.RECEIVE, "");
+            var s2 = new Comm("a", "b", Utils.Direction.SELECT, "");
             assertNotEquals(s1, s2);
         }
         @Test
@@ -226,23 +220,23 @@ public class BehaviourTest {
         }
         @Test
         public void addContinuationToEmptySendReturnContinuatedSend(){
-            var send = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var send = new Comm("a", "b", Utils.Direction.SEND, "");
             send.addBehaviour(new End("a"));
-            var fullSend = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var fullSend = new Comm("a", "b", Utils.Direction.SEND, "");
             fullSend.nextBehaviours.put(";", new End("a"));
             assertEquals(send, fullSend);
         }
         @Test
         public void addContinuationToEmptySelectReturnContinuatedSelection(){
-            var select = new Comm("a", "b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var select = new Comm("a", "b", Utils.Direction.SELECT, "GET");
             select.addBehaviour(new End("a"));
-            var fullSelect = new Comm("a", "b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var fullSelect = new Comm("a", "b", Utils.Direction.SELECT, "GET");
             fullSelect.nextBehaviours.put("GET;", new End("a"));
             assertEquals(select, fullSelect);
         }
         @Test
         public void addContinuationToEmptyBranchingReturnContinuatedBranching(){
-            var br = new Comm("a", "b", Utils.Direction.BRANCH, Utils.Arity.SINGLE, "GET");
+            var br = new Comm("a", "b", Utils.Direction.BRANCH, "GET");
             br.addBehaviour(new End("a"));
 
             var fullNb = new HashMap<String, Behaviour>();
@@ -269,11 +263,11 @@ public class BehaviourTest {
         public void addContinuationToContinuedSendShouldAppendIt(){
             var nb = new HashMap<String, Behaviour>();
             nb.put(";", new Call("a","MyVar"));
-            var send = new Comm("a","b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var send = new Comm("a","b", Utils.Direction.SEND, "");
             send.nextBehaviours = nb;
             send.addBehaviour(new End("a"));
 
-            var fullSend = new Comm("a","b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var fullSend = new Comm("a","b", Utils.Direction.SEND, "");
             fullSend.nextBehaviours = new HashMap<>(Map.of(";",
                     new Call("a", new HashMap<>(Map.of("unfold", new End("a"))), "MyVar")));
             assertEquals(send, fullSend);
@@ -283,11 +277,11 @@ public class BehaviourTest {
         public void addContinuationToContinuedSelectShouldAppendIt(){
             var nb = new HashMap<String, Behaviour>();
             nb.put("GET;", new Call("a","MyVar"));
-            var select = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var select = new Comm("a","b", Utils.Direction.SELECT, "GET");
             select.nextBehaviours = nb;
             select.addBehaviour(new End("a"));
 
-            var fullSelect = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var fullSelect = new Comm("a","b", Utils.Direction.SELECT, "GET");
             fullSelect.nextBehaviours = new HashMap<>(Map.of("GET;",
                     new Call("a", new HashMap<>(Map.of("unfold", new End("a"))), "MyVar")));
             assertEquals(select, fullSelect);
@@ -327,20 +321,17 @@ public class BehaviourTest {
         }
         @Test
         public void sendIsNotFinal(){
-            var com = new Comm("myProcess", "myOtherProcess", Utils.Direction.SEND,
-                    Utils.Arity.SINGLE, "");
+            var com = new Comm("myProcess", "myOtherProcess", Utils.Direction.SEND, "");
             assertFalse(com.isFinal());
         }
         @Test
         public void receiveIsNotFinal(){
-            var com = new Comm("myProcess", "myOtherProcess", Utils.Direction.RECEIVE,
-                    Utils.Arity.SINGLE, "");
+            var com = new Comm("myProcess", "myOtherProcess", Utils.Direction.RECEIVE, "");
             assertFalse(com.isFinal());
         }
         @Test
         public void selectIsNotFinal(){
-            var com = new Comm("myProcess", "myOtherProcess", Utils.Direction.SELECT,
-                    Utils.Arity.SINGLE, "");
+            var com = new Comm("myProcess", "myOtherProcess", Utils.Direction.SELECT, "");
             assertFalse(com.isFinal());
         }
         @Test
@@ -410,7 +401,7 @@ public class BehaviourTest {
         }
         @Test
         public void sendDuplicationEqualButNotSame(){
-            var send = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var send = new Comm("a", "b", Utils.Direction.SEND, "");
             send.addBehaviour(new End("a"));
             var sendPrime = send.duplicate();
             assertNotSame(send, sendPrime);
@@ -418,7 +409,7 @@ public class BehaviourTest {
         }
         @Test
         public void selectDuplicationEqualButNotSame(){
-            var select = new Comm("a", "b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var select = new Comm("a", "b", Utils.Direction.SELECT, "GET");
             select.addBehaviour(new End("a"));
             var selectPrime = select.duplicate();
             assertNotSame(select, selectPrime);
@@ -473,7 +464,7 @@ public class BehaviourTest {
         }
         @Test
         public void reduceNonEmptyCallShouldReturnUnfoldedBehaviour(){
-            var continuation = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var continuation = new Comm("a", "b", Utils.Direction.SEND, "");
             var oldMqs = mqs.duplicate();
             var ca = new Call("process",new HashMap<>(Map.of("unfold", continuation )),"Var");
             var reduced = ca.reduce(behaviours, mqs);
@@ -516,7 +507,7 @@ public class BehaviourTest {
         }
         @Test
         public void reduceSendShouldGiveContinuationAndAddMessageInQueue(){
-            var send = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var send = new Comm("a", "b", Utils.Direction.SEND, "");
             var oldMqs = mqs.duplicate();
             send.reduce(behaviours, mqs);
             assertTrue(mqs.containsKey("a-b") && mqs.get("a-b").stream()
@@ -524,7 +515,7 @@ public class BehaviourTest {
         }
         @Test
         public void reduceSendShouldFailIfDestinationNotInEnv(){
-            var send = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var send = new Comm("a", "b", Utils.Direction.SEND, "");
             var b = new HashMap<String, Behaviour>();
             var oldMqs = mqs.duplicate();
             var reduced = send.reduce(b, mqs);
@@ -533,7 +524,7 @@ public class BehaviourTest {
         }
         @Test
         public void reduceReceiveShouldFailIfMsgQueueIsEmpty(){
-            var rcv = new Comm("a", "b", Utils.Direction.RECEIVE, Utils.Arity.SINGLE, "");
+            var rcv = new Comm("a", "b", Utils.Direction.RECEIVE, "");
             var oldMqs = mqs.duplicate();
             var reduced = rcv.reduce(behaviours, mqs);
             assertSame(rcv, reduced);
@@ -541,7 +532,7 @@ public class BehaviourTest {
         }
         @Test
         public void reduceReceiveShouldFailIfMsgQueueDoesntContainSend(){
-            var rcv = new Comm("a", "b", Utils.Direction.RECEIVE, Utils.Arity.SINGLE, "");
+            var rcv = new Comm("a", "b", Utils.Direction.RECEIVE, "");
             var oldMqs = mqs.duplicate();
             mqs.add(Utils.Direction.SELECT, "b", "a", "GET");
             var reduced = rcv.reduce(behaviours, mqs);
@@ -549,7 +540,7 @@ public class BehaviourTest {
         }
         @Test
         public void reduceReceiveShouldReturnContinuationAndConsumeSendFromQueue(){
-            var rcv = new Comm("a", "b", Utils.Direction.RECEIVE, Utils.Arity.SINGLE, "");
+            var rcv = new Comm("a", "b", Utils.Direction.RECEIVE, "");
             var cont = new End("a");
             rcv.addBehaviour(cont);
             var oldMqs = mqs.duplicate();
@@ -561,7 +552,7 @@ public class BehaviourTest {
 
         @Test
         public void reduceSelectShouldPutLabelInQueue(){
-            var select = new Comm("a", "b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var select = new Comm("a", "b", Utils.Direction.SELECT, "GET");
             select.reduce(behaviours, mqs);
             assertTrue(mqs.containsKey("a-b") && mqs.get("a-b").stream()
                     .filter(msg -> msg.direction() == Utils.Direction.SELECT && msg.label().equals("GET"))
@@ -637,9 +628,9 @@ public class BehaviourTest {
         @Test
         public void cdtAfterCallShouldReturnTwoThenElsePrefixedWithCall(){
             var hmCdt = new HashMap<String, Behaviour>();
-            var selectGet = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var selectGet = new Comm("a","b", Utils.Direction.SELECT, "GET");
             selectGet.addBehaviour(new End("a"));
-            var selectPut = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "PUT");
+            var selectPut = new Comm("a","b", Utils.Direction.SELECT, "PUT");
             selectPut.addBehaviour(new End("a"));
             hmCdt.put("then", selectGet);
             hmCdt.put("else", selectPut);
@@ -666,7 +657,7 @@ public class BehaviourTest {
         //simple case with continuations
         @Test
         public void sendShouldReturnContinuationExecutionPaths(){
-            var b = new Comm("a", "b", Utils.Direction.SEND, Utils.Arity.SINGLE, "");
+            var b = new Comm("a", "b", Utils.Direction.SEND, "");
             b.addBehaviour(new End("a"));
             var branches = b.getBranches();
             assertEquals(branches.size(), 1);
@@ -674,7 +665,7 @@ public class BehaviourTest {
         }
         @Test
         public void receiveShouldReturnContinuationExecutionPaths(){
-            var b = new Comm("a", "b", Utils.Direction.RECEIVE, Utils.Arity.SINGLE, "");
+            var b = new Comm("a", "b", Utils.Direction.RECEIVE, "");
             b.addBehaviour(new End("a"));
             var branches = b.getBranches();
             assertEquals(branches.size(), 1);
@@ -682,7 +673,7 @@ public class BehaviourTest {
         }
         @Test
         public void selectShouldReturnContinuationExecutionPaths(){
-            var b = new Comm("a", "b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "GET");
+            var b = new Comm("a", "b", Utils.Direction.SELECT, "GET");
             b.addBehaviour(new End("a"));
             var branches = b.getBranches();
             assertEquals(branches.size(), 1);
@@ -701,17 +692,17 @@ public class BehaviourTest {
         @Test
         public void branching2andConditionalShouldReturnFourPaths(){
             var hmCdt1 = new HashMap<String, Behaviour>();
-            var selectBranch1Then = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "1-THEN");
+            var selectBranch1Then = new Comm("a","b", Utils.Direction.SELECT, "1-THEN");
             selectBranch1Then.addBehaviour(new End("a"));
-            var selectBranch1Else = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "1-ELSE");
+            var selectBranch1Else = new Comm("a","b", Utils.Direction.SELECT, "1-ELSE");
             selectBranch1Else.addBehaviour(new End("a"));
             hmCdt1.put("then", selectBranch1Then);
             hmCdt1.put("else", selectBranch1Else);
 
             var hmCdt2 = new HashMap<String, Behaviour>();
-            var selectBranch2Then = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "2-THEN");
+            var selectBranch2Then = new Comm("a","b", Utils.Direction.SELECT, "2-THEN");
             selectBranch2Then.addBehaviour(new End("a"));
-            var selectBranch2Else = new Comm("a","b", Utils.Direction.SELECT, Utils.Arity.SINGLE, "2-ELSE");
+            var selectBranch2Else = new Comm("a","b", Utils.Direction.SELECT, "2-ELSE");
             selectBranch2Else.addBehaviour(new End("a"));
             hmCdt2.put("then", selectBranch2Then);
             hmCdt2.put("else", selectBranch2Else);
