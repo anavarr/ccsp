@@ -33,18 +33,36 @@ public class MessagePatternParsingTest {
         assertEquals(spp.getNumberOfSyntaxErrors(), 0);
     }
     @Test
-    public void testWrongPatternTitleShouldFail() throws IOException {
+    public void wrongPatternTitleShouldFail() throws IOException {
         var spp = testFile("pattern_title_error.txt");
         spp.pattern();
         assertEquals(spp.getNumberOfSyntaxErrors(), 1);
     }
     @Test
-    public void testWrongPatternSequentShouldFail() throws IOException {
+    public void simpleSequentShouldGiveLinearGraphTwoNodes() throws IOException{
+        var spp = testFile("pattern_sequent.txt");
+        //turn spp into a using a MessagePatternVisitor
+        var mpm = new MessagePatternMaker();
+        spp.pattern().accept(mpm);
+        var map = mpm.getSessionsMap();
+        assertTrue(map.containsKey("REST_client"));
+        assertTrue(map.containsKey("REST_server"));
+        var clientCommunications = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                new Communication(Utils.Direction.RECEIVE))));
+        var serverCommunications = new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                new Communication(Utils.Direction.SEND))));
+
+        Session client = new Session("client", "server", new ArrayList<>(List.of(clientCommunications)));
+        Session server = new Session("server","client",  new ArrayList<>(List.of(serverCommunications)));
+        assertEquals(map.get("REST_client"), client);
+        assertEquals(map.get("REST_server"), server);
+    }
+    @Test
+    public void wrongPatternSequentShouldFail() throws IOException {
         var spp = testFile("pattern_sequent_error.txt");
         spp.pattern();
         assertEquals(spp.getNumberOfSyntaxErrors(), 1);
     }
-
     @Test
     public void simpleExchangeGivesOneElementSessions() throws IOException {
         Session sa = new Session("a", "b", new Communication(Utils.Direction.SEND));
@@ -59,7 +77,6 @@ public class MessagePatternParsingTest {
         assertEquals(map.get("SIMPLE_EXCHANGE_a"), sa);
         assertEquals(map.get("SIMPLE_EXCHANGE_b"), sb);
     }
-
     @Test
     public void patternsListShouldReturnAllPatternNamesTwice() throws IOException {
         var spp = testFile("misc_pattern_test.txt");
@@ -85,7 +102,6 @@ public class MessagePatternParsingTest {
         assertTrue(map.containsKey("RandomlyIntricateOne2_a"));
         assertTrue(map.containsKey("RandomlyIntricateOne2_b"));
     }
-
     @Test
     public void choicePatternShouldReturnMultiRootSessions() throws IOException {
         var spp = testFile("choice_pattern.txt");
@@ -105,7 +121,6 @@ public class MessagePatternParsingTest {
         assertEquals(map.get("CHOICE_a"), choice_a);
         assertEquals(map.get("CHOICE_a"), choice_b);
     }
-
     @Test
     public void repetitionPatternShouldReturnMultiRootSessions() throws IOException {
         var spp = testFile("repetition_pattern.txt");
@@ -131,7 +146,6 @@ public class MessagePatternParsingTest {
         assertEquals(map.get("Repetition_a"), repetition_a);
         assertEquals(map.get("Repetition_a"), repetition_b);
     }
-
     @Test
     public void atLeastOncePatternShouldReturnMultiRootSessions() throws IOException {
         var spp = testFile("repetition_at_least_once.txt");

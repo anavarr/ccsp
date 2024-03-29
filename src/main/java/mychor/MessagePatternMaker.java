@@ -10,14 +10,10 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         HashMap<String, Session> sessions = new HashMap<>();
         boolean firstExchange = true;
 
-        private String[] currentEnds = new String[2];
         private String currentTitle;
+        private HashMap<String, Session> currentSessions = new HashMap<>();
         public VisitorContext(){
 
-        }
-        public void resetEnds(){
-            currentEnds[0]=null;
-            currentEnds[1]=null;
         }
         public void setCurrentTitle(String title){
             currentTitle = title;
@@ -25,34 +21,21 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         public String getCurrentTitle(){
             return currentTitle;
         }
-        public String[] getCurrentTitles(){
-            String[] titles = new String[2];
-            getCurrentEnds().ifPresentOrElse(
-                    (ends) -> {
-                        titles[0] = currentTitle+"_"+ends[0];
-                        titles[1] = currentTitle+"_"+ends[1];
-                    },
-                    () -> {}
-            );
-            return titles;
-        }
-        public boolean setCurrentEnds(String a, String b){
-            if(currentEnds[0] != null || currentEnds[1] != null) return false;
-            currentEnds[0] = a;
-            currentEnds[1] = b;
-            return true;
-        }
 
-        public Optional<String[]> getCurrentEnds(){
-            if(currentEnds[0] == null || currentEnds[1] == null) return Optional.empty();
-            return Optional.of(currentEnds);
-        }
-
-        public void reset() {
-            resetEnds();
-            currentTitle = null;
-            firstExchange = true;
-        }
+//        public VisitorContext duplicate(){
+//            var vc = new VisitorContext();
+//            vc.firstExchange = this.firstExchange;
+//            vc.currentTitle = this.currentTitle;
+//            for (String s : this.sessions.keySet()) {
+//                var session = sessions.get(s);
+//                var communicationRootsDuplicate = new ArrayList<Communication>();
+//                for (Communication communicationsRoot : session.communicationsRoots()) {
+//                    communicationRootsDuplicate.add(communicationsRoot.duplicate());
+//                }
+//                vc.sessions.put(s, new Session(session.peerA(),session.peerB(), session.communicationsRoots()));
+//            }
+//            vc.sessions
+//        }
     }
 
     public HashMap<String, Session> getSessionsMap(){
@@ -60,23 +43,48 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
     }
 
     VisitorContext vctx = new VisitorContext();
+
+    @Override
+    public String visitSequent(MessagePatternParser.SequentContext ctx) {
+        // 0 expr
+        // 1 ;
+        // 2 expr
+        vctx.currentSessions = new HashMap<>();
+        vctx.firstExchange = true;
+        ctx.getChild(0).accept(this);
+        var leftSessions = vctx.currentSessions;
+        vctx.currentSessions = new HashMap<>();
+        vctx.firstExchange = true;
+        ctx.getChild(2).accept(this);
+        var rightSessions = vctx.currentSessions;
+        for (String s : leftSessions.keySet()) {
+            leftSessions.get(s).addLeafCommunicationRoots(rightSessions.get(s).communicationsRoots());
+        }
+        vctx.currentSessions = leftSessions;
+        for (String s : vctx.currentSessions.keySet()) {
+            System.out.println(vctx.currentSessions.get(s));
+        }
+        return null;
+    }
+
     @Override
     public String visitExchange(MessagePatternParser.ExchangeContext ctx) {
+        // 0 id
+        // 1 ->
+        // 2 id
         var sender = ctx.getChild(0).getText();
         var rcver = ctx.getChild(2).getText();
-        var comA = new Communication(Utils.Direction.SEND);
-        var comB = new Communication(Utils.Direction.RECEIVE);
+        var comSend = new Communication(Utils.Direction.SEND);
+        var comReceive = new Communication(Utils.Direction.RECEIVE);
         if(vctx.firstExchange){
-            vctx.setCurrentEnds(sender, rcver);
-            vctx.sessions.put(vctx.getCurrentTitles()[0], new Session(sender, rcver, comA));
-            vctx.sessions.put(vctx.getCurrentTitles()[1], new Session(rcver, sender, comB));
+            vctx.currentSessions.put(sender,  new Session(sender, rcver, comSend));
+            vctx.currentSessions.put(rcver,  new Session(rcver, sender, comReceive));
             vctx.firstExchange = false;
         }else{
-            var cts = vctx.getCurrentTitles();
-            vctx.sessions.get(cts[0]).addLeafCommunicationRoots(new ArrayList<>(List.of(comA)));
-            vctx.sessions.get(cts[0]).addLeafCommunicationRoots(new ArrayList<>(List.of(comB)));
+            vctx.currentSessions.get(sender).addLeafCommunicationRoots(new ArrayList<>(List.of(comSend)));
+            vctx.currentSessions.get(rcver).addLeafCommunicationRoots(new ArrayList<>(List.of(comReceive)));
         }
-        return super.visitExchange(ctx);
+        return null;
     }
 
     @Override
@@ -85,8 +93,13 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         // 1 "
         // 2 expression
         // 3 "
-        vctx.reset();
+        vctx.firstExchange = true;
         vctx.setCurrentTitle(ctx.getChild(0).getText());
-        return super.visitPattern_single(ctx);
+        ctx.getChild(2).accept(this);
+        for (String s : vctx.currentSessions.keySet()) {
+            vctx.sessions.put(vctx.currentTitle+"_"+s, vctx.currentSessions.get(s));
+        }
+        System.out.println(vctx.sessions.keySet());
+        return null;
     }
 }
