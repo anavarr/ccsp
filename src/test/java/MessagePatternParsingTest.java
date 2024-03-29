@@ -67,7 +67,7 @@ public class MessagePatternParsingTest {
         var mpm = new MessagePatternMaker();
         spp.pattern().accept(mpm);
         var map = mpm.getSessionsMap();
-        assertEquals(map.keySet().size(), 14);
+        assertEquals(map.keySet().size(), 16);
         assertTrue(map.containsKey("REST_client"));
         assertTrue(map.containsKey("REST_server"));
         assertTrue(map.containsKey("ReactiveStreams_client"));
@@ -82,6 +82,8 @@ public class MessagePatternParsingTest {
         assertTrue(map.containsKey("GRPC_st_st_server"));
         assertTrue(map.containsKey("RandomlyIntricateOne_a"));
         assertTrue(map.containsKey("RandomlyIntricateOne_b"));
+        assertTrue(map.containsKey("RandomlyIntricateOne2_a"));
+        assertTrue(map.containsKey("RandomlyIntricateOne2_b"));
     }
 
     @Test
