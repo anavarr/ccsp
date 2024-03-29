@@ -206,9 +206,9 @@ public class CommunicationTest {
         var c = new Communication(Utils.Direction.SEND,
                 new ArrayList<>(List.of(
                         new Communication(Utils.Direction.SELECT,
-                                new ArrayList<>(List.of(c1)), "left"),
+                                new ArrayList<>(List.of(c1)), "left", null),
                         new Communication(Utils.Direction.SELECT,
-                                new ArrayList<>(List.of(c2)), "left"),
+                                new ArrayList<>(List.of(c2)), "left", null),
                         c3
                 )));
         var leaves = c.getLeaves();

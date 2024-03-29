@@ -1,5 +1,7 @@
 package mychor;
 
+import java.lang.ref.Reference;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -9,20 +11,41 @@ import java.util.Set;
 import static mychor.Utils.Direction.SELECT;
 import static mychor.Utils.Direction.VOID;
 
-public record Communication(Utils.Direction direction, ArrayList<Communication> communicationsBranches, String label) {
+public class Communication {
+    private final Utils.Direction direction;
+    private final ArrayList<Communication> communicationsBranches;
+    private final String label;
+    private Communication previous;
 
-    public Communication{
+    public Communication(Utils.Direction direction, ArrayList<Communication> comBranches, String label, Communication prev){
         Objects.requireNonNull(direction);
+        this.direction = direction;
+        communicationsBranches = comBranches;
+        this.label = label;
+        previous = prev;
         if(direction.equals(SELECT) || direction.equals(Utils.Direction.BRANCH)){
             Objects.requireNonNull(label);
         }
+        for (Communication communicationsBranch : communicationsBranches) {
+            communicationsBranch.previous = this;
+        }
+    }
+
+    public Utils.Direction getDirection() {
+        return direction;
+    }
+    public String getLabel(){
+        return label;
     }
 
     public Communication(Utils.Direction direction, String label){
-        this(direction, new ArrayList<>(), label);
+        this(direction, new ArrayList<>(), label, null);
     }
     public Communication(Utils.Direction direction, ArrayList<Communication> communicationsBranches){
-        this(direction, communicationsBranches, null);
+        this(direction, communicationsBranches, null, null);
+    }
+    public Communication(Utils.Direction direction, ArrayList<Communication> communicationsBranches, String label){
+        this(direction, communicationsBranches, label, null);
     }
     public Communication(Utils.Direction direction, Communication nextCommunication){
         this(direction, new ArrayList<>(List.of(nextCommunication)));
@@ -58,11 +81,11 @@ public record Communication(Utils.Direction direction, ArrayList<Communication> 
         if (!(isSend() ? comp.isReceive() :
                 (isReceive() ? comp.isSend() :
                         (isBranch() ? comp.isSelect() : comp.isBranch())))) return false;
-        if(communicationsBranches.size() != comp.communicationsBranches().size()) return false;
+        if(communicationsBranches.size() != comp.communicationsBranches.size()) return false;
         if(!Objects.equals(label, comp.label)) return false;
         for (int i = 0; i < communicationsBranches.size(); i++) {
             var c1 = communicationsBranches.get(i);
-            var c2 = comp.communicationsBranches().get(i);
+            var c2 = comp.communicationsBranches.get(i);
             if(!c1.isComplementary(c2)) return false;
         }
         return true;
@@ -71,11 +94,11 @@ public record Communication(Utils.Direction direction, ArrayList<Communication> 
     @Override
     public boolean equals(Object o){
         if (!(o instanceof Communication comp)) return false;
-        if(!(direction == comp.direction() && Objects.equals(label, comp.label))) return false;
-        if(communicationsBranches.size() != comp.communicationsBranches().size()) return false;
+        if(!(direction == comp.direction && Objects.equals(label, comp.label))) return false;
+        if(communicationsBranches.size() != comp.communicationsBranches.size()) return false;
         for (int i = 0; i < communicationsBranches.size(); i++) {
-            if(!(communicationsBranches.contains(comp.communicationsBranches().get(i))
-                    & comp.communicationsBranches().contains(communicationsBranches.get(i)))) return false;
+            if(!(communicationsBranches.contains(comp.communicationsBranches.get(i))
+                    & comp.communicationsBranches.contains(communicationsBranches.get(i)))) return false;
         }
         return true;
     }
@@ -98,6 +121,9 @@ public record Communication(Utils.Direction direction, ArrayList<Communication> 
     public void addLeafCommunicationRoots(ArrayList<Communication> roots){
         if(communicationsBranches.isEmpty()){
             communicationsBranches.addAll(roots);
+            for (Communication root : roots) {
+                root.previous = this;
+            }
         }else{
             if(roots.contains(new Communication(VOID))){
                 //can't add any continuation if there is already a void

@@ -416,7 +416,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
         }
         addBehaviour(new Comm(
-                compilerCtx.currentProcess, dest, communication.direction(), communication.label()));
+                compilerCtx.currentProcess, dest, communication.getDirection(), communication.getLabel()));
         errors.addAll(ctx.getChild(continuationIndex).accept(this));
         return errors;
     }
