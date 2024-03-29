@@ -121,7 +121,9 @@ public class MessagePatternParsingTest {
                 new Communication(Utils.Direction.VOID)
         )));
         Session repetition_a = new Session("a", "b", send);
+        repetition_a.expandTopCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         Session repetition_b = new Session("b", "a", recv);
+        repetition_b.expandTopCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         assertTrue(map.containsKey("Repetition_a"));
         assertTrue(map.containsKey("Repetition_b"));
         assertEquals(map.get("Repetition_a"), repetition_a);
@@ -135,19 +137,10 @@ public class MessagePatternParsingTest {
         spp.pattern().accept(mpm);
         var map = mpm.getSessionsMap();
         var send = new Communication(Utils.Direction.SEND);
-        var send2 = new Communication(Utils.Direction.SEND);
-        send.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
-        send.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.VOID),
-                send2
-        )));
+        send.addLeafCommunicationRoots(new ArrayList<>(List.of(send, new Communication(Utils.Direction.VOID))));
+        System.out.println(send);
         var recv = new Communication(Utils.Direction.RECEIVE);
-        var recv2 = new Communication(Utils.Direction.RECEIVE);
-        recv.addLeafCommunicationRoots(new ArrayList<>(List.of(recv2)));
-        recv.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                recv2,
-                new Communication(Utils.Direction.VOID)
-        )));
+        recv.addLeafCommunicationRoots(new ArrayList<>(List.of(recv, new Communication(Utils.Direction.VOID))));
         Session repetition_a = new Session("alice", "bob", send);
         Session repetition_b = new Session("bob", "alice", recv);
         assertTrue(map.containsKey("AtLeastOnce_alice"));
