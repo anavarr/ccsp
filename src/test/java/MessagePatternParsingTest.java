@@ -144,7 +144,7 @@ public class MessagePatternParsingTest {
         assertTrue(map.containsKey("Repetition_a"));
         assertTrue(map.containsKey("Repetition_b"));
         assertEquals(map.get("Repetition_a"), repetition_a);
-        assertEquals(map.get("Repetition_a"), repetition_b);
+        assertEquals(map.get("Repetition_b"), repetition_b);
     }
     @Test
     public void atLeastOncePatternShouldReturnMultiRootSessions() throws IOException {

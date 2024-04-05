@@ -110,4 +110,58 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         }
         return null;
     }
+
+    @Override
+    public String visitRepeat(MessagePatternParser.RepeatContext ctx) {
+        // 0 (
+        // 1 expr
+        // 2 )
+        // 3 (REPEATER)?
+        vctx.currentSessions = new HashMap<>();
+        vctx.firstExchange = true;
+        ctx.getChild(1).accept(this);
+        var nestedSession = vctx.currentSessions;
+
+        if(ctx.children.size() <= 3){
+            return null;
+        }
+
+        switch (ctx.getChild(3).getText()){
+            case "*" :
+                for (String s : nestedSession.keySet()) {
+                    var session = nestedSession.get(s);
+                    var topNodes = session.communicationsRoots();
+                    var bottomNodes = session.getLeaves();
+                    for (Communication bottomNode : bottomNodes) {
+                        bottomNode.addLeafCommunicationRoots(topNodes);
+                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                                new Communication(Utils.Direction.VOID))));
+                    }
+                    session.expandTopCommunicationRoots(new ArrayList<>(List.of(
+                            new Communication(Utils.Direction.VOID))));
+                }
+                break;
+            case "?" :
+                for (String s : nestedSession.keySet()) {
+                    var session = nestedSession.get(s);
+                    session.expandTopCommunicationRoots(new ArrayList<>(List.of(
+                            new Communication(Utils.Direction.VOID))));
+                }
+                break;
+            case "+" :
+                for (String s : nestedSession.keySet()) {
+                    var session = nestedSession.get(s);
+                    var topNodes = session.communicationsRoots();
+                    var bottomNodes = session.getLeaves();
+                    for (Communication bottomNode : bottomNodes) {
+                        bottomNode.addLeafCommunicationRoots(topNodes);
+                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                                new Communication(Utils.Direction.VOID))));
+                    }
+                }
+                break;
+        }
+        vctx.currentSessions = nestedSession;
+        return null;
+    }
 }
