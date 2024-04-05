@@ -18,24 +18,6 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         public void setCurrentTitle(String title){
             currentTitle = title;
         }
-        public String getCurrentTitle(){
-            return currentTitle;
-        }
-
-//        public VisitorContext duplicate(){
-//            var vc = new VisitorContext();
-//            vc.firstExchange = this.firstExchange;
-//            vc.currentTitle = this.currentTitle;
-//            for (String s : this.sessions.keySet()) {
-//                var session = sessions.get(s);
-//                var communicationRootsDuplicate = new ArrayList<Communication>();
-//                for (Communication communicationsRoot : session.communicationsRoots()) {
-//                    communicationRootsDuplicate.add(communicationsRoot.duplicate());
-//                }
-//                vc.sessions.put(s, new Session(session.peerA(),session.peerB(), session.communicationsRoots()));
-//            }
-//            vc.sessions
-//        }
     }
 
     public HashMap<String, Session> getSessionsMap(){
@@ -100,6 +82,32 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
             vctx.sessions.put(vctx.currentTitle+"_"+s, vctx.currentSessions.get(s));
         }
         System.out.println(vctx.sessions.keySet());
+        return null;
+    }
+
+    @Override
+    public String visitChoice(MessagePatternParser.ChoiceContext ctx) {
+        // 0 expr
+        // 1 |
+        // 2 expr
+        vctx.currentSessions = new HashMap<>();
+        vctx.firstExchange = true;
+        ctx.getChild(0).accept(this);
+        var leftSessions = vctx.currentSessions;
+
+        vctx.currentSessions = new HashMap<>();
+        vctx.firstExchange = true;
+        ctx.getChild(2).accept(this);
+        var rightSessions = vctx.currentSessions;
+
+
+        for (String s : leftSessions.keySet()) {
+            leftSessions.get(s).expandTopCommunicationRoots(rightSessions.get(s).communicationsRoots());
+        }
+        vctx.currentSessions = leftSessions;
+        for (String s : vctx.currentSessions.keySet()) {
+            System.out.println(vctx.currentSessions.get(s));
+        }
         return null;
     }
 }

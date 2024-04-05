@@ -119,7 +119,7 @@ public class MessagePatternParsingTest {
         assertTrue(map.containsKey("CHOICE_a"));
         assertTrue(map.containsKey("CHOICE_b"));
         assertEquals(map.get("CHOICE_a"), choice_a);
-        assertEquals(map.get("CHOICE_a"), choice_b);
+        assertEquals(map.get("CHOICE_b"), choice_b);
     }
     @Test
     public void repetitionPatternShouldReturnMultiRootSessions() throws IOException {
