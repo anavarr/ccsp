@@ -28,6 +28,11 @@ public class PatternDetector {
         var mpm = new MessagePatternMaker();
         spp.pattern().accept(mpm);
         patterns = mpm.getSessionsMap();
+        for (String s : patterns.keySet()) {
+            System.out.println("================");
+            System.out.println(s);
+            System.out.println(patterns.get(s));
+        }
     }
 
     public PatternDetector(CompilerContext ctx){
@@ -44,11 +49,6 @@ public class PatternDetector {
         for (Session session : ctx.sessions) {
             compatibleFrameworks.put(session, new ArrayList<>());
             for (String name : patterns.keySet()) {
-                if(session.areEnds("alice", "store") && name.equals("GRPC_st_st_client")){
-                    System.out.println(session);
-                    System.out.println("======");
-                    System.out.println(patterns.get(name));
-                }
                 if(testCompatibility(session, patterns.get(name))) compatibleFrameworks.get(session).add(name);
             }
         }

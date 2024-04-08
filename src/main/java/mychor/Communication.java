@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static mychor.Utils.Direction.BRANCH;
+import static mychor.Utils.Direction.RECEIVE;
 import static mychor.Utils.Direction.SELECT;
+import static mychor.Utils.Direction.SEND;
 import static mychor.Utils.Direction.VOID;
 
 public class Communication {
@@ -173,8 +176,9 @@ public class Communication {
 
     @Override
     public String toString() {
-        StringBuilder s = new StringBuilder("Communication[\n");
-        s.append(String.format("\tdirection=%s\n\tlabel=%s\n\t[", direction, label));
+        StringBuilder s = new StringBuilder("Communication").append(" ").append(this.hashCode()).append("[\n");
+        s.append(String.format("\tdirection=%s\n\tlabel=%s\n\trecursive calls=%s\n\t[",
+                direction, label, recursiveCallers.stream().map((it -> it.hashCode())).toList()));
         for (Communication communicationsRoot : nextCommunicationNodes) {
             s.append("\n\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
         }
@@ -202,4 +206,36 @@ public class Communication {
         return nextCommunicationNodes.contains(com);
     }
     public boolean containsDirectPreviousNode(Communication com) { return previousCommunicationNodes.contains(com); }
+
+    public boolean supports(Communication targetNode) {
+        if(direction == SEND && (targetNode.direction == RECEIVE || targetNode.direction == BRANCH) ) return false;
+        if(direction == RECEIVE && (targetNode.direction == SEND || targetNode.direction == SELECT)) return false;
+
+        boolean oneCompatiblePath;
+        //if there are no more target nodes then the protocol must be over
+        if(targetNode.nextCommunicationNodes.isEmpty() &&
+                !(nextCommunicationNodes.isEmpty() || nextCommunicationNodes.contains(new Communication(VOID))))
+            return false;
+        for (Communication nextTargetCommunicationNode : targetNode.nextCommunicationNodes) {
+            oneCompatiblePath = false;
+            //try next nodes first
+            for (Communication nextCommunicationNode : nextCommunicationNodes) {
+                if(nextCommunicationNode.supports(nextTargetCommunicationNode)){
+                    oneCompatiblePath = true;
+                    break;
+                }
+            }
+            //then try recursive calls next nodes didn't give anything
+            if(!oneCompatiblePath){
+                for (Communication recursiveCommunicationNode : recursiveCallers) {
+                    if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
+                        oneCompatiblePath = true;
+                        break;
+                    }
+                }
+            }
+            if(!oneCompatiblePath) return false;
+        }
+        return true;
+    }
 }

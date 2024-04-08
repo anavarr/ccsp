@@ -119,6 +119,7 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
             return null;
         }
 
+        var voidNode = new Communication(Utils.Direction.VOID);
         switch (ctx.getChild(3).getText()){
             case "*" :
                 for (String s : nestedSession.keySet()) {
@@ -127,18 +128,15 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
                     var bottomNodes = session.getLeaves();
                     for (Communication bottomNode : bottomNodes) {
                         bottomNode.addLeafCommunicationRoots(topNodes);
-                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                                new Communication(Utils.Direction.VOID))));
+                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(voidNode)));
                     }
-                    session.expandTopCommunicationRoots(new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.VOID))));
+                    session.expandTopCommunicationRoots(new ArrayList<>(List.of(voidNode)));
                 }
                 break;
             case "?" :
                 for (String s : nestedSession.keySet()) {
                     var session = nestedSession.get(s);
-                    session.expandTopCommunicationRoots(new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.VOID))));
+                    session.expandTopCommunicationRoots(new ArrayList<>(List.of(voidNode)));
                 }
                 break;
             case "+" :
@@ -148,8 +146,7 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
                     var bottomNodes = session.getLeaves();
                     for (Communication bottomNode : bottomNodes) {
                         bottomNode.addLeafCommunicationRoots(topNodes);
-                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                                new Communication(Utils.Direction.VOID))));
+                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(voidNode)));
                     }
                 }
                 break;

@@ -201,4 +201,19 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     public void walk(){
         
     }
+
+    public boolean supports(Session target) {
+        boolean oneCompatiblePath;
+        for (Communication targetNode : target.communicationsRoots) {
+            oneCompatiblePath = false;
+            for (Communication node : communicationsRoots) {
+                if(node.supports(targetNode)){
+                    oneCompatiblePath = true;
+                    break;
+                }
+            }
+            if(!oneCompatiblePath) return false;
+        }
+        return true;
+    }
 }

@@ -1,4 +1,5 @@
 import mychor.PatternDetector;
+import mychor.Session;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -38,7 +39,14 @@ public class PatternDetectionTest extends ProgramReaderTest{
         var ctx = testFile("Three_buyer_protocol.sp").compilerCtx;
         PatternDetector detector = new PatternDetector(ctx);
         var cf = detector.detectCompatibleFrameworks();
-        assertTrue(cf.containsValue("gRPC_st_st"));
+        for (Session session : ctx.sessions) {
+            if(session.peerA().equals("alice") && session.peerB().equals("store")){
+                assertTrue(cf.get(session).contains("GRPC_st_st_client"));
+            }
+            if(session.peerA().equals("store") && session.peerB().equals("alice")){
+                assertTrue(cf.get(session).contains("GRPC_st_st_server"));
+            }
+        }
     }
     @Test
     public void threeBuyersAliceStoreCanBeImplementedUsingReactiveStreamsWithAliceClient() throws IOException {
