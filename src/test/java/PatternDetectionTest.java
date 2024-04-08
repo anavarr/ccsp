@@ -11,40 +11,40 @@ public class PatternDetectionTest extends ProgramReaderTest{
     public void threeBuyersAliceStoreCantBeImplementedUsingNRestCallsWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().contains("REST_PATTERN"));
+        assertFalse(detector.detectCompatibleFrameworks().containsValue("REST_PATTERN"));
     }
     @Test
     public void threeBuyersAliceStoreCantBeImplementedUsingNGrpcUnUnWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().contains("gRPC_un_un"));
+        assertFalse(detector.detectCompatibleFrameworks().containsValue("gRPC_un_un"));
     }
     @Test
     public void threeBuyersAliceStoreCantBeImplementedUsingNGrpcUnStrWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().contains("gRPC_un_st"));
+        assertFalse(detector.detectCompatibleFrameworks().containsValue("gRPC_un_st"));
     }
     @Test
     public void threeBuyersAliceStoreCantBeImplementedUsingNGrpcStrUnWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().contains("gRPC_st_un"));
+        assertFalse(detector.detectCompatibleFrameworks().containsValue("gRPC_st_un"));
     }
 
 
     @Test
     public void threeBuyersAliceStoreCanBeImplementedUsingGrpcStrStrWithAliceClient() throws IOException {
-        var ctx = testFile("Three_buyer_protocol.sp");
-        PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertTrue(detector.detectCompatibleFrameworks().contains("gRPC_st_st"));
+        var ctx = testFile("Three_buyer_protocol.sp").compilerCtx;
+        PatternDetector detector = new PatternDetector(ctx);
+        var cf = detector.detectCompatibleFrameworks();
+        assertTrue(cf.containsValue("gRPC_st_st"));
     }
     @Test
     public void threeBuyersAliceStoreCanBeImplementedUsingReactiveStreamsWithAliceClient() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertTrue(detector.detectCompatibleFrameworks().contains("REACTIVE_MESSAGING"));
+        var cf = detector.detectCompatibleFrameworks();
+        assertTrue(cf.containsValue("REACTIVE_MESSAGING"));
     }
-
-
 }

@@ -43,9 +43,6 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
             leftSessions.get(s).addLeafCommunicationRoots(rightSessions.get(s).communicationsRoots());
         }
         vctx.currentSessions = leftSessions;
-        for (String s : vctx.currentSessions.keySet()) {
-            System.out.println(vctx.currentSessions.get(s));
-        }
         return null;
     }
 
@@ -81,7 +78,6 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         for (String s : vctx.currentSessions.keySet()) {
             vctx.sessions.put(vctx.currentTitle+"_"+s, vctx.currentSessions.get(s));
         }
-        System.out.println(vctx.sessions.keySet());
         return null;
     }
 
@@ -105,9 +101,6 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
             leftSessions.get(s).expandTopCommunicationRoots(rightSessions.get(s).communicationsRoots());
         }
         vctx.currentSessions = leftSessions;
-        for (String s : vctx.currentSessions.keySet()) {
-            System.out.println(vctx.currentSessions.get(s));
-        }
         return null;
     }
 
