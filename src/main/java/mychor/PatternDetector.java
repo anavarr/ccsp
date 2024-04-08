@@ -28,6 +28,9 @@ public class PatternDetector {
         var mpm = new MessagePatternMaker();
         spp.pattern().accept(mpm);
         patterns = mpm.getSessionsMap();
+        for (Session session : patterns.values()) {
+            session.cleanVoid();
+        }
         for (String s : patterns.keySet()) {
             System.out.println("================");
             System.out.println(s);

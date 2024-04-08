@@ -74,6 +74,9 @@ public class Communication {
     public boolean isBranch(){
         return direction == Utils.Direction.BRANCH;
     }
+    public void addRecursiveCallers(Communication c){
+        c.recursiveCallers.add(c);
+    }
 
     public int getBranchesSize(){
         int c = 0;
@@ -101,6 +104,7 @@ public class Communication {
         if (!(o instanceof Communication comp)) return false;
         if(!(direction == comp.direction && Objects.equals(label, comp.label))) return false;
         if(nextCommunicationNodes.size() != comp.nextCommunicationNodes.size()) return false;
+        if(recursiveCallers.size() != comp.recursiveCallers.size()) return false;
         for (int i = 0; i < nextCommunicationNodes.size(); i++) {
             if(!(nextCommunicationNodes.contains(comp.nextCommunicationNodes.get(i))
                     & comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i)))) return false;
@@ -124,32 +128,28 @@ public class Communication {
     }
 
     public boolean nodeIsBelow(Communication node){
-        if(nextCommunicationNodes.contains(node)) return true;
         for (Communication nextCommunicationNode : nextCommunicationNodes) {
-            if(nextCommunicationNode.nodeIsBelow(node)) return true;
+            if(nextCommunicationNode == node || nextCommunicationNode.nodeIsBelow(node)) return true;
         }
         return false;
     }
     public boolean nodeIsSelfOrBelow(Communication node){
         if(node == this) return true;
-        if(nextCommunicationNodes.contains(node)) return true;
         for (Communication nextCommunicationNode : nextCommunicationNodes) {
-            if(nextCommunicationNode.nodeIsSelfOrBelow(node)) return true;
+            if(nextCommunicationNode == node || nextCommunicationNode.nodeIsSelfOrBelow(node)) return true;
         }
         return false;
     }
     public boolean nodeIsAbove(Communication root){
-        if(previousCommunicationNodes.contains(root)) return true;
         for (Communication communication : previousCommunicationNodes) {
-            if(communication.nodeIsAbove(root)) return true;
+            if(communication == root || communication.nodeIsAbove(root)) return true;
         }
         return false;
     }
     public boolean nodeIsSelfOrAbove(Communication root){
         if(root == this) return true;
-        if(previousCommunicationNodes.contains(root)) return true;
         for (Communication communication : previousCommunicationNodes) {
-            if(communication.nodeIsSelfOrAbove(root)) return true;
+            if(communication == root || communication.nodeIsSelfOrAbove(root)) return true;
         }
         return false;
     }
@@ -158,19 +158,20 @@ public class Communication {
             for (Communication root : roots) {
                 if(nodeIsSelfOrAbove(root)) recursiveCallers.add(root);
                 else {
-                    nextCommunicationNodes.add(root);
-                    root.previousCommunicationNodes.add(this);
-                }
-            }
-        }else{
-            for (Communication root : roots) {
-                if(nodeIsSelfOrAbove(root)) recursiveCallers.add(root);
-                else{
-                    if(!roots.contains(new Communication(VOID))){
-                        nextCommunicationNodes.get(0).addLeafCommunicationRoots(roots);
+                    if(direction == VOID){
+                        for (Communication previousCommunicationNode : previousCommunicationNodes) {
+                            previousCommunicationNode.nextCommunicationNodes.add(root);
+                            previousCommunicationNode.nextCommunicationNodes.remove(this);
+                        }
+                        root.previousCommunicationNodes.addAll(previousCommunicationNodes);
+                    }else{
+                        nextCommunicationNodes.add(root);
+                        root.previousCommunicationNodes.add(this);
                     }
                 }
             }
+        }else{
+            nextCommunicationNodes.get(0).addLeafCommunicationRoots(roots);
         }
     }
 
@@ -237,5 +238,24 @@ public class Communication {
             if(!oneCompatiblePath) return false;
         }
         return true;
+    }
+
+    public boolean hasNextNodes(){
+        return !nextCommunicationNodes.isEmpty();
+    }
+
+    public void cleanVoid() {
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.cleanVoid();
+        }
+        if(nextCommunicationNodes.size() == 1 && nextCommunicationNodes.get(0).direction == VOID)
+            nextCommunicationNodes.remove(0);
+    }
+
+    public void addNextCommunicationNodes(ArrayList<Communication> communications) {
+        nextCommunicationNodes.addAll(communications);
+        for (Communication communication : communications) {
+            communication.previousCommunicationNodes.add(this);
+        }
     }
 }

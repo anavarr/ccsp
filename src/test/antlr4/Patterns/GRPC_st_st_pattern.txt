@@ -1,0 +1,5 @@
+GRPC_st_st
+"
+client -> server;
+(client -> server | server -> client)*
+"

@@ -26,26 +26,11 @@ server -> client
 GRPC_un_st
 "
 client -> server;
-(server -> client)+
+(server -> client)*
 "
 
 GRPC_st_st
 "
 client -> server;
 ( client -> server | server -> client )*
-"
-
-RandomlyIntricateOne
-"
-(a -> b ; (b -> a)*)+;
-(a -> b | b -> a)?;
-a -> b;
-(b -> a)+
-"
-
-RandomlyIntricateOne2
-"
-((a -> b) | (b -> a))*;
-a -> b;
-(b -> a)+
 "

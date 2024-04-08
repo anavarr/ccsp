@@ -216,4 +216,10 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         }
         return true;
     }
+
+    public void cleanVoid() {
+        for (Communication communicationsRoot : communicationsRoots) {
+            communicationsRoot.cleanVoid();
+        }
+    }
 }

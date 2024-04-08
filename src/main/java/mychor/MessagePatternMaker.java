@@ -3,7 +3,6 @@ package mychor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 
 public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
     static class VisitorContext {
@@ -119,22 +118,32 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
             return null;
         }
 
-        var voidNode = new Communication(Utils.Direction.VOID);
+
         switch (ctx.getChild(3).getText()){
             case "*" :
                 for (String s : nestedSession.keySet()) {
+                    var voidNode = new Communication(Utils.Direction.VOID);
                     var session = nestedSession.get(s);
                     var topNodes = session.communicationsRoots();
                     var bottomNodes = session.getLeaves();
                     for (Communication bottomNode : bottomNodes) {
                         bottomNode.addLeafCommunicationRoots(topNodes);
-                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(voidNode)));
+                    }
+                    // every bottom node can finish without recursion
+                    for (Communication bottomNode : bottomNodes) {
+                        if(bottomNode.hasNextNodes())
+                        {
+                            bottomNode.addNextCommunicationNodes(new ArrayList<>(List.of(
+                                    new Communication(Utils.Direction.VOID))
+                            ));
+                        }
                     }
                     session.expandTopCommunicationRoots(new ArrayList<>(List.of(voidNode)));
                 }
                 break;
             case "?" :
                 for (String s : nestedSession.keySet()) {
+                    var voidNode = new Communication(Utils.Direction.VOID);
                     var session = nestedSession.get(s);
                     session.expandTopCommunicationRoots(new ArrayList<>(List.of(voidNode)));
                 }
@@ -146,7 +155,12 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
                     var bottomNodes = session.getLeaves();
                     for (Communication bottomNode : bottomNodes) {
                         bottomNode.addLeafCommunicationRoots(topNodes);
-                        bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(voidNode)));
+                    }
+                    // every bottom node can finish without recursion
+                    for (Communication bottomNode : bottomNodes) {
+                        if(bottomNode.hasNextNodes()) bottomNode.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                                new Communication(Utils.Direction.VOID))
+                        ));
                     }
                 }
                 break;
