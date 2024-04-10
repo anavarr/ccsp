@@ -1,0 +1,5 @@
+REST
+"
+client -> server;
+server -> client;
+"

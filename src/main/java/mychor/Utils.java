@@ -11,12 +11,6 @@ public class Utils {
         VOID
     }
 
-    public enum Arity{
-        SINGLE,
-        MULTIPLE,
-        INFINITE
-    }
-
     static String ERROR_RECVAR_ADD(String key, String boundProcess, String newProcess, ParserRuleContext ctx){
         return ERROR_DEFAULT(String.format(
                 "Procedure %s is already bound to process %s, can't bind it to %s",

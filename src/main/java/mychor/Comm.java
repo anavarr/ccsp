@@ -6,25 +6,22 @@ import java.util.List;
 import java.util.Map;
 
 public class Comm extends Behaviour {
-    Utils.Arity arity;
     Utils.Direction direction;
     List<String> labels = new ArrayList<>();
     String destination;
 
 
-    public Comm(String pr, String dest, Utils.Direction direction, Utils.Arity arity, List<String> labels){
+    public Comm(String pr, String dest, Utils.Direction direction, List<String> labels){
         super(pr);
         this.destination= dest;
         this.direction = direction;
-        this.arity = arity;
         this.labels.addAll(labels);
     }
 
-    public Comm(String pr, String dest, Utils.Direction direction, Utils.Arity arity, String label){
+    public Comm(String pr, String dest, Utils.Direction direction, String label){
         super(pr);
         this.destination= dest;
         this.direction = direction;
-        this.arity = arity;
         if(label != null) labels.add(label);
     }
 
@@ -32,7 +29,6 @@ public class Comm extends Behaviour {
         super(pr);
         this.destination = dest;
         this.direction = Utils.Direction.BRANCH;
-        this.arity = Utils.Arity.SINGLE;
         this.nextBehaviours = branches;
         this.labels = branches.keySet().stream().toList();
     }
@@ -110,7 +106,7 @@ public class Comm extends Behaviour {
 
     @Override
     public Behaviour duplicate() {
-        var c = new Comm(process, destination, direction, arity, labels);
+        var c = new Comm(process, destination, direction, labels);
         if (!nextBehaviours.isEmpty()){
             if(direction != Utils.Direction.BRANCH && direction != Utils.Direction.SELECT) {
                 c.nextBehaviours.put(";", nextBehaviours.get(";").duplicate());
@@ -130,8 +126,7 @@ public class Comm extends Behaviour {
         if(!(b instanceof Comm comm)) return false;
         if(!(comm.direction.equals(direction) &&
                 comm.labels.equals(labels) &&
-                comm.destination.equals(destination) &&
-                comm.arity == arity)) return false;
+                comm.destination.equals(destination))) return false;
         return super.equals(b);
     }
 

@@ -153,7 +153,6 @@ public class StackFrameTest {
                         ))
                 )
         ));
-        System.out.println(totalSf);
         assertEquals(sf, totalSf);
     }
 

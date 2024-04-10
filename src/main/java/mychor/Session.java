@@ -65,10 +65,10 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         if(communicationsRoots.isEmpty()) return true;
         //if the branches are all SELECT, then anything following is valid
         var allSelect = communicationsRoots.stream()
-                .allMatch(item -> item.direction() == Utils.Direction.SELECT);
+                .allMatch(item -> item.getDirection() == Utils.Direction.SELECT);
         //if the branches are all BRANCH, then anything following is valid
         var allBranch = communicationsRoots.stream()
-                .allMatch(item -> item.direction() == Utils.Direction.BRANCH);
+                .allMatch(item -> item.getDirection() == Utils.Direction.BRANCH);
         //else, branching is valid if all branches are the same
         var allSame = communicationsRoots.stream()
                 .allMatch(item -> item.equals(communicationsRoots.get(0)));
@@ -160,9 +160,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                         List.of(
                                 new Communication(
                                         Utils.Direction.VOID,
-                                        Utils.Arity.SINGLE,
-                                        new ArrayList<>(),
-                                        null)
+                                        new ArrayList<>())
                         )
                 )
         )).toList()));
@@ -171,9 +169,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                         List.of(
                                 new Communication(
                                         Utils.Direction.VOID,
-                                        Utils.Arity.SINGLE,
-                                        new ArrayList<>(),
-                                        null)
+                                        new ArrayList<>())
                         )
                 )
         )).toList()));
@@ -204,5 +200,26 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
 
     public void walk(){
         
+    }
+
+    public boolean supports(Session target) {
+        boolean oneCompatiblePath;
+        for (Communication targetNode : target.communicationsRoots) {
+            oneCompatiblePath = false;
+            for (Communication node : communicationsRoots) {
+                if(node.supports(targetNode)){
+                    oneCompatiblePath = true;
+                    break;
+                }
+            }
+            if(!oneCompatiblePath) return false;
+        }
+        return true;
+    }
+
+    public void cleanVoid() {
+        for (Communication communicationsRoot : communicationsRoots) {
+            communicationsRoot.cleanVoid();
+        }
     }
 }

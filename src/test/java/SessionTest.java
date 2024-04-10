@@ -13,30 +13,30 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SessionTest {
 
     Session refl = new Session("client", "client",
-            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
+            new Communication(Utils.Direction.SEND));
     Session a = new Session("client", "server",
-            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
+            new Communication(Utils.Direction.SEND));
     Session b = new Session("client", "server",
-            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE));
+            new Communication(Utils.Direction.SEND));
 
     Session clientSide = new Session("client", "server", new ArrayList<>(List.of(
-            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-            new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+            new Communication(Utils.Direction.SEND),
+            new Communication(Utils.Direction.RECEIVE)
     )));
     Session serverSide = new Session("server", "client", new ArrayList<>(List.of(
-            new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE),
-            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+            new Communication(Utils.Direction.RECEIVE),
+            new Communication(Utils.Direction.SEND)
     )));
 
     Session longSession = new Session("server", "client", new ArrayList<>(List.of(
-            new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,new ArrayList<>(List.of(
-                    new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE),
-                            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+            new Communication(Utils.Direction.RECEIVE,new ArrayList<>(List.of(
+                    new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                            new Communication(Utils.Direction.RECEIVE),
+                            new Communication(Utils.Direction.SEND)
                     ))),
-                    new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                    new Communication(Utils.Direction.SEND)
             ))),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND)
     )));
 
     //SESSION EQUALITY
@@ -117,38 +117,38 @@ public class SessionTest {
     @Test
     public void sessionNonComplementaryPeers(){
         Session serverSide = new Session("server", "client2", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE),
+                new Communication(Utils.Direction.SEND)
         )));
         assertFalse(clientSide.isComplementary(serverSide));
     }
     @Test
     public void sessionNonComplementaryInitiators(){
         Session serverSide = new Session("server", "client", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND),
+                new Communication(Utils.Direction.SEND)
         )));
         assertFalse(clientSide.isComplementary(serverSide));
     }
     @Test
     public void sessionNonComplementarySize(){
         Session serverSide = new Session("server", "client", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE),
+                new Communication(Utils.Direction.SEND),
+                new Communication(Utils.Direction.SEND)
         )));
         assertFalse(clientSide.isComplementary(serverSide));
     }
     @Test
     public void sessionNonComplementaryLate(){
         Session clientSide = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SEND)
                 )))
         )));
         Session serverSide = new Session("server", "client", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SEND)
                 )))
         )));
         assertFalse(clientSide.isComplementary(serverSide));
@@ -163,13 +163,13 @@ public class SessionTest {
     @Test
     public void branchingValidityAllSelect(){
         Session s = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SELECT,
                                 new ArrayList<>(List.of(
-                                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                                        new Communication(Utils.Direction.SEND)
                                 )), "GET"),
-                        new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,"POST"),
-                        new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "DELETE")
+                        new Communication(Utils.Direction.SELECT,"POST"),
+                        new Communication(Utils.Direction.SELECT, "DELETE")
                 )))
         )));
         assertTrue(s.isBranchingValid());
@@ -177,13 +177,13 @@ public class SessionTest {
     @Test
     public void branchingValidityAllBranch(){
         Session s = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.BRANCH,
                                 new ArrayList<>(List.of(
-                                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                                        new Communication(Utils.Direction.SEND)
                                 )), "GET"),
-                        new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,"POST"),
-                        new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, "DELETE")
+                        new Communication(Utils.Direction.BRANCH,"POST"),
+                        new Communication(Utils.Direction.BRANCH, "DELETE")
                 )))
         )));
         assertTrue(s.isBranchingValid());
@@ -191,10 +191,10 @@ public class SessionTest {
     @Test
     public void branchingValidityAllSame(){
         Session s = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SEND),
+                        new Communication(Utils.Direction.SEND),
+                        new Communication(Utils.Direction.SEND)
                 )))
         )));
         assertTrue(s.isBranchingValid());
@@ -202,13 +202,13 @@ public class SessionTest {
     @Test
     public void branchingInvalidity(){
         Session s = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SEND,
                                 new ArrayList<>(List.of(
-                                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                                        new Communication(Utils.Direction.SEND)
                                 ))),
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                        new Communication(Utils.Direction.SEND),
+                        new Communication(Utils.Direction.SEND)
                 )))
         )));
         assertFalse(s.isBranchingValid());
@@ -218,13 +218,13 @@ public class SessionTest {
     @Test
     public void testExpandCommunication(){
         Session s = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE)
         )));
-        Communication c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        Communication c2 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        Communication c1 = new Communication(Utils.Direction.SEND);
+        Communication c2 = new Communication(Utils.Direction.RECEIVE);
         s.expandTopCommunicationRoots(new ArrayList<>(List.of(c1,c2)));
         Session totalSession = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE),
+                new Communication(Utils.Direction.RECEIVE),
                 c1,
                 c2
         )));
@@ -233,14 +233,16 @@ public class SessionTest {
     @Test
     public void compareAddLeafCommunication(){
         Session s = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE)
         )));
-        Communication c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        Communication c2 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        Communication c1 = new Communication(Utils.Direction.SEND);
+        Communication c1prime = new Communication(Utils.Direction.SEND);
+        Communication c2 = new Communication(Utils.Direction.RECEIVE);
+        Communication c2prime = new Communication(Utils.Direction.RECEIVE);
         s.addLeafCommunicationRoots(new ArrayList<>(List.of(c1,c2)));
         Session totalSession = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        c1,c2
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        c1prime, c2prime
                 )))
         )));
         assertEquals(s, totalSession);
@@ -250,13 +252,13 @@ public class SessionTest {
     public void addLeafEquivExpandWhenEmptySession(){
         var s1 = new Session("client", "server", new ArrayList<>());
         s1.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "left"),
-                new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "right")
+                new Communication(Utils.Direction.SELECT, "left"),
+                new Communication(Utils.Direction.SELECT, "right")
         )));
         var s2 = new Session("client", "server", new ArrayList<>());
         s2.expandTopCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "left"),
-                new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "right")
+                new Communication(Utils.Direction.SELECT, "left"),
+                new Communication(Utils.Direction.SELECT, "right")
         )));
         assertEquals(s1, s2);
     }
@@ -266,27 +268,27 @@ public class SessionTest {
     public void compareHorizontalMergingSameEnds(){
         Session s1 = new Session("client", "server", new ArrayList<>());
         s1.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.SEND))
         ));
         s1.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE)
         )));
 
         Session s2 = new Session("client", "server", new ArrayList<>());
         s2.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.SEND))
         ));
         s2.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,"left")
+                new Communication(Utils.Direction.BRANCH,"left")
         )));
 
         var totalSessions = new ArrayList<Session>();
         totalSessions.add(new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.RECEIVE)
                 ))),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, "left")
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.BRANCH, "left")
                 )))
         ))));
 
@@ -302,14 +304,14 @@ public class SessionTest {
         var sessionSet1 = new ArrayList<Session>();
         Session s1 = new Session("client", "server", new ArrayList<>());
         s1.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.SEND))
         ));
         s1.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE)
         )));
         Session s1b = new Session("client", "bus", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.RECEIVE)
                 )))
         )));
         sessionSet1.add(s1);
@@ -320,14 +322,14 @@ public class SessionTest {
         var sessionSet2 = new ArrayList<Session>();
         Session s2 = new Session("client", "proxy", new ArrayList<>());
         s2.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.SEND))
         ));
         s2.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,"left")
+                new Communication(Utils.Direction.BRANCH,"left")
         )));
         Session s2b = new Session("client", "bus", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SEND)
                 )))
         )));
         sessionSet2.add(s2);
@@ -335,23 +337,23 @@ public class SessionTest {
 
         var totalSessions = new ArrayList<Session>();
         totalSessions.add(new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.RECEIVE)
                 ))),
-                new Communication(Utils.Direction.VOID, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.VOID)
         ))));
         totalSessions.add(new Session("client", "proxy", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, "left")
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.BRANCH, "left")
                 ))),
-                new Communication(Utils.Direction.VOID, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.VOID)
         ))));
         totalSessions.add(new Session("client", "bus", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.RECEIVE)
                 ))),
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.SEND)
                 )))
         ))));
 
@@ -365,26 +367,26 @@ public class SessionTest {
     public void compareVerticalMergingSameEnds(){
         Session s1 = new Session("client", "server", new ArrayList<>());
         s1.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.SEND))
         ));
         s1.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                new Communication(Utils.Direction.RECEIVE)
         )));
 
         Session s2 = new Session("client", "server", new ArrayList<>());
         s2.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.SEND))
         ));
         s2.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,"left")
+                new Communication(Utils.Direction.BRANCH,"left")
         )));
 
         var totalSessions = new ArrayList<Session>();
         totalSessions.add(new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                                        new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, "left")
+                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                        new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
+                                new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                                        new Communication(Utils.Direction.BRANCH, "left")
                                 )))
                         )))
                 )))

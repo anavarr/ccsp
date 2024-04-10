@@ -8,64 +8,106 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class CommunicationTest {
 
     ArrayList<Communication> cSelect = new ArrayList<>(List.of(
-            new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+            new Communication(Utils.Direction.SELECT,
                     new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+                            new Communication(Utils.Direction.SEND)
                     )), "left"),
-            new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+            new Communication(Utils.Direction.SELECT,
                     new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                                    new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE))
+                            new Communication(Utils.Direction.SEND,
+                                    new Communication(Utils.Direction.RECEIVE))
                     )), "left"),
-            new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+            new Communication(Utils.Direction.SELECT,
                     new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
-                                    new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                            new Communication(Utils.Direction.RECEIVE,
+                                    new Communication(Utils.Direction.SEND))
                     )), "left")
     ));
     ArrayList<Communication> cBranch = new ArrayList<>(List.of(
-            new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,
+            new Communication(Utils.Direction.BRANCH,
                     new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+                            new Communication(Utils.Direction.RECEIVE)
                     )), "left"),
-            new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,
+            new Communication(Utils.Direction.BRANCH,
                     new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
-                                    new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                            new Communication(Utils.Direction.RECEIVE,
+                                    new Communication(Utils.Direction.SEND))
                     )), "left"),
-            new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE,
+            new Communication(Utils.Direction.BRANCH,
                     new ArrayList<>(List.of(
-                            new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                                    new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE))
+                            new Communication(Utils.Direction.SEND,
+                                    new Communication(Utils.Direction.RECEIVE))
                     )), "left")
     ));
+
+    // CONSTRUCTION
+    @Test
+    public void createSend(){
+        var c1 = new Communication(Utils.Direction.SEND);
+        assert(c1.isSend());
+    }
+    @Test
+    public void createReceive(){
+        var c1 = new Communication(Utils.Direction.RECEIVE);
+        assert(c1.isReceive());
+    }
+    @Test
+    public void createSelect(){
+        var c1 = new Communication(Utils.Direction.SELECT, "GET");
+        assert(c1.isSelect());
+    }
+    @Test
+    public void createSelectDoesntWorkIfNoLabel(){
+        assertThrows(NullPointerException.class, () -> new Communication(Utils.Direction.SELECT));
+    }
+    @Test
+    public void createBranching(){
+        var c1 = new Communication(Utils.Direction.BRANCH, "GET");
+        assert(c1.isBranch());
+    }
+    @Test
+    public void createBranchingDoesntWorkIfNoLabel(){
+        assertThrows(NullPointerException.class, () -> new Communication(Utils.Direction.BRANCH));
+    }
+    @Test
+    public void createCommunicationWithBranchesPossessingPreviousShouldWork(){
+        var cChild = new Communication(Utils.Direction.SEND);
+        var cParent = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(cChild)));
+        var cParent2 = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(cChild)));
+        assertTrue(cParent.containsDirectNextNode(cChild));
+        assertTrue(cParent2.containsDirectNextNode(cChild));
+
+        assertTrue(cChild.containsDirectPreviousNode(cParent2));
+        assertTrue(cChild.containsDirectPreviousNode(cParent));
+    }
 
     // EQUALITY
     @Test
     public void equalitySingleComm(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        var c2 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var c1 = new Communication(Utils.Direction.SEND);
+        var c2 = new Communication(Utils.Direction.SEND);
         assertEquals(c1, c2);
     }
     @Test
     public void equalityMultiCommLine(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+        var c1 = new Communication(Utils.Direction.SEND,
+                new Communication(Utils.Direction.RECEIVE,
+                        new Communication(Utils.Direction.SEND,
+                                new Communication(Utils.Direction.RECEIVE)
                         )
                 )
         );
-        var c2 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+        var c2 = new Communication(Utils.Direction.SEND,
+                new Communication(Utils.Direction.RECEIVE,
+                        new Communication(Utils.Direction.SEND,
+                                new Communication(Utils.Direction.RECEIVE)
                         )
                 )
         );
@@ -73,17 +115,17 @@ public class CommunicationTest {
     }
     @Test
     public void inequalityMultiCommLine(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+        var c1 = new Communication(Utils.Direction.SEND,
+                new Communication(Utils.Direction.RECEIVE,
+                        new Communication(Utils.Direction.SEND,
+                                new Communication(Utils.Direction.SEND)
                         )
                 )
         );
-        var c2 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE)
+        var c2 = new Communication(Utils.Direction.SEND,
+                new Communication(Utils.Direction.RECEIVE,
+                        new Communication(Utils.Direction.SEND,
+                                new Communication(Utils.Direction.RECEIVE)
                         )
                 )
         );
@@ -93,7 +135,7 @@ public class CommunicationTest {
     // SIZE
     @Test
     public void checkSize1(){
-        var c = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var c = new Communication(Utils.Direction.SEND);
         assertEquals(c.getBranchesSize(), 1);
     }
     @Test
@@ -104,72 +146,72 @@ public class CommunicationTest {
     // COMPLEMENTARITY
     @Test
     public void simpleComplementaritySR(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        var c2 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        var c1 = new Communication(Utils.Direction.SEND);
+        var c2 = new Communication(Utils.Direction.RECEIVE);
         assertTrue(c1.isComplementary(c2) && c2.isComplementary(c1));
     }
     @Test
     public void simpleComplementaritySB(){
-        var c1 = new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "left");
-        var c2 = new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, "left");
+        var c1 = new Communication(Utils.Direction.SELECT, "left");
+        var c2 = new Communication(Utils.Direction.BRANCH, "left");
         assertTrue(c1.isComplementary(c2));
     }
     @Test
     public void simpleNonComplementaritySBLabel(){
-        var c1 = new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "left");
-        var c2 = new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, "right");
+        var c1 = new Communication(Utils.Direction.SELECT, "left");
+        var c2 = new Communication(Utils.Direction.BRANCH, "right");
         assertFalse(c1.isComplementary(c2));
     }
     @Test
     public void simpleNonComplementaritySR(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        var c2 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var c1 = new Communication(Utils.Direction.SEND);
+        var c2 = new Communication(Utils.Direction.SEND);
         assertFalse(c1.isComplementary(c2) && c2.isComplementary(c1));
     }
     @Test
     public void complexComplementarity(){
-        var c1 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE, cSelect);
-        var c2 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, cBranch);
+        var c1 = new Communication(Utils.Direction.RECEIVE, cSelect);
+        var c2 = new Communication(Utils.Direction.SEND, cBranch);
         assertTrue(c1.isComplementary(c2) && c2.isComplementary(c1));
     }
 
     // BRANCHING
     @Test
     public void validBranchingTrivial(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var c1 = new Communication(Utils.Direction.SEND);
         assertTrue(c1.isBranchingValid());
-        c1 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
+        c1 = new Communication(Utils.Direction.RECEIVE);
         assertTrue(c1.isBranchingValid());
-        c1 = new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "left");
+        c1 = new Communication(Utils.Direction.SELECT, "left");
         assertTrue(c1.isBranchingValid());
-        c1 = new Communication(Utils.Direction.BRANCH, Utils.Arity.SINGLE, "left");
+        c1 = new Communication(Utils.Direction.BRANCH, "left");
         assertTrue(c1.isBranchingValid());
     }
     @Test
     public void validBranchingAllSelect(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, cSelect);
+        var c1 = new Communication(Utils.Direction.SEND, cSelect);
         assertTrue(c1.isBranchingValid());
     }
     @Test
     public void validBranchingAllBranch(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, cBranch);
+        var c1 = new Communication(Utils.Direction.SEND, cBranch);
         assertTrue(c1.isBranchingValid());
     }
     @Test
     public void validBranchingAllSame(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+        var c1 = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                new Communication(Utils.Direction.SEND),
+                new Communication(Utils.Direction.SEND),
+                new Communication(Utils.Direction.SEND)
         )));
         assertTrue(c1.isBranchingValid());
     }
     @Test
     public void invalidBranchingNotAllSame(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE, new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE),
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)
+        var c1 = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
+                new Communication(Utils.Direction.SEND),
+                new Communication(Utils.Direction.RECEIVE),
+                new Communication(Utils.Direction.SEND)
         )));
         assertFalse(c1.isBranchingValid());
     }
@@ -177,42 +219,57 @@ public class CommunicationTest {
     // ADDING NODES
     @Test
     public void addRootsFirstLayer(){
-        var c = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
+        var c = new Communication(Utils.Direction.SEND);
         c.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.RECEIVE))
         ));
-        var cTotal = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE));
+        var cTotal = new Communication(Utils.Direction.SEND,
+                new Communication(Utils.Direction.RECEIVE));
 
         assertEquals(c, cTotal);
     }
     @Test
     public void addRootsSecondLayer(){
-        var c = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE));
+        var c = new Communication(Utils.Direction.SEND,
+                new Communication(Utils.Direction.RECEIVE));
         c.addLeafCommunicationRoots(new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE))
+                new Communication(Utils.Direction.SEND))
         ));
-        var cTotal = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
-                new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE,
-                        new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE)));
+        var cTotal = new Communication(Utils.Direction.SEND,
+                new Communication(Utils.Direction.RECEIVE,
+                        new Communication(Utils.Direction.SEND)));
         assertEquals(c, cTotal);
     }
     @Test
     public void correctLeaves(){
-        var c1 = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE);
-        var c2 = new Communication(Utils.Direction.RECEIVE, Utils.Arity.SINGLE);
-        var c3 = new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE, "left");
-        var c = new Communication(Utils.Direction.SEND, Utils.Arity.SINGLE,
+        var c1 = new Communication(Utils.Direction.SEND);
+        var c2 = new Communication(Utils.Direction.RECEIVE);
+        var c3 = new Communication(Utils.Direction.SELECT, "left");
+        var c = new Communication(Utils.Direction.SEND,
                 new ArrayList<>(List.of(
-                        new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+                        new Communication(Utils.Direction.SELECT,
                                 new ArrayList<>(List.of(c1)), "left"),
-                        new Communication(Utils.Direction.SELECT, Utils.Arity.SINGLE,
+                        new Communication(Utils.Direction.SELECT,
                                 new ArrayList<>(List.of(c2)), "left"),
                         c3
                 )));
         var leaves = c.getLeaves();
         var leavesExpected = new ArrayList<>(List.of(c1,c2, c3));
         assertTrue(leaves.containsAll(leavesExpected) && leavesExpected.containsAll(leaves));
+    }
+    @Test
+    public void previousTest(){
+        var cChild = new Communication(Utils.Direction.SEND);
+        var cParent = new Communication(Utils.Direction.RECEIVE);
+        var cPParent = new Communication(Utils.Direction.SEND);
+        cParent.addLeafCommunicationRoots(new ArrayList<>(List.of(cChild)));
+        cPParent.addLeafCommunicationRoots(new ArrayList<>(List.of(cParent)));
+        assertTrue(cPParent.containsDirectNextNode(cParent));
+        assertTrue(cParent.containsDirectNextNode(cChild));
+        assertTrue(cChild.containsDirectPreviousNode(cParent));
+        assertTrue(cParent.containsDirectPreviousNode(cPParent));
+        assertTrue(cChild.nodeIsAbove(cPParent));
+        assertTrue(cChild.nodeIsAbove(cParent));;
+        assertTrue(cPParent.nodeIsBelow(cChild));
     }
 }

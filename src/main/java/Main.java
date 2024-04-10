@@ -1,3 +1,5 @@
+import mychor.CompilerContext;
+import mychor.PatternDetector;
 import mychor.SPcheckerRich;
 import mychor.SPcodeGenerator;
 import mychor.SPlexer;
@@ -5,6 +7,7 @@ import mychor.SPparserRich;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.stringtemplate.v4.compiler.Compiler;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,7 +23,8 @@ public class Main {
             SPlexer spl = new SPlexer(cs);
             CommonTokenStream tokens = new CommonTokenStream(spl);
             var spp = new SPparserRich(tokens);
-            verifyRichChorProgramSemantics(spp);
+            var cCtx = verifyRichChorProgramSemantics(spp);
+            detectMessagingPattern(cCtx);
             spp.reset();
 //            compileToQuarkusServices(spp);
         } catch (IOException | AssertionError e) {
@@ -28,7 +32,7 @@ public class Main {
         }
     }
 
-    public static void verifyRichChorProgramSemantics(SPparserRich spp){
+    public static CompilerContext verifyRichChorProgramSemantics(SPparserRich spp){
         var spc = new SPcheckerRich();
         spp.program().accept(spc);
         spc.displayContext();
@@ -37,6 +41,12 @@ public class Main {
         System.out.println("Your program contains those unknown processes : " + spc.unknownProcesses());
         System.out.println("Your program contains those unknown recursive variables : " + spc.unknownVariables());
         var nonComplementarySessions = spc.getNonComplementarySessions();
+        return spc.compilerCtx;
+    }
+
+    public static void detectMessagingPattern(CompilerContext cCtx){
+        var pd = new PatternDetector(cCtx);
+        pd.detectCompatibleFrameworks();
     }
 
     public static void compileToQuarkusServices(SPparserRich spp){

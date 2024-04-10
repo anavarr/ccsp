@@ -1,0 +1,4 @@
+SIMPLE_EXCHANGE
+"
+a -> b
+"
