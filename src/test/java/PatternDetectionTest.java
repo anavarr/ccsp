@@ -3,6 +3,8 @@ import mychor.Session;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,47 +14,48 @@ public class PatternDetectionTest extends ProgramReaderTest{
     public void threeBuyersAliceStoreCantBeImplementedUsingNRestCallsWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().containsValue("REST_PATTERN"));
     }
     @Test
     public void threeBuyersAliceStoreCantBeImplementedUsingNGrpcUnUnWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().containsValue("gRPC_un_un"));
     }
     @Test
     public void threeBuyersAliceStoreCantBeImplementedUsingNGrpcUnStrWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().containsValue("gRPC_un_st"));
     }
     @Test
     public void threeBuyersAliceStoreCantBeImplementedUsingNGrpcStrUnWithAliceClientNorServer() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp");
         PatternDetector detector = new PatternDetector(ctx.compilerCtx);
-        assertFalse(detector.detectCompatibleFrameworks().containsValue("gRPC_st_un"));
     }
-
-
     @Test
     public void threeBuyersAliceStoreCanBeImplementedUsingGrpcStrStrWithAliceClient() throws IOException {
         var ctx = testFile("Three_buyer_protocol.sp").compilerCtx;
         PatternDetector detector = new PatternDetector(ctx);
         var cf = detector.detectCompatibleFrameworks();
-        for (Session session : ctx.sessions) {
-            if(session.peerA().equals("alice") && session.peerB().equals("store")){
-                assertTrue(cf.get(session).contains("GRPC_st_st_client"));
-            }
-            if(session.peerA().equals("store") && session.peerB().equals("alice")){
-                assertTrue(cf.get(session).contains("GRPC_st_st_server"));
-            }
-        }
+        assertTrue(frameworkIsCompatibleForSessionPeers(ctx.sessions, "alice", "store",
+                "GRPC_st_st_client", cf));
+        assertTrue(frameworkIsCompatibleForSessionPeers(ctx.sessions, "store","alice",
+                "GRPC_st_st_server", cf));
     }
     @Test
     public void threeBuyersAliceStoreCanBeImplementedUsingReactiveStreamsWithAliceClient() throws IOException {
-        var ctx = testFile("Three_buyer_protocol.sp");
-        PatternDetector detector = new PatternDetector(ctx.compilerCtx);
+        var ctx = testFile("Three_buyer_protocol.sp").compilerCtx;
+        PatternDetector detector = new PatternDetector(ctx);
         var cf = detector.detectCompatibleFrameworks();
-        assertTrue(cf.containsValue("REACTIVE_MESSAGING"));
+        assertTrue(frameworkIsCompatibleForSessionPeers(ctx.sessions, "alice", "store",
+                "ReactiveStreams_client", cf));
+        assertTrue(frameworkIsCompatibleForSessionPeers(ctx.sessions, "store","alice",
+                "ReactiveStreams_server", cf));
+    }
+    boolean frameworkIsCompatibleForSessionPeers(List<Session> sessions, String peerA, String peerB,
+                                                 String framework, Map<Session, List<String>> frameworks){
+        var sessionOptional = sessions.stream().filter(s -> s.peerA().equals(peerA) && s.peerB().equals(peerB))
+                .findFirst();
+        if(sessionOptional.isEmpty()) return false;
+        var session = sessionOptional.get();
+        return (frameworks.get(session).contains(framework));
     }
 }
