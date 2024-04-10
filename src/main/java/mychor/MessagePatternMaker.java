@@ -7,8 +7,6 @@ import java.util.List;
 public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
     static class VisitorContext {
         HashMap<String, Session> sessions = new HashMap<>();
-        boolean firstExchange = true;
-
         private String currentTitle;
         private HashMap<String, Session> currentSessions = new HashMap<>();
         public VisitorContext(){
@@ -31,11 +29,9 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         // 1 ;
         // 2 expr
         vctx.currentSessions = new HashMap<>();
-        vctx.firstExchange = true;
         ctx.getChild(0).accept(this);
         var leftSessions = vctx.currentSessions;
         vctx.currentSessions = new HashMap<>();
-        vctx.firstExchange = true;
         ctx.getChild(2).accept(this);
         var rightSessions = vctx.currentSessions;
         for (String s : leftSessions.keySet()) {
@@ -54,14 +50,8 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         var rcver = ctx.getChild(2).getText();
         var comSend = new Communication(Utils.Direction.SEND);
         var comReceive = new Communication(Utils.Direction.RECEIVE);
-        if(vctx.firstExchange){
-            vctx.currentSessions.put(sender,  new Session(sender, rcver, comSend));
-            vctx.currentSessions.put(rcver,  new Session(rcver, sender, comReceive));
-            vctx.firstExchange = false;
-        }else{
-            vctx.currentSessions.get(sender).addLeafCommunicationRoots(new ArrayList<>(List.of(comSend)));
-            vctx.currentSessions.get(rcver).addLeafCommunicationRoots(new ArrayList<>(List.of(comReceive)));
-        }
+        vctx.currentSessions.put(sender,  new Session(sender, rcver, comSend));
+        vctx.currentSessions.put(rcver,  new Session(rcver, sender, comReceive));
         return null;
     }
 
@@ -71,7 +61,6 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         // 1 "
         // 2 expression
         // 3 "
-        vctx.firstExchange = true;
         vctx.setCurrentTitle(ctx.getChild(0).getText());
         ctx.getChild(2).accept(this);
         for (String s : vctx.currentSessions.keySet()) {
@@ -86,12 +75,10 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         // 1 |
         // 2 expr
         vctx.currentSessions = new HashMap<>();
-        vctx.firstExchange = true;
         ctx.getChild(0).accept(this);
         var leftSessions = vctx.currentSessions;
 
         vctx.currentSessions = new HashMap<>();
-        vctx.firstExchange = true;
         ctx.getChild(2).accept(this);
         var rightSessions = vctx.currentSessions;
 
@@ -110,7 +97,6 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
         // 2 )
         // 3 (REPEATER)?
         vctx.currentSessions = new HashMap<>();
-        vctx.firstExchange = true;
         ctx.getChild(1).accept(this);
         var nestedSession = vctx.currentSessions;
 
