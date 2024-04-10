@@ -22,23 +22,29 @@ public class PatternDetectionTest extends ProgramReaderTest{
         threeBuyersCompatibilityList.put("alice-bob", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
         threeBuyersCompatibilityList.put("bob-alice", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
 
+        OAuth2FragmentCompatibilityList.put("service-client", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
+        OAuth2FragmentCompatibilityList.put("client-service", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
+        OAuth2FragmentCompatibilityList.put("service-authenticator", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
+        OAuth2FragmentCompatibilityList.put("authenticator-service", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
+        OAuth2FragmentCompatibilityList.put("client-authenticator", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
+        OAuth2FragmentCompatibilityList.put("authenticator-client", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
     }
 
     @Test
     public void checkThreeBuyersCompatibilityList() throws IOException{
-        checkProtocolCompatibilityList("Three_buyer_protocol.sp");
+        checkProtocolCompatibilityList("Three_buyer_protocol.sp", threeBuyersCompatibilityList);
     }
 
     @Test
     public void checkOAuth2FragmentCompatibilityList() throws IOException{
-        checkProtocolCompatibilityList("OAuth2_fragment.sp");
+        checkProtocolCompatibilityList("OAuth2_fragment.sp", OAuth2FragmentCompatibilityList);
     }
 
-    public void checkProtocolCompatibilityList(String protocol) throws IOException{
+    public void checkProtocolCompatibilityList(String protocol, Map<String, List<String>> compatibilityList) throws IOException{
         var ctx = testFile(protocol).compilerCtx;
         PatternDetector detector = new PatternDetector(ctx);
         var cf = detector.detectCompatibleFrameworks();
-        threeBuyersCompatibilityList.forEach((ends, compliantFrameworks) -> {
+        compatibilityList.forEach((ends, compliantFrameworks) -> {
             var peerA = ends.split("-")[0];
             var peerB = ends.split("-")[1];
             for (String compliantFramework : compliantFrameworks) {
