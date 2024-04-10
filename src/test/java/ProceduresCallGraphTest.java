@@ -279,7 +279,6 @@ public class ProceduresCallGraphTest {
                 new StackFrame("var21")
         )));
         var pcg=new ProceduresCallGraph(new ArrayList<>(List.of(sf1, sf2)));
-        System.out.println(pcg.getLoopedVariables());
         assertEquals(pcg.getLoopedVariables().size(), 1);
         assertTrue(pcg.getLoopedVariables().contains("var1"));
     }

@@ -31,11 +31,6 @@ public class PatternDetector {
         for (Session session : patterns.values()) {
             session.cleanVoid();
         }
-        for (String s : patterns.keySet()) {
-            System.out.println("================");
-            System.out.println(s);
-            System.out.println(patterns.get(s));
-        }
     }
 
     public PatternDetector(CompilerContext ctx){

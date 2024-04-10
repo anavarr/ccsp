@@ -85,7 +85,6 @@ public class SPcheckerTest extends ProgramReaderTest{
     @Test
     public void twiceMappedVariable() throws IOException {
         var spc = testFile("twiceMappedVariable.sp");
-        System.out.println(spc.compilerCtx.errors);
         assertEquals(spc.compilerCtx.errors.size(), 1);
     }
 
