@@ -5,14 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 
 public class StackFrame{
-    ArrayList<Communication> previousCommunications = new ArrayList<>();
     private final ArrayList<StackFrame> nextFrames;
     public String varName;
-    public StackFrame(String varName, ArrayList<StackFrame> nextFrames, ArrayList<Communication> previousCommunications){
-        this.varName = varName;
-        this.previousCommunications.addAll(previousCommunications);
-        this.nextFrames = nextFrames;
-    }
     public StackFrame(String varName, ArrayList<StackFrame> nextFrames){
         this.varName = varName;
         this.nextFrames = nextFrames;
@@ -38,6 +32,7 @@ public class StackFrame{
         }
         nextFrames.get(0).addLeafFrames(stackFrames);
     }
+    // CAN LEAD TO STACK OVERFLOW IF NAME ISN'T IN, NEED A BLOCKER
     public boolean isVarNameInGraph(String var){
         if(this.varName.equals(var)) return true;
         return nextFrames.stream().anyMatch(item -> item.isVarNameInGraph(var));
@@ -51,7 +46,7 @@ public class StackFrame{
         if(!nextFrames.isEmpty()){
             s.append("\n");
         }
-        s.append("}").append("-").append(previousCommunications);
+        s.append("}");
         return s.toString();
     }
     @Override
@@ -73,6 +68,7 @@ public class StackFrame{
     // two lists
     // 0 : called
     // 1 : looped
+    // CAN LEAD TO STACK OVERFLOW
     public List<HashSet<String>> getLoopedVariables() {
         var called=new HashSet<String>();
         var looped = new HashSet<String>();
@@ -86,5 +82,11 @@ public class StackFrame{
         }
         called.add(varName);
         return List.of(called, looped);
+    }
+    public int getNextFramesSize(){
+        return nextFrames.size();
+    }
+    public boolean containsStackFrames(List<StackFrame> sfs){
+        return nextFrames.containsAll(sfs);
     }
 }
