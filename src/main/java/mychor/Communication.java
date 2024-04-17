@@ -77,6 +77,9 @@ public class Communication {
     public void addRecursiveCallers(Communication c){
         c.recursiveCallers.add(c);
     }
+    public List<Communication> getRecursiveCallers(){
+        return recursiveCallers;
+    }
 
     public int getBranchesSize(){
         int c = 0;

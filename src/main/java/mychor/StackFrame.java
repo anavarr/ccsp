@@ -87,4 +87,10 @@ public class StackFrame{
         called.add(varName);
         return List.of(called, looped);
     }
+    public int getNextFramesSize(){
+        return nextFrames.size();
+    }
+    public boolean containsStackFrames(List<StackFrame> sfs){
+        return nextFrames.containsAll(sfs);
+    }
 }
