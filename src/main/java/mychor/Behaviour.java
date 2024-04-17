@@ -38,13 +38,7 @@ public abstract class Behaviour {
         return true;
     }
 
-    public boolean isFinal() {
-        if(nextBehaviours.keySet().isEmpty()) return false;
-        for (String s : nextBehaviours.keySet()) {
-            if(!nextBehaviours.get(s).isFinal()) return false;
-        }
-        return true;
-    }
+    abstract public boolean isFinal();
 
     abstract public List<Behaviour> getBranches();
 }

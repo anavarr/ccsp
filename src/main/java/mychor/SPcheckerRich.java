@@ -271,26 +271,22 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             //else we simply map it
             compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
         }
-        //we attach it to the good subgraph of sessions
-        var previousCommunications = compilerCtx.sessions.stream().filter(s ->
-                        s.peerA().equals(compilerCtx.currentProcess)
-        ).map(Session::getLeaves).reduce(new ArrayList<>(), (acc, it) ->  {acc.addAll(it); return acc;});
 
         //we handle recursion here
         var phantomGraph = compilerCtx.phantomGraph.get(compilerCtx.currentProcess);
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
         if(phantomGraph != null && phantomGraph.isVarNameInGraph(varName)){ //we first check if the phantom graph exists and contains a loop
-            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunications));
+            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>()));
             return errors;
         }
         //this process exists and has already called a method
         if(callGraph.isVarNameInGraph(varName)){
             compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
-                    new StackFrame(varName, new ArrayList<>(), previousCommunications));
+                    new StackFrame(varName, new ArrayList<>()));
             return errors;
         }
         compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
-                new StackFrame(varName, new ArrayList<>(), previousCommunications));
+                new StackFrame(varName, new ArrayList<>()));
         //if the variable is not in the set of recursive variable definitions we add an error and return
         if(!recDefs.containsKey(varName)) {
             errors.add(ERROR_RECVAR_UNKNOWN(varName, ctx));

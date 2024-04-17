@@ -79,9 +79,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     public boolean hasSameEnds(Session comp) {
         return peerA.equals(comp.peerA()) && peerB.equals(comp.peerB());
     }
-    public boolean hasDualEnds(Session comp){
-        return peerA.equals(comp.peerB()) && peerB.equals(comp.peerA());
-    }
 
     @Override
     public boolean equals(Object obj) {
@@ -181,25 +178,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         return communicationsRoots.stream().map(Communication::getLeaves)
                 //reduce List<ArrayList<Communication>> to ArrayList<Communication>
                 .reduce(new ArrayList<>(), (acc, it) -> {acc.addAll(it); return acc;});
-    }
-
-    public Set<String> getSelectionLabels(){
-        var labels = new HashSet<String>();
-        for (Communication communicationsRoot : communicationsRoots) {
-            labels.addAll(communicationsRoot.getDirectedLabels(Utils.Direction.SELECT));
-        }
-        return labels;
-    }
-    public Set<String> getBranchingLabels(){
-        var labels = new HashSet<String>();
-        for (Communication communicationsRoot : communicationsRoots) {
-            labels.addAll(communicationsRoot.getDirectedLabels(Utils.Direction.BRANCH));
-        }
-        return labels;
-    }
-
-    public void walk(){
-        
     }
 
     public boolean supports(Session target) {
