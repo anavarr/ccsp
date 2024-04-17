@@ -128,22 +128,19 @@ public class Communication {
     }
 
     public boolean nodeIsBelow(Communication node){
-        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+        for (Communication nextCommunicationNode : nextCommunicationNodes)
             if(nextCommunicationNode == node || nextCommunicationNode.nodeIsBelow(node)) return true;
-        }
         return false;
     }
     public boolean nodeIsSelfOrBelow(Communication node){
         if(node == this) return true;
-        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+        for (Communication nextCommunicationNode : nextCommunicationNodes)
             if(nextCommunicationNode == node || nextCommunicationNode.nodeIsSelfOrBelow(node)) return true;
-        }
         return false;
     }
     public boolean nodeIsAbove(Communication root){
-        for (Communication communication : previousCommunicationNodes) {
+        for (Communication communication : previousCommunicationNodes)
             if(communication == root || communication.nodeIsAbove(root)) return true;
-        }
         return false;
     }
     public boolean nodeIsSelfOrAbove(Communication root){
@@ -197,9 +194,8 @@ public class Communication {
     public Set<String> getDirectedLabels(Utils.Direction dir) {
         var labels = new HashSet<String>();
         if(label != null && direction == dir) labels.add(label);
-        for (Communication communicationsBranch : nextCommunicationNodes) {
+        for (Communication communicationsBranch : nextCommunicationNodes)
             labels.addAll(communicationsBranch.getDirectedLabels(dir));
-        }
         return labels;
     }
 
