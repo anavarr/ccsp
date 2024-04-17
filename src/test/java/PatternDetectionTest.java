@@ -24,10 +24,10 @@ public class PatternDetectionTest extends ProgramReaderTest{
 
         OAuth2FragmentCompatibilityList.put("service-client", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
         OAuth2FragmentCompatibilityList.put("client-service", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
-        OAuth2FragmentCompatibilityList.put("service-authenticator", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
-        OAuth2FragmentCompatibilityList.put("authenticator-service", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
-        OAuth2FragmentCompatibilityList.put("client-authenticator", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
-        OAuth2FragmentCompatibilityList.put("authenticator-client", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
+        OAuth2FragmentCompatibilityList.put("service-authenticator", List.of("GRPC_st_st_server"));
+        OAuth2FragmentCompatibilityList.put("authenticator-service", List.of("GRPC_st_st_client"));
+        OAuth2FragmentCompatibilityList.put("client-authenticator", List.of("GRPC_st_st_client"));
+        OAuth2FragmentCompatibilityList.put("authenticator-client", List.of("GRPC_st_st_server"));
     }
 
     @Test
@@ -48,7 +48,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
             var peerA = ends.split("-")[0];
             var peerB = ends.split("-")[1];
             for (String compliantFramework : compliantFrameworks) {
-                assertTrue(frameworkIsCompatibleForSessionPeers(ctx.sessions, peerA, peerB, compliantFramework, cf));
+                assertTrue(frameworkIsCompatibleForSessionPeers(ctx.sessions, peerA, peerB, compliantFramework, cf),
+                        compliantFramework+" is not compliant with the session between "+peerA+" and "+peerB);
             }
             //we don't want any other framework to be compatible
             assertEquals(getCompatibleFrameworksForEnds(ctx.sessions, peerA, peerB, cf).size(), compliantFrameworks.size());

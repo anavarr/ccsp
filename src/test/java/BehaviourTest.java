@@ -588,7 +588,6 @@ public class BehaviourTest {
 
         }
     }
-
     @Nested
     class BranchesExtractionTest {
         //base cases
@@ -741,7 +740,6 @@ public class BehaviourTest {
             assertTrue(branches.containsAll(List.of(branch1, branch2, branch3, branch4)));
         }
     }
-
     @Nested
     class IntricatePathExtractionTest extends ProgramReaderTest{
         @Test
@@ -755,6 +753,4 @@ public class BehaviourTest {
             }
         }
     }
-
-
 }
