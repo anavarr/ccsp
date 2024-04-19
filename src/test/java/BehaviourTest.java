@@ -44,8 +44,18 @@ public class BehaviourTest {
             nbs.put("else-if", new End("myProcess"));
             assertThrows(IllegalArgumentException.class, () -> new Cdt("myProcess", nbs));
         }
-
-
+        @Test
+        public void creatingCallWithBadContinuationLabelShouldFail(){
+            var nbs = new HashMap<String, Behaviour>();
+            nbs.put("unfold2", new End("myProcess"));
+            assertThrows(IllegalArgumentException.class, () -> new Call("myProcess",nbs,  "MyFunction"));
+        }
+        @Test
+        public void creatingCallWithEmptyContinuationMapShouldSucceed(){
+            var nbs = new HashMap<String, Behaviour>();
+            var call = new Call("myProcess", nbs, "MyFunction");
+            assertEquals(0, call.nextBehaviours.size());
+        }
     }
     @Nested
     class EqualityTest{
@@ -588,7 +598,6 @@ public class BehaviourTest {
 
         }
     }
-
     @Nested
     class BranchesExtractionTest {
         //base cases
@@ -741,7 +750,6 @@ public class BehaviourTest {
             assertTrue(branches.containsAll(List.of(branch1, branch2, branch3, branch4)));
         }
     }
-
     @Nested
     class IntricatePathExtractionTest extends ProgramReaderTest{
         @Test
@@ -755,6 +763,4 @@ public class BehaviourTest {
             }
         }
     }
-
-
 }

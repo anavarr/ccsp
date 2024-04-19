@@ -59,6 +59,8 @@ public class Communication {
         this(direction, new ArrayList<>());
     }
 
+
+
     public boolean isSend(){
         return direction == Utils.Direction.SEND;
     }
@@ -75,7 +77,10 @@ public class Communication {
         return direction == Utils.Direction.BRANCH;
     }
     public void addRecursiveCallers(Communication c){
-        c.recursiveCallers.add(c);
+        recursiveCallers.add(c);
+    }
+    public List<Communication> getRecursiveCallers(){
+        return recursiveCallers;
     }
 
     public int getBranchesSize(){
@@ -88,7 +93,8 @@ public class Communication {
     public boolean isComplementary(Communication comp){
         if (!(isSend() ? comp.isReceive() :
                 (isReceive() ? comp.isSend() :
-                        (isBranch() ? comp.isSelect() : comp.isBranch())))) return false;
+                        (isBranch() ? comp.isSelect() :
+                                isSelect() && comp.isBranch())))) return false;
         if(nextCommunicationNodes.size() != comp.nextCommunicationNodes.size()) return false;
         if(!Objects.equals(label, comp.label)) return false;
         for (int i = 0; i < nextCommunicationNodes.size(); i++) {
@@ -128,22 +134,19 @@ public class Communication {
     }
 
     public boolean nodeIsBelow(Communication node){
-        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+        for (Communication nextCommunicationNode : nextCommunicationNodes)
             if(nextCommunicationNode == node || nextCommunicationNode.nodeIsBelow(node)) return true;
-        }
         return false;
     }
     public boolean nodeIsSelfOrBelow(Communication node){
         if(node == this) return true;
-        for (Communication nextCommunicationNode : nextCommunicationNodes) {
-            if(nextCommunicationNode == node || nextCommunicationNode.nodeIsSelfOrBelow(node)) return true;
-        }
+        for (Communication nextCommunicationNode : nextCommunicationNodes)
+            if(nextCommunicationNode.nodeIsSelfOrBelow(node)) return true;
         return false;
     }
     public boolean nodeIsAbove(Communication root){
-        for (Communication communication : previousCommunicationNodes) {
+        for (Communication communication : previousCommunicationNodes)
             if(communication == root || communication.nodeIsAbove(root)) return true;
-        }
         return false;
     }
     public boolean nodeIsSelfOrAbove(Communication root){
@@ -197,9 +200,8 @@ public class Communication {
     public Set<String> getDirectedLabels(Utils.Direction dir) {
         var labels = new HashSet<String>();
         if(label != null && direction == dir) labels.add(label);
-        for (Communication communicationsBranch : nextCommunicationNodes) {
+        for (Communication communicationsBranch : nextCommunicationNodes)
             labels.addAll(communicationsBranch.getDirectedLabels(dir));
-        }
         return labels;
     }
 
@@ -209,9 +211,9 @@ public class Communication {
     public boolean containsDirectPreviousNode(Communication com) { return previousCommunicationNodes.contains(com); }
 
     public boolean supports(Communication targetNode) {
-        if(direction == SEND && (targetNode.direction == RECEIVE || targetNode.direction == BRANCH) ) return false;
-        if(direction == RECEIVE && (targetNode.direction == SEND || targetNode.direction == SELECT)) return false;
-
+        if(direction == SEND && targetNode.direction != SEND  && targetNode.direction != SELECT) return false;
+        if(direction == RECEIVE && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
+        if(direction == VOID && targetNode.direction != VOID) return false;
         boolean oneCompatiblePath;
         //if there are no more target nodes then the protocol must be over
         if(targetNode.nextCommunicationNodes.isEmpty() &&
@@ -244,12 +246,17 @@ public class Communication {
         return !nextCommunicationNodes.isEmpty();
     }
 
+    public boolean hasPreviousNodes(){
+        return !previousCommunicationNodes.isEmpty();
+    }
+
     public void cleanVoid() {
-        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+        for (Communication nextCommunicationNode : nextCommunicationNodes)
             nextCommunicationNode.cleanVoid();
-        }
-        if(nextCommunicationNodes.size() == 1 && nextCommunicationNodes.get(0).direction == VOID)
+        if(nextCommunicationNodes.size() == 1 && nextCommunicationNodes.get(0).direction == VOID){
+            nextCommunicationNodes.get(0).previousCommunicationNodes.remove(this);
             nextCommunicationNodes.remove(0);
+        }
     }
 
     public void addNextCommunicationNodes(ArrayList<Communication> communications) {

@@ -97,7 +97,7 @@ public class Comm extends Behaviour {
         }else if (direction == Utils.Direction.SELECT){
             return nextBehaviours.get(labels.get(0)+";").addBehaviour(nb);
         }else{
-            if(labels.size() == 1){
+            if(!labels.isEmpty()){
                 nextBehaviours.get(labels.get(0)).addBehaviour(nb);
             }
         }

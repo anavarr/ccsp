@@ -177,7 +177,6 @@ public class MessagePatternParsingTest {
         assertEquals(map.get("REST_client"), client);
         assertEquals(map.get("REST_server"), server);
     }
-
     @Test
     public void checkGRPC_un_unParsing() throws IOException {
         //same as simpleSequent
@@ -220,7 +219,6 @@ public class MessagePatternParsingTest {
         assertEquals(map.get("GRPC_st_un_client"), client);
         assertEquals(map.get("GRPC_st_un_server"), server);
     }
-
     @Test
     public void checkGRPC_un_stParsing() throws IOException {
         var spp = testFile("GRPC_un_st_pattern.txt");
