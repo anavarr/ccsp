@@ -148,8 +148,10 @@ public class MessagePatternParsingTest {
         var map = mpm.getSessionsMap();
         var send = new Communication(Utils.Direction.SEND);
         send.addLeafCommunicationRoots(new ArrayList<>(List.of(send)));
+        send.addNextCommunicationNodes(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         var recv = new Communication(Utils.Direction.RECEIVE);
         recv.addLeafCommunicationRoots(new ArrayList<>(List.of(recv)));
+        recv.addNextCommunicationNodes(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         Session repetition_a = new Session("alice", "bob", send);
         Session repetition_b = new Session("bob", "alice", recv);
         assertTrue(map.containsKey("AtLeastOnce_alice"));

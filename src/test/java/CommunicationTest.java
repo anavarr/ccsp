@@ -627,7 +627,7 @@ public class CommunicationTest {
             assertTrue(v.supports(v2));
         }
         @Test
-        public void singleSendDoesntSupportRecursiveSend(){
+        public void singleSendShouldNotSupportRecursiveSend(){
             var singleSend = new Communication(Utils.Direction.SEND);
             var recursiveSend = new Communication(Utils.Direction.SEND);
             recursiveSend.addLeafCommunicationRoots(new ArrayList<>(List.of(recursiveSend)));
@@ -670,7 +670,7 @@ public class CommunicationTest {
             assertFalse(com1.supports(com2));
         }
         @Test
-        public void recursiveSendSupportsDoubleSend(){
+        public void recursiveSendShouldSupportsDoubleSend(){
             var com1 = new Communication(Utils.Direction.SEND);
             com1.addRecursiveCallers(com1);
             com1.addLeafCommunicationRoots(new ArrayList<>(List.of(

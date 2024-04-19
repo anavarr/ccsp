@@ -215,10 +215,11 @@ public class Communication {
         if(direction == RECEIVE && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
         if(direction == VOID && targetNode.direction != VOID) return false;
         boolean oneCompatiblePath;
-        //if there are no more target nodes then the protocol must be over
-        if(targetNode.nextCommunicationNodes.isEmpty() &&
-                !(nextCommunicationNodes.isEmpty() || nextCommunicationNodes.contains(new Communication(VOID))))
-            return false;
+        // If target node is in final state, we need to make sure the template can reach final state
+        if(targetNode.isFinal() && !canBeFinal()) return false;
+        // If template can only reach final state, need to make sure that node is final state
+        if(isFinal()  && !targetNode.isFinal()) return false;
+
         for (Communication nextTargetCommunicationNode : targetNode.nextCommunicationNodes) {
             oneCompatiblePath = false;
             //try next nodes first
@@ -257,6 +258,19 @@ public class Communication {
             nextCommunicationNodes.get(0).previousCommunicationNodes.remove(this);
             nextCommunicationNodes.remove(0);
         }
+    }
+
+    public boolean canBeFinal(){
+        for (Communication nextCommunicationNode: nextCommunicationNodes){
+            if(nextCommunicationNode.direction == VOID) return true;
+        }
+        return nextCommunicationNodes.isEmpty() && recursiveCallers.isEmpty();
+    }
+    public boolean isFinal(){
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            if(nextCommunicationNode.direction != VOID) return false;
+        }
+        return nextCommunicationNodes.isEmpty() && recursiveCallers.isEmpty();
     }
 
     public void addNextCommunicationNodes(ArrayList<Communication> communications) {

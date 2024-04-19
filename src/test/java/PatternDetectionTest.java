@@ -19,8 +19,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
     static{
         threeBuyersCompatibilityList.put("alice-store", List.of("GRPC_st_st_client", "ReactiveStreams_client"));
         threeBuyersCompatibilityList.put("store-alice", List.of("GRPC_st_st_server", "ReactiveStreams_server"));
-        threeBuyersCompatibilityList.put("alice-bob", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
-        threeBuyersCompatibilityList.put("bob-alice", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
+        threeBuyersCompatibilityList.put("alice-bob", List.of("GRPC_st_st_client"));
+        threeBuyersCompatibilityList.put("bob-alice", List.of("GRPC_st_st_server"));
 
         OAuth2FragmentCompatibilityList.put("service-client", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
         OAuth2FragmentCompatibilityList.put("client-service", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
