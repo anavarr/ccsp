@@ -59,6 +59,8 @@ public class Communication {
         this(direction, new ArrayList<>());
     }
 
+
+
     public boolean isSend(){
         return direction == Utils.Direction.SEND;
     }
@@ -75,7 +77,7 @@ public class Communication {
         return direction == Utils.Direction.BRANCH;
     }
     public void addRecursiveCallers(Communication c){
-        c.recursiveCallers.add(c);
+        recursiveCallers.add(c);
     }
     public List<Communication> getRecursiveCallers(){
         return recursiveCallers;
@@ -139,7 +141,7 @@ public class Communication {
     public boolean nodeIsSelfOrBelow(Communication node){
         if(node == this) return true;
         for (Communication nextCommunicationNode : nextCommunicationNodes)
-            if(nextCommunicationNode == node || nextCommunicationNode.nodeIsSelfOrBelow(node)) return true;
+            if(nextCommunicationNode.nodeIsSelfOrBelow(node)) return true;
         return false;
     }
     public boolean nodeIsAbove(Communication root){

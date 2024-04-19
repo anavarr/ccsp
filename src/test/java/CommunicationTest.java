@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -175,6 +176,29 @@ public class CommunicationTest {
             );
             assertNotEquals(c1, c2);
         }
+        @Test
+        public void inequalityDifferentLabelsSelect(){
+            var select1 = new Communication(Utils.Direction.SELECT, "GET");
+            var select2 = new Communication(Utils.Direction.SELECT, "POST");
+            assertNotEquals(select1, select2);
+        }
+        @Test
+        public void inequalityDifferentLabelsBranch(){
+            var br1 = new Communication(Utils.Direction.BRANCH, "GET");
+            var br2 = new Communication(Utils.Direction.BRANCH, "POST");
+            assertNotEquals(br1, br2);
+        }
+        @Test
+        public void inequalityDifferentRecursiveCallersSize(){
+            var send1 = new Communication(Utils.Direction.SEND);
+            send1.addRecursiveCallers(new Communication(Utils.Direction.RECEIVE));
+            System.out.println(send1.getRecursiveCallers());
+            send1.addRecursiveCallers(new Communication(Utils.Direction.SEND));
+            var send2 = new Communication(Utils.Direction.SEND);
+            send2.addRecursiveCallers(new Communication(Utils.Direction.RECEIVE));
+            System.out.println(send2.getRecursiveCallers().size());
+            assertNotEquals(send1, send2);
+        }
     }
     @Nested
     class AboveOrBelowTest{
@@ -209,6 +233,52 @@ public class CommunicationTest {
             cParent.addLeafCommunicationRoots(new ArrayList<>(List.of(cChild)));
             assertFalse(cParent.nodeIsSelfOrAbove(cChild));
             assertFalse(cParent.nodeIsAbove(cChild));
+        }
+        @Test
+        public void indirectParentIsAboveShouldReturnTrue(){
+            var comm111 = new Communication(Utils.Direction.SELECT, "GET");
+            var comm11 = new Communication(Utils.Direction.RECEIVE, comm111);
+            var comm1 = new Communication(Utils.Direction.SEND, comm11);
+            assertTrue(comm111.nodeIsAbove(comm1));
+        }
+        @Test
+        public void indirectChildIsBelowShouldReturnTrue(){
+            var comm111 = new Communication(Utils.Direction.SELECT, "GET");
+            var comm11 = new Communication(Utils.Direction.RECEIVE, comm111);
+            var comm1 = new Communication(Utils.Direction.SEND, comm11);
+            assertTrue(comm1.nodeIsBelow(comm111));
+        }
+        @Test
+        public void selfIsSelfOrAboveButNotAbove(){
+            var n = new Communication(Utils.Direction.SEND);
+            assertTrue(n.nodeIsSelfOrAbove(n));
+            assertFalse(n.nodeIsAbove(n));
+        }
+        @Test
+        public void selfIsSelfOrBelowButNotBelow(){
+            var n = new Communication(Utils.Direction.SEND);
+            assertTrue(n.nodeIsSelfOrBelow(n));
+            assertFalse(n.nodeIsBelow(n));
+        }
+        @Test
+        public void unRelatedNodesShouldNotBeSelfAboveOrBelow(){
+            var s = new Communication(Utils.Direction.SEND);
+            s.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.SEND))));
+            var s2 = new Communication(Utils.Direction.SEND);
+            assertFalse(s.nodeIsSelfOrBelow(s2));
+            assertFalse(s.nodeIsBelow(s2));
+            assertFalse(s.nodeIsSelfOrAbove(s2));
+            assertFalse(s.nodeIsAbove(s2));
+        }
+        @Test
+        public void unRelatedNodesShouldNotBeSelfAboveOrBelowInLongChain(){
+            var sEnd = new Communication(Utils.Direction.SEND);
+            var s = new Communication(Utils.Direction.SEND,
+                    new Communication(Utils.Direction.SEND,
+                            sEnd));
+            var s2 = new Communication(Utils.Direction.SEND);
+            assertFalse(sEnd.nodeIsSelfOrAbove(s2));
+            assertFalse(sEnd.nodeIsAbove(s2));
         }
     }
     @Nested
@@ -493,6 +563,15 @@ public class CommunicationTest {
             var s = new Communication(Utils.Direction.BRANCH, "GET");
             var dls = s.getDirectedLabels(Utils.Direction.BRANCH);
             assertTrue(dls.contains("GET"));
+        }
+        @Test
+        public void branchingAndSelectShouldOnlyReturnQueriedDirectionLabels(){
+            var select = new Communication(Utils.Direction.SELECT,"GETS");
+            var branch = new Communication(Utils.Direction.BRANCH, new ArrayList<>(List.of(select)), "GET");
+            assertTrue(branch.getDirectedLabels(Utils.Direction.BRANCH).contains("GET"));
+            assertFalse(branch.getDirectedLabels(Utils.Direction.BRANCH).contains("GETS"));
+            assertTrue(branch.getDirectedLabels(Utils.Direction.SELECT).contains("GETS"));
+            assertFalse(branch.getDirectedLabels(Utils.Direction.SELECT).contains("GET"));
         }
     }
     @Nested
