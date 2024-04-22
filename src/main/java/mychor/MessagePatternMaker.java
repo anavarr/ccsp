@@ -117,7 +117,7 @@ public class MessagePatternMaker extends MessagePatternBaseVisitor<String>{
                     }
                     // every bottom node can finish without recursion
                     for (Communication bottomNode : bottomNodes) {
-                        if(bottomNode.hasNextNodes())
+                        if(bottomNode.hasNextNodes() || !bottomNode.getRecursiveCallers().isEmpty())
                         {
                             bottomNode.addNextCommunicationNodes(new ArrayList<>(List.of(
                                     new Communication(Utils.Direction.VOID))

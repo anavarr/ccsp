@@ -254,7 +254,8 @@ public class Communication {
     public void cleanVoid() {
         for (Communication nextCommunicationNode : nextCommunicationNodes)
             nextCommunicationNode.cleanVoid();
-        if(nextCommunicationNodes.size() == 1 && nextCommunicationNodes.get(0).direction == VOID){
+        if(recursiveCallers.isEmpty() &&
+                nextCommunicationNodes.size() == 1 && nextCommunicationNodes.get(0).direction == VOID){
             nextCommunicationNodes.get(0).previousCommunicationNodes.remove(this);
             nextCommunicationNodes.remove(0);
         }

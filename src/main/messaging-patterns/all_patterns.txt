@@ -4,6 +4,12 @@ client -> server;
 server -> client
 "
 
+REST_Recursive
+"
+(client -> server;
+server -> client)+
+"
+
 ReactiveStreams
 "
 client -> server;
