@@ -295,4 +295,8 @@ public class Communication {
             communication.previousCommunicationNodes.add(this);
         }
     }
+
+    public List<Communication> getNextCommunicationNodes(){
+        return nextCommunicationNodes;
+    }
 }

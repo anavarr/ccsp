@@ -1,12 +1,20 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public class StackFrame{
+    Map<Session, List<Communication>> previousCommunications;
     private final ArrayList<StackFrame> nextFrames;
     public String varName;
+    public StackFrame(String varName, ArrayList<StackFrame> nextFrames, Map<Session, List<Communication>> previousCommunications){
+        this.varName = varName;
+        this.previousCommunications = previousCommunications;
+        this.nextFrames = nextFrames;
+    }
     public StackFrame(String varName, ArrayList<StackFrame> nextFrames){
         this.varName = varName;
         this.nextFrames = nextFrames;
@@ -46,7 +54,7 @@ public class StackFrame{
         if(!nextFrames.isEmpty()){
             s.append("\n");
         }
-        s.append("}");
+        s.append("}").append("-").append(previousCommunications);
         return s.toString();
     }
     @Override
