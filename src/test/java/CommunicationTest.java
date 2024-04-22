@@ -199,6 +199,44 @@ public class CommunicationTest {
             System.out.println(send2.getRecursiveCallers().size());
             assertNotEquals(send1, send2);
         }
+        @Test
+        public void inequalityDifferentRecursiveCalls(){
+            var comm1 = new Communication(Utils.Direction.SEND);
+            var comm11 = new Communication(Utils.Direction.RECEIVE);
+            var comm111 = new Communication(Utils.Direction.SEND);
+            comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm11)));
+            comm11.addLeafCommunicationRoots(new ArrayList<>(List.of(comm111)));
+            comm111.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm1)));
+
+
+            var comm2 = new Communication(Utils.Direction.SEND);
+            var comm22 = new Communication(Utils.Direction.RECEIVE);
+            var comm222 = new Communication(Utils.Direction.SEND);
+            comm2.addLeafCommunicationRoots(new ArrayList<>(List.of(comm22)));
+            comm22.addLeafCommunicationRoots(new ArrayList<>(List.of(comm222)));
+            comm222.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm22)));
+
+            assertNotEquals(comm1, comm2);
+        }
+        @Test
+        public void equalitySameRecursiveCalls(){
+            var comm1 = new Communication(Utils.Direction.SEND);
+            var comm11 = new Communication(Utils.Direction.RECEIVE);
+            var comm111 = new Communication(Utils.Direction.SEND);
+            comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm11)));
+            comm11.addLeafCommunicationRoots(new ArrayList<>(List.of(comm111)));
+            comm111.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm1)));
+
+
+            var comm2 = new Communication(Utils.Direction.SEND);
+            var comm22 = new Communication(Utils.Direction.RECEIVE);
+            var comm222 = new Communication(Utils.Direction.SEND);
+            comm2.addLeafCommunicationRoots(new ArrayList<>(List.of(comm22)));
+            comm22.addLeafCommunicationRoots(new ArrayList<>(List.of(comm222)));
+            comm222.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm2)));
+
+            assertEquals(comm1, comm2);
+        }
     }
     @Nested
     class AboveOrBelowTest{

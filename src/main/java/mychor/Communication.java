@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +19,7 @@ public class Communication {
     private final String label;
     private final ArrayList<Communication> previousCommunicationNodes = new ArrayList<>();
     private final ArrayList<Communication> recursiveCallers = new ArrayList<>();
+    private final HashMap<Communication, Integer> visitedRecursiveBranches = new HashMap<>();
 
     public Communication(Utils.Direction direction, ArrayList<Communication> nextNodes, String label, ArrayList<Communication> previousNodes){
         Objects.requireNonNull(direction);
@@ -110,7 +112,20 @@ public class Communication {
         if (!(o instanceof Communication comp)) return false;
         if(!(direction == comp.direction && Objects.equals(label, comp.label))) return false;
         if(nextCommunicationNodes.size() != comp.nextCommunicationNodes.size()) return false;
+        //handling recursive branches
         if(recursiveCallers.size() != comp.recursiveCallers.size()) return false;
+        if(!recursiveCallers.isEmpty()){
+            if(visitedRecursiveBranches.containsKey(this)){
+                var recursiveIndex = visitedRecursiveBranches.get(this);
+                if(recursiveIndex < recursiveCallers.size()){
+                    visitedRecursiveBranches.put(this, recursiveIndex+1);
+                    if(!recursiveCallers.get(recursiveIndex).equals(comp.recursiveCallers.get(recursiveIndex))) return false;
+                }
+            }else{
+                visitedRecursiveBranches.put(this, 1);
+                if(!recursiveCallers.get(0).equals(comp.recursiveCallers.get(0))) return false;
+            }
+        }
         for (int i = 0; i < nextCommunicationNodes.size(); i++) {
             if(!(nextCommunicationNodes.contains(comp.nextCommunicationNodes.get(i))
                     & comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i)))) return false;
