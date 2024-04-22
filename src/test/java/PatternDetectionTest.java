@@ -19,8 +19,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
     static{
         threeBuyersCompatibilityList.put("alice-store", List.of("GRPC_st_st_client", "ReactiveStreams_client"));
         threeBuyersCompatibilityList.put("store-alice", List.of("GRPC_st_st_server", "ReactiveStreams_server"));
-        threeBuyersCompatibilityList.put("alice-bob", List.of("GRPC_st_st_client"));
-        threeBuyersCompatibilityList.put("bob-alice", List.of("GRPC_st_st_server"));
+        threeBuyersCompatibilityList.put("alice-bob", List.of("GRPC_st_st_client", "GRPC_un_st_client"));
+        threeBuyersCompatibilityList.put("bob-alice", List.of("GRPC_st_st_server", "GRPC_un_st_server"));
 
         OAuth2FragmentCompatibilityList.put("service-client", List.of("GRPC_un_st_client", "GRPC_st_st_client"));
         OAuth2FragmentCompatibilityList.put("client-service", List.of("GRPC_un_st_server", "GRPC_st_st_server"));
@@ -52,7 +52,10 @@ public class PatternDetectionTest extends ProgramReaderTest{
                         compliantFramework+" is not compliant with the session between "+peerA+" and "+peerB);
             }
             //we don't want any other framework to be compatible
-            assertEquals(getCompatibleFrameworksForEnds(ctx.sessions, peerA, peerB, cf).size(), compliantFrameworks.size());
+            var cffe = getCompatibleFrameworksForEnds(ctx.sessions, peerA, peerB, cf);
+            assertEquals(cffe.size(), compliantFrameworks.size(),
+                    "the session between "+peerA+" and "+peerB+" must be compliant with "
+                            +compliantFrameworks+" only but it is compliant with "+cffe);
         });
 
     }
