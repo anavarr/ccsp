@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public class StackFrame{
-    Map<Session, List<Communication>> previousCommunications;
+    Map<Session, List<Communication>> previousCommunications = new HashMap<>();
     private final ArrayList<StackFrame> nextFrames;
     public String varName;
     public StackFrame(String varName, ArrayList<StackFrame> nextFrames, Map<Session, List<Communication>> previousCommunications){

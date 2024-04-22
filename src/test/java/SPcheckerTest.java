@@ -1,3 +1,4 @@
+import mychor.Comm;
 import mychor.Communication;
 import mychor.Session;
 import mychor.Utils;
@@ -12,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SPcheckerTest extends ProgramReaderTest{
+
 
 
     // SELF COMM
@@ -147,18 +149,50 @@ public class SPcheckerTest extends ProgramReaderTest{
     @Test
     public void loop() throws IOException {
         var spc = testFile("loop.sp");
+        System.out.println(spc);
+        assertTrue(spc.compilerCtx.sessions.isEmpty());
+        assertTrue(spc.compilerCtx.behaviours.containsKey("client"));
     }
     @Test
     public void loopBra() throws IOException {
         var spc = testFile("loopBra.sp");
+        var comm1 = new Communication(Utils.Direction.BRANCH, "left");
+        var comm2 = new Communication(Utils.Direction.BRANCH, "right");
+        comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm1, comm2)));
+        comm2.addLeafCommunicationRoots(new ArrayList<>(List.of(comm1, comm2)));
+        var session = new Session("client","server", new ArrayList<>(List.of(comm1, comm2)));
+        assertEquals(spc.compilerCtx.sessions.get(0), session);
     }
     @Test
     public void loopCdt() throws IOException {
         var spc = testFile("loopCdt.sp");
+        System.out.println(spc);
+        assertTrue(spc.compilerCtx.sessions.isEmpty());
+        assertTrue(spc.compilerCtx.behaviours.containsKey("client"));
     }
     @Test
     public void loopBraCall() throws IOException {
         var spc = testFile("loopBraCdt.sp");
+
+        var comm1 = new Communication(Utils.Direction.SELECT, "split");
+        var comm11 = new Communication(Utils.Direction.BRANCH,
+                new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))), "no");
+        var comm12 = new Communication(Utils.Direction.BRANCH,
+                new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))), "yes");
+        comm12.addRecursiveCallers(comm1);
+        comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm11,comm12)));
+        var session = new Session("alice", "bob", comm1);
+        assertEquals(spc.compilerCtx.sessions.get(0), session);
     }
+    @Test
+    public void exampleSimpleRecursiveSend() throws IOException {
+        var spc = testFile("simple_recursive_send.sp");
+        System.out.println(spc);
+        var session = spc.compilerCtx.sessions.get(0);
+        var comm1 = new Communication(Utils.Direction.SEND);
+        comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm1)));
+        assertEquals(session, new Session("process", "server", comm1));
+    }
+
 
 }

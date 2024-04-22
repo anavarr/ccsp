@@ -283,16 +283,16 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var phantomGraph = compilerCtx.phantomGraph.get(compilerCtx.currentProcess);
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
         if(phantomGraph != null && phantomGraph.isVarNameInGraph(varName)){ //we first check if the phantom graph exists and contains a loop
-            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
             loopSessionToPreviousVarNameInvocation(callGraph, varName);
+            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
             return errors;
         }
 
         //this process exists and has already called a method
         if(callGraph.isVarNameInGraph(varName)){
+            loopSessionToPreviousVarNameInvocation(callGraph, varName);
             compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
                     new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
-            loopSessionToPreviousVarNameInvocation(callGraph, varName);
             return errors;
         }
         compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
@@ -440,18 +440,27 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             System.err.println("Already twice in the loop");
         }else{
             var previousComms = stackFrames.get(0).previousCommunications;
-            compilerCtx.sessions.stream()
-                    .filter(s -> s.peerA().equals(compilerCtx.currentProcess))
-                    .forEach(session -> {
-                        var comms = previousComms.get(session);
-                        var recursiveDestination = new ArrayList<>(comms.stream()
-                                .map(Communication::getNextCommunicationNodes)
-                                .reduce(new ArrayList<>(), (acc, it) -> {
-                                    acc.addAll(it);
-                                    return acc;
-                                }).stream().toList());
-                        session.addLeafCommunicationRoots(recursiveDestination);
-                    });
+            var sessionsStream = compilerCtx.sessions.stream()
+                    .filter(s -> s.peerA().equals(compilerCtx.currentProcess));
+            if(previousComms.isEmpty()){
+                //Call was before the first communication
+                sessionsStream.forEach(session -> {
+                    session.addLeafCommunicationRoots(session.communicationsRoots());
+                });
+            }else{
+                sessionsStream.forEach(session -> {
+                            var comms = previousComms.get(session);
+                            if(comms != null){
+                                var recursiveDestination = new ArrayList<>(comms.stream()
+                                        .map(Communication::getNextCommunicationNodes)
+                                        .reduce(new ArrayList<>(), (acc, it) -> {
+                                            acc.addAll(it);
+                                            return acc;
+                                        }).stream().toList());
+                                session.addLeafCommunicationRoots(recursiveDestination);
+                            }
+                        });
+            }
         }
     }
 }
