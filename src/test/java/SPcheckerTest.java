@@ -1,3 +1,4 @@
+import mychor.Comm;
 import mychor.Communication;
 import mychor.Session;
 import mychor.Utils;
@@ -188,6 +189,14 @@ public class SPcheckerTest extends ProgramReaderTest{
         var comm1 = new Communication(Utils.Direction.SEND);
         comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm1)));
         assertEquals(session, new Session("process", "server", comm1));
+    }
+
+    @Test
+    public void loopCdt1() throws IOException {
+        var spc = testFile("loopCdt1.sp");
+        var send = new Communication(Utils.Direction.SEND);
+        send.addLeafCommunicationRoots(new ArrayList<>(List.of(send)));
+        assertEquals(spc.compilerCtx.sessions.get(0), new Session("client", "server", send));
     }
 
 
