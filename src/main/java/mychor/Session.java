@@ -24,6 +24,14 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         return (communicationsRoots.get(0).isReceive() || communicationsRoots.get(0).isBranch()) ? peerA : peerB;
     }
 
+    public List<Communication> getRecursiveCallersTo(Communication comm){
+        var recursiveCallersTo = new ArrayList<Communication>();
+        for (Communication communicationsRoot : communicationsRoots) {
+            recursiveCallersTo.addAll(communicationsRoot.getRecursiveCallersTo(comm));
+        }
+        return recursiveCallersTo;
+    }
+
     public boolean areEnds(String peerAP, String peerBP){
         return (peerA.equals(peerAP) || peerA.equals(peerBP)) & (peerB.equals(peerAP) || peerB.equals(peerBP));
     }
@@ -86,7 +94,9 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         if (!hasSameEnds(comp)) return false;
         if (communicationsRoots.size() != comp.communicationsRoots().size()) return false;
         for (int i = 0; i < communicationsRoots().size(); i++) {
+            communicationsRoots.get(i).resetVisitedRecursiveBranches();
             if(!communicationsRoots.get(i).equals(comp.communicationsRoots.get(i))) return false;
+            communicationsRoots.get(i).resetVisitedRecursiveBranches();
         }
         return true;
     }

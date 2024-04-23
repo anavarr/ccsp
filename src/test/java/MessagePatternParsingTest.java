@@ -1,4 +1,3 @@
-import mychor.Comm;
 import mychor.Communication;
 import mychor.MessagePatternLexer;
 import mychor.MessagePatternMaker;
@@ -212,11 +211,11 @@ public class MessagePatternParsingTest {
         assertTrue(map.containsKey("GRPC_st_un_server"));
         var clientCommunications = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
                 new Communication(Utils.Direction.RECEIVE))));
-        clientCommunications.addRecursiveCallers(clientCommunications);
+        clientCommunications.addRecursiveCallee(clientCommunications);
 
         var serverCommunications = new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
                 new Communication(Utils.Direction.SEND))));
-        serverCommunications.addRecursiveCallers(serverCommunications);
+        serverCommunications.addRecursiveCallee(serverCommunications);
 
         Session client = new Session("client", "server", new ArrayList<>(List.of(clientCommunications)));
         Session server = new Session("server","client",  new ArrayList<>(List.of(serverCommunications)));

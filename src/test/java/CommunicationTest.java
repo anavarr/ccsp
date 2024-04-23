@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -122,8 +121,8 @@ public class CommunicationTest {
                     new ArrayList<>(List.of(c1)));
             assertTrue(c2.nodeIsSelfOrAbove(c1));
             assertFalse(c2.nodeIsSelfOrBelow(c3));
-            assertEquals(c2.getRecursiveCallers().size(),1);
-            assertTrue(c2.getRecursiveCallers().contains(c3));
+            assertEquals(c2.getRecursiveCallees().size(),1);
+            assertTrue(c2.getRecursiveCallees().contains(c3));
         }
     }
     @Nested
@@ -191,12 +190,12 @@ public class CommunicationTest {
         @Test
         public void inequalityDifferentRecursiveCallersSize(){
             var send1 = new Communication(Utils.Direction.SEND);
-            send1.addRecursiveCallers(new Communication(Utils.Direction.RECEIVE));
-            System.out.println(send1.getRecursiveCallers());
-            send1.addRecursiveCallers(new Communication(Utils.Direction.SEND));
+            send1.addRecursiveCallee(new Communication(Utils.Direction.RECEIVE));
+            System.out.println(send1.getRecursiveCallees());
+            send1.addRecursiveCallee(new Communication(Utils.Direction.SEND));
             var send2 = new Communication(Utils.Direction.SEND);
-            send2.addRecursiveCallers(new Communication(Utils.Direction.RECEIVE));
-            System.out.println(send2.getRecursiveCallers().size());
+            send2.addRecursiveCallee(new Communication(Utils.Direction.RECEIVE));
+            System.out.println(send2.getRecursiveCallees().size());
             assertNotEquals(send1, send2);
         }
         @Test
@@ -710,7 +709,7 @@ public class CommunicationTest {
         @Test
         public void recursiveSendShouldSupportsDoubleSend(){
             var com1 = new Communication(Utils.Direction.SEND);
-            com1.addRecursiveCallers(com1);
+            com1.addRecursiveCallee(com1);
             com1.addLeafCommunicationRoots(new ArrayList<>(List.of(
                 new Communication(Utils.Direction.VOID))
             ));
@@ -722,7 +721,7 @@ public class CommunicationTest {
         @Test
         public void recursiveSendDoesntSupportsPresenceOfReceive(){
             var com1 = new Communication(Utils.Direction.SEND);
-            com1.addRecursiveCallers(com1);
+            com1.addRecursiveCallee(com1);
             com1.addLeafCommunicationRoots(new ArrayList<>(List.of(
                     new Communication(Utils.Direction.VOID))
             ));
@@ -734,7 +733,7 @@ public class CommunicationTest {
         @Test
         public void recursiveSendWithoutVoidEscapeDoesntSupportsDoubleSend(){
             var com1 = new Communication(Utils.Direction.SEND);
-            com1.addRecursiveCallers(com1);
+            com1.addRecursiveCallee(com1);
             var com2 = new Communication(Utils.Direction.SEND);
             var com21 = new Communication(Utils.Direction.SEND);
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(com21)));

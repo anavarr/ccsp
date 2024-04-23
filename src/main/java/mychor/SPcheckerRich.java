@@ -273,26 +273,24 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         //we attach it to the good subgraph of sessions
         var previousCommunicationsMap = new HashMap<Session, List<Communication>>();
-        var c = compilerCtx.sessions.stream().filter(s ->
+        compilerCtx.sessions.stream().filter(s ->
                         s.peerA().equals(compilerCtx.currentProcess)
-        ).peek(s -> {
+        ).forEach(s -> {
             previousCommunicationsMap.put(s, s.getLeaves());
-        }).count();
+        });
 
         //we handle recursion here
         var phantomGraph = compilerCtx.phantomGraph.get(compilerCtx.currentProcess);
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
         if(phantomGraph != null && phantomGraph.isVarNameInGraph(varName)){ //we first check if the phantom graph exists and contains a loop
-            loopSessionToPreviousVarNameInvocation(callGraph, varName);
+            loopSessionToPreviousVarNameInvocation(phantomGraph, varName);
             callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
             return errors;
         }
-
         //this process exists and has already called a method
         if(callGraph.isVarNameInGraph(varName)){
             loopSessionToPreviousVarNameInvocation(callGraph, varName);
-            compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
-                    new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
+            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
             return errors;
         }
         compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
@@ -366,9 +364,27 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var oldContext = compilerCtx;
         var contexts = new ArrayList<CompilerContext>();
         var errors = new ArrayList<String>();
+        var recursiveCallersToTopLevelBranching = new ArrayList<Communication>();
+        var oldRecursiveCallers = new ArrayList<Communication>();
+        Communication branch = null;
+        Communication oldBranch;
         for(int i=5; i< ctx.getChildCount();i+=6){
             compilerCtx = oldContext.duplicateContext();
-            errors.addAll(visitComm(ctx, new Communication(Utils.Direction.BRANCH, ctx.getChild(i-2).getText()), i));
+            oldRecursiveCallers = recursiveCallersToTopLevelBranching;
+            oldBranch = branch;
+            branch = new Communication(Utils.Direction.BRANCH, ctx.getChild(i-2).getText());
+            errors.addAll(visitComm(ctx, branch, i));
+            recursiveCallersToTopLevelBranching.addAll(branch.getRecursiveCallersTo(branch));
+            if(!oldRecursiveCallers.isEmpty()){
+                Communication finalBranch = branch;
+                oldRecursiveCallers
+                        .forEach(c -> c.addLeafCommunicationRoots(new ArrayList<>(List.of(finalBranch))));
+            }
+            if(oldBranch != null && !recursiveCallersToTopLevelBranching.isEmpty()){
+                for (Communication communication : recursiveCallersToTopLevelBranching) {
+                    communication.addLeafCommunicationRoots(new ArrayList<>(List.of(oldBranch)));
+                }
+            }
             contexts.add(compilerCtx);
         }
         Behaviour merged = contexts.get(0).behaviours.get(compilerCtx.currentProcess);
@@ -444,7 +460,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                     .filter(s -> s.peerA().equals(compilerCtx.currentProcess));
             if(previousComms.isEmpty()){
                 //Call was before the first communication
-                sessionsStream.forEach(session -> {
+                if(sessionsStream.findAny().isEmpty()) System.err.println("NO SESSION WAS FOUND, RECURSIVITY MIGHT BE FALTY");
+                compilerCtx.sessions.stream()
+                        .filter(s -> s.peerA().equals(compilerCtx.currentProcess)).forEach(session -> {
                     session.addLeafCommunicationRoots(session.communicationsRoots());
                 });
             }else{

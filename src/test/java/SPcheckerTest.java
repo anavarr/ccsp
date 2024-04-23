@@ -1,4 +1,3 @@
-import mychor.Comm;
 import mychor.Communication;
 import mychor.Session;
 import mychor.Utils;
@@ -144,7 +143,6 @@ public class SPcheckerTest extends ProgramReaderTest{
         assertFalse(spc.sessionsBranchingAreValid());
     }
 
-
     // RECURSION TESTS
     @Test
     public void loop() throws IOException {
@@ -156,8 +154,8 @@ public class SPcheckerTest extends ProgramReaderTest{
     @Test
     public void loopBra() throws IOException {
         var spc = testFile("loopBra.sp");
-        var comm1 = new Communication(Utils.Direction.BRANCH, "left");
-        var comm2 = new Communication(Utils.Direction.BRANCH, "right");
+        var comm1 = new Communication(Utils.Direction.BRANCH, "\"left\"");
+        var comm2 = new Communication(Utils.Direction.BRANCH, "\"right\"");
         comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm1, comm2)));
         comm2.addLeafCommunicationRoots(new ArrayList<>(List.of(comm1, comm2)));
         var session = new Session("client","server", new ArrayList<>(List.of(comm1, comm2)));
@@ -171,15 +169,13 @@ public class SPcheckerTest extends ProgramReaderTest{
         assertTrue(spc.compilerCtx.behaviours.containsKey("client"));
     }
     @Test
-    public void loopBraCall() throws IOException {
+    public void loopBraCdt() throws IOException {
         var spc = testFile("loopBraCdt.sp");
 
-        var comm1 = new Communication(Utils.Direction.SELECT, "split");
-        var comm11 = new Communication(Utils.Direction.BRANCH,
-                new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))), "no");
-        var comm12 = new Communication(Utils.Direction.BRANCH,
-                new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))), "yes");
-        comm12.addRecursiveCallers(comm1);
+        var comm1 = new Communication(Utils.Direction.SELECT, "\"split\"");
+        var comm11 = new Communication(Utils.Direction.BRANCH, "\"no\"");
+        var comm12 = new Communication(Utils.Direction.BRANCH, "\"yes\"");
+        comm12.addRecursiveCallee(comm1);
         comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm11,comm12)));
         var session = new Session("alice", "bob", comm1);
         assertEquals(spc.compilerCtx.sessions.get(0), session);
