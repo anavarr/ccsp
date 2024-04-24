@@ -108,20 +108,17 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                     for (String label : comm.nextBehaviours.keySet()) {
                         var newCtx = ctx.duplicateWithoutSession();
                         Communication co = new Communication(direction, label);
-                        if(maybeSession.isEmpty()){
-                            session = new Session(peerA, peerB, co);
-                            ctx.sessions.add(session);
-                        }else{
-                            session = maybeSession.get();
-                            session.addLeafCommunicationRoots(new ArrayList<>(List.of(co)));
-                        }
-                        fromBehaviour(b.nextBehaviours.get(label), ctx);
+                        session = new Session(peerA, peerB, co);
+                        newCtx.sessions.add(session);
+                        fromBehaviour(b.nextBehaviours.get(label), newCtx);
                         ctxs.add(newCtx);
                     }
-                    ctx = ctxs.stream().reduce(oldCtx, (acc, it) -> {
-                        acc.sessions.addAll(it.sessions);
+                    ctx = ctxs.stream().reduce(new SmallContext(), (acc, it) -> {
+                        mergeSessionsHorizontal(acc.sessions, it.sessions);
                         return acc;
                     });
+                    mergeSessionsVertical(oldCtx.sessions, ctx.sessions);
+                    ctx = oldCtx;
                 }else{
                     Communication co = new Communication(direction);
                     if(maybeSession.isEmpty()) {
@@ -137,7 +134,18 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                 }
             }
             case Cdt cdt -> {
-
+                var oldCtx = ctx;
+                var ctxs = new ArrayList<SmallContext>();
+                for (String s : cdt.nextBehaviours.keySet()) {
+                    var newCtx = new SmallContext();
+                    fromBehaviour(cdt.nextBehaviours.get(s), newCtx);
+                    ctxs.add(newCtx);
+                }
+                ctx = ctxs.stream().reduce(new SmallContext(), (acc, it) -> {
+                    mergeSessionsHorizontal(acc.sessions, it.sessions);
+                    return acc;
+                });
+                mergeSessionsVertical(oldCtx.sessions, ctx.sessions);
             }
             case End end -> {
 
@@ -179,9 +187,8 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         if (!hasSameEnds(comp)) return false;
         if (communicationsRoots.size() != comp.communicationsRoots().size()) return false;
         for (int i = 0; i < communicationsRoots().size(); i++) {
-            communicationsRoots.get(i).resetVisitedRecursiveBranches();
-            if(!communicationsRoots.get(i).equals(comp.communicationsRoots.get(i))) return false;
-            communicationsRoots.get(i).resetVisitedRecursiveBranches();
+            if(!(communicationsRoots.containsAll(comp.communicationsRoots)
+                    && comp.communicationsRoots.containsAll(communicationsRoots))) return false;
         }
         return true;
     }

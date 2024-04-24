@@ -64,7 +64,7 @@ public class Comm extends Behaviour {
         }else if(direction == Utils.Direction.SELECT){
             var label = labels.get(0);
             qs.add(Utils.Direction.SELECT, process, destination, label);
-            return nextBehaviours.get(label+";");
+            return nextBehaviours.get(label);
         }else if(direction == Utils.Direction.BRANCH){
             var m = qs.poll(destination, process);
             if(m == null) return this;
@@ -85,17 +85,13 @@ public class Comm extends Behaviour {
         if (nextBehaviours.isEmpty()) {
             if(direction != Utils.Direction.BRANCH && direction != Utils.Direction.SELECT){
                 nextBehaviours.put(";", nb);
-            }else if (direction == Utils.Direction.SELECT) {
-                nextBehaviours.put(labels.get(0)+";", nb);
-            }else{
+            }else {
                 nextBehaviours.put(labels.get(0), nb);
             }
             return true;
         }
         if(direction != Utils.Direction.BRANCH && direction != Utils.Direction.SELECT){
             return nextBehaviours.get(";").addBehaviour(nb);
-        }else if (direction == Utils.Direction.SELECT){
-            return nextBehaviours.get(labels.get(0)+";").addBehaviour(nb);
         }else{
             if(!labels.isEmpty()){
                 nextBehaviours.get(labels.get(0)).addBehaviour(nb);
@@ -110,8 +106,6 @@ public class Comm extends Behaviour {
         if (!nextBehaviours.isEmpty()){
             if(direction != Utils.Direction.BRANCH && direction != Utils.Direction.SELECT) {
                 c.nextBehaviours.put(";", nextBehaviours.get(";").duplicate());
-            }else if(direction == Utils.Direction.SELECT){
-                c.nextBehaviours.put(c.labels.get(0)+";", nextBehaviours.get(labels.get(0)+";").duplicate());
             }else{
                 for (String s : nextBehaviours.keySet()) {
                     c.nextBehaviours.put(s, nextBehaviours.get(s).duplicate());
