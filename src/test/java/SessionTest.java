@@ -1,4 +1,3 @@
-import mychor.Comm;
 import mychor.Communication;
 import mychor.Session;
 import mychor.Utils;
@@ -168,13 +167,13 @@ public class SessionTest {
         @Test
         public void sessionFirstSelectorIsInitiator(){
             var s = new Session("a", "b", new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE))), "GET"));
+                    "GET", new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE)))));
             assertEquals(s.getInitiator(), "a");
         }
         @Test
         public void sessionFirstBranchingIsInitiated(){
             var s = new Session("a", "b", new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(new Communication(Utils.Direction.SEND))), "GET"));
+                    "GET", new ArrayList<>(List.of(new Communication(Utils.Direction.SEND)))));
             assertEquals(s.getInitiated(), "a");
         }
         @Test
@@ -241,9 +240,9 @@ public class SessionTest {
         public void branchingValidityAllSelect(){
             Session s = new Session("client", "server", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SELECT,
-                                    new ArrayList<>(List.of(
+                                    "GET", new ArrayList<>(List.of(
                                             new Communication(Utils.Direction.SEND)
-                                    )), "GET"),
+                                    ))),
                             new Communication(Utils.Direction.SELECT,"POST"),
                             new Communication(Utils.Direction.SELECT, "DELETE")
                     ))
@@ -254,9 +253,9 @@ public class SessionTest {
         public void branchingValidityAllBranch(){
             Session s = new Session("client", "server", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.BRANCH,
-                                    new ArrayList<>(List.of(
+                                    "GET", new ArrayList<>(List.of(
                                             new Communication(Utils.Direction.SEND)
-                                    )), "GET"),
+                                    ))),
                             new Communication(Utils.Direction.BRANCH,"POST"),
                             new Communication(Utils.Direction.BRANCH, "DELETE")
                     ))

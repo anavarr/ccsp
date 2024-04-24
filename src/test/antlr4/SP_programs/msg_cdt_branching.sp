@@ -8,15 +8,3 @@ client[
         server+"right" @+"";
         End
 ]
-
-|
-
-server [
-    client!ready @!"";
-    client&
-    {
-        "left": None
-    }//{
-        "right": None
-    }
-]

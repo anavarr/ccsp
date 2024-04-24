@@ -1,7 +1,6 @@
 package mychor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +51,7 @@ public class Communication {
     public Communication(Utils.Direction direction, ArrayList<Communication> nextCommunicationNodes){
         this(direction, nextCommunicationNodes, null, new ArrayList<>());
     }
-    public Communication(Utils.Direction direction, ArrayList<Communication> nextCommunicationNodes, String label){
+    public Communication(Utils.Direction direction, String label, ArrayList<Communication> nextCommunicationNodes){
         this(direction, nextCommunicationNodes, label, new ArrayList<>());
     }
     public Communication(Utils.Direction direction, Communication nextCommunication){

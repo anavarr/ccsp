@@ -19,35 +19,35 @@ public class CommunicationTest {
 
     ArrayList<Communication> cSelect = new ArrayList<>(List.of(
             new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SEND)
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SEND,
                                     new Communication(Utils.Direction.RECEIVE))
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.RECEIVE,
                                     new Communication(Utils.Direction.SEND))
-                    )), "left")
+                    )))
     ));
     ArrayList<Communication> cBranch = new ArrayList<>(List.of(
             new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.RECEIVE)
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.RECEIVE,
                                     new Communication(Utils.Direction.SEND))
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SEND,
                                     new Communication(Utils.Direction.RECEIVE))
-                    )), "left")
+                    )))
     ));
 
     @Nested
@@ -476,9 +476,9 @@ public class CommunicationTest {
             var c = new Communication(Utils.Direction.SEND,
                     new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SELECT,
-                                    new ArrayList<>(List.of(c1)), "left"),
+                                    "left", new ArrayList<>(List.of(c1))),
                             new Communication(Utils.Direction.SELECT,
-                                    new ArrayList<>(List.of(c2)), "left"),
+                                    "left", new ArrayList<>(List.of(c2))),
                             c3
                     )));
             var leaves = c.getLeaves();
@@ -604,7 +604,7 @@ public class CommunicationTest {
         @Test
         public void branchingAndSelectShouldOnlyReturnQueriedDirectionLabels(){
             var select = new Communication(Utils.Direction.SELECT,"GETS");
-            var branch = new Communication(Utils.Direction.BRANCH, new ArrayList<>(List.of(select)), "GET");
+            var branch = new Communication(Utils.Direction.BRANCH, "GET", new ArrayList<>(List.of(select)));
             assertTrue(branch.getDirectedLabels(Utils.Direction.BRANCH).contains("GET"));
             assertFalse(branch.getDirectedLabels(Utils.Direction.BRANCH).contains("GETS"));
             assertTrue(branch.getDirectedLabels(Utils.Direction.SELECT).contains("GETS"));
