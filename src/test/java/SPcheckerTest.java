@@ -172,11 +172,10 @@ public class SPcheckerTest extends ProgramReaderTest{
     @Test
     public void loopBraCdt() throws IOException {
         var spc = testFile("loopBraCdt.sp");
-
         var comm1 = new Communication(Utils.Direction.SELECT, "\"split\"");
         var comm11 = new Communication(Utils.Direction.BRANCH, "\"no\"");
         var comm12 = new Communication(Utils.Direction.BRANCH, "\"yes\"");
-        comm12.addRecursiveCallee(comm1);
+        comm11.addRecursiveCallee(comm1);
         comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm11,comm12)));
         var session = new Session("alice", "bob", comm1);
         assertEquals(spc.compilerCtx.sessions.get(0), session);
@@ -198,6 +197,4 @@ public class SPcheckerTest extends ProgramReaderTest{
         send.addLeafCommunicationRoots(new ArrayList<>(List.of(send)));
         assertEquals(spc.compilerCtx.sessions.get(0), new Session("client", "server", send));
     }
-
-
 }

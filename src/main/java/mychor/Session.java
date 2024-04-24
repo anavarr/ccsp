@@ -1,10 +1,9 @@
 package mychor;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public record Session(String peerA, String peerB, ArrayList<Communication> communicationsRoots) {
     public Session {
@@ -86,6 +85,92 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
 
     public boolean hasSameEnds(Session comp) {
         return peerA.equals(comp.peerA()) && peerB.equals(comp.peerB());
+    }
+
+    public static void fromBehaviour(Behaviour b, SmallContext ctx){
+        switch(b){
+            case null -> {
+
+            }
+            case Comm comm -> {
+                var peerA = comm.process;
+                var peerB = comm.destination;
+                var direction = comm.direction;
+
+                Session session;
+                var maybeSession = ctx.sessions.stream()
+                        .filter(sess-> sess.peerA.equals(peerA) && sess.peerB.equals(peerB))
+                        .findFirst();
+                if(direction.equals(Utils.Direction.SELECT) || direction.equals(Utils.Direction.BRANCH)){
+                    //There can be several nextNodes
+                    var ctxs = new ArrayList<SmallContext>();
+                    var oldCtx=ctx;
+                    for (String label : comm.nextBehaviours.keySet()) {
+                        var newCtx = ctx.duplicateWithoutSession();
+                        Communication co = new Communication(direction, label);
+                        if(maybeSession.isEmpty()){
+                            session = new Session(peerA, peerB, co);
+                            ctx.sessions.add(session);
+                        }else{
+                            session = maybeSession.get();
+                            session.addLeafCommunicationRoots(new ArrayList<>(List.of(co)));
+                        }
+                        fromBehaviour(b.nextBehaviours.get(label), ctx);
+                        ctxs.add(newCtx);
+                    }
+                    ctx = ctxs.stream().reduce(oldCtx, (acc, it) -> {
+                        acc.sessions.addAll(it.sessions);
+                        return acc;
+                    });
+                }else{
+                    Communication co = new Communication(direction);
+                    if(maybeSession.isEmpty()) {
+                        session = new Session(peerA, peerB, co);
+                        ctx.sessions.add(session);
+                    }else{
+                        session = maybeSession.get();
+                        session.addLeafCommunicationRoots(new ArrayList<>(List.of(co)));
+                    }
+                    if(!comm.nextBehaviours.isEmpty()){
+                        fromBehaviour(comm.nextBehaviours.get(";"), ctx);
+                    }
+                }
+            }
+            case Cdt cdt -> {
+
+            }
+            case End end -> {
+
+            }
+            case None none -> {
+
+            }
+            case Call call -> {
+
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + b);
+        }
+    }
+
+    static class SmallContext{
+        ArrayList<Session> sessions = new ArrayList<>();
+        ArrayList<String> calledVariables = new ArrayList<>();
+
+        public SmallContext duplicateWithoutSession(){
+            var sm = new SmallContext();
+            sm.calledVariables.addAll(this.calledVariables);
+            return sm;
+        }
+    }
+    public static List<Session> fromBehaviours(Map<String, Behaviour> behaviours){
+        var sessions = new ArrayList<Session>();
+        for (String s : behaviours.keySet()) {
+            var behaviour = behaviours.get(s);
+            var ctx = new SmallContext();
+            fromBehaviour(behaviour, ctx);
+            sessions.addAll(ctx.sessions);
+        }
+        return sessions;
     }
 
     @Override

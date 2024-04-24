@@ -271,6 +271,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             //else we simply map it
             compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
         }
+
         //we attach it to the good subgraph of sessions
         var previousCommunicationsMap = new HashMap<Session, List<Communication>>();
         compilerCtx.sessions.stream().filter(s ->
@@ -287,6 +288,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
             return errors;
         }
+
         //this process exists and has already called a method
         if(callGraph.isVarNameInGraph(varName)){
             loopSessionToPreviousVarNameInvocation(callGraph, varName);
