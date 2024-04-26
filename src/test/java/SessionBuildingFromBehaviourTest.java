@@ -271,8 +271,6 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
             ctx2.mergeWithPrevious();
             assertEquals(ctx1.calledVariables.size(), 4);
             assertTrue(ctx1.calledVariables.containsAll(List.of("X1", "X2", "X3", "X4")));
-
         }
     }
-
 }

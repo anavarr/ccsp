@@ -115,6 +115,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     }
 
     private static void processCall(SmallContext ctx, Call call) {
+        var nextBehaviour = call.nextBehaviours.isEmpty() ? null : call.nextBehaviours.get("unfold");
         if(ctx.calledVariables.contains(call.variableName)){
             //already called it
             if(!ctx.recursiveCommunicationsEntrypoint.containsKey(call.variableName)){
@@ -131,6 +132,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         }else{
             //not called
             ctx.calledVariables.add(call.variableName);
+            fromBehaviour(nextBehaviour, ctx);
         }
     }
 
