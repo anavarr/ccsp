@@ -1,6 +1,8 @@
 import mychor.Communication;
 import mychor.Session;
+import mychor.Session.SmallContext;
 import mychor.Utils;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -8,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
@@ -182,4 +185,94 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
         )));
         assertEquals(sessions.get(0), session);
     }
+    @Nested
+    class SmallContextTest{
+        @Test
+        public void simpleMergeHorizontalSameSession(){
+            var session1 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "GET"));
+            var session2 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "POST"));
+            var session3 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "DELETE"));
+            var session4 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "PUT"));
+            var ctx1 = new SmallContext(session1);
+            var ctx2 = new SmallContext(session2);
+            var ctx3 = new SmallContext(session3);
+            var ctx4 = new SmallContext(session4);
+            var newCtx = SmallContext.mergeHorizontal(List.of(ctx1, ctx2, ctx3, ctx4));
+            assertNotNull(newCtx);
+            assertEquals(newCtx.sessions.size(), 1);
+            var session = newCtx.sessions.get(0);
+            assertEquals(session.getInitiator(), "b");
+            assertEquals(session.getInitiated(), "a");
+            assertEquals(session.communicationsRoots().size(), 4);
+            assertTrue(session.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "GET")));
+            assertTrue(session.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "POST")));
+            assertTrue(session.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "DELETE")));
+            assertTrue(session.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "PUT")));
+        }
+        @Test
+        public void simpleMergeHorizontalDifferentSessions(){
+            var session1 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "GET"));
+            var session2 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "POST"));
+            var session3 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "DELETE"));
+            var session31 = new Session("a", "c", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.RECEIVE)));
+            var session4 = new Session("a","b", new Communication(Utils.Direction.BRANCH, "PUT"));
+            var ctx1 = new SmallContext(session1);
+            var ctx2 = new SmallContext(session2);
+            var ctx3 = new SmallContext(List.of(session3, session31));
+            var ctx4 = new SmallContext(session4);
+            var newCtx = SmallContext.mergeHorizontal(List.of(ctx1, ctx2, ctx3, ctx4));
+            assertNotNull(newCtx);
+            assertEquals(newCtx.sessions.size(), 2);
+            var sessions = newCtx.sessions.stream().filter(s -> s.peerB().equals("b")).findFirst().get();
+            var sessions2 = newCtx.sessions.stream().filter(s -> s.peerB().equals("c")).findFirst().get();
+            assertEquals(sessions.getInitiator(), "b");
+            assertEquals(sessions.getInitiated(), "a");
+            assertEquals(sessions2.getInitiator(), "a");
+            assertEquals(sessions2.getInitiated(),"c");
+
+            assertEquals(sessions.communicationsRoots().size(), 4);
+            assertEquals(sessions2.communicationsRoots().size(), 1);
+            assertTrue(sessions.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "GET")));
+            assertTrue(sessions.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "POST")));
+            assertTrue(sessions.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "DELETE")));
+            assertTrue(sessions.communicationsRoots().contains(new Communication(Utils.Direction.BRANCH, "PUT")));
+            assertEquals(sessions2.communicationsRoots().get(0), new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.RECEIVE)));
+        }
+        @Test
+        public void simpleChainBranchMergePrevious(){
+            var parentSm = new SmallContext(new Session("a","b", new Communication(Utils.Direction.SEND)));
+            var newSessions = new ArrayList<>(List.of(
+                    new Session("a","b", new Communication(Utils.Direction.BRANCH, "GET"))));
+            var sm = new SmallContext(newSessions, null, null, parentSm);
+            sm.mergeWithPrevious();
+            assertEquals(parentSm.sessions.size(), 1);
+            assertEquals(parentSm.sessions.get(0), new Session("a","b", new Communication(Utils.Direction.SEND,
+                    new Communication(Utils.Direction.BRANCH, "GET"))));
+        }
+        @Test
+        public void simpleMergeHorizontalSeveralVarCalls(){
+            var ctx1 = new SmallContext();
+            ctx1.calledVariables.add("X1");
+            var ctx2 = new SmallContext();
+            ctx2.calledVariables.addAll(List.of("X1", "X2", "X3"));
+            var ctx3 = new SmallContext();
+            ctx3.calledVariables.addAll(List.of("X5", "X4"));
+            var newCtx=SmallContext.mergeHorizontal(List.of(ctx1, ctx2, ctx3));
+            assertEquals(newCtx.calledVariables.size(), 5);
+            assertTrue(newCtx.calledVariables.containsAll(List.of("X1", "X2", "X3", "X4", "X5")));
+        }
+        @Test
+        public void simpleMergeVerticalSeveralVarCalls(){
+            var ctx1 = new SmallContext();
+            ctx1.calledVariables.add("X1");
+            var ctx2 = new SmallContext();
+            ctx2.calledVariables.addAll(List.of("X4", "X2", "X3"));
+            ctx2.previousContext = ctx1;
+            ctx2.mergeWithPrevious();
+            assertEquals(ctx1.calledVariables.size(), 4);
+            assertTrue(ctx1.calledVariables.containsAll(List.of("X1", "X2", "X3", "X4")));
+
+        }
+    }
+
 }

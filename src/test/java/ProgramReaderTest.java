@@ -2,11 +2,13 @@ import mychor.CompilerContext;
 import mychor.SPcheckerRich;
 import mychor.SPlexer;
 import mychor.SPparserRich;
+import mychor.Session;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 public class ProgramReaderTest {
     SPcheckerRich spr = new SPcheckerRich();

@@ -8,5 +8,4 @@ client[
         }//{
             "right": None
         }
-        End
 ]
