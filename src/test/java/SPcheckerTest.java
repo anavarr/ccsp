@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SPcheckerTest extends ProgramReaderTest{
 
-
-
     // SELF COMM
     @Test
     public void exampleSelfComm(){

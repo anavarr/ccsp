@@ -250,7 +250,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             return resultContext;
         }
     }
-    public static List<Session> fromBehaviours(Map<String, Behaviour> behaviours){
+    public static ArrayList<Session> fromBehaviours(Map<String, Behaviour> behaviours){
         var sessions = new ArrayList<Session>();
         for (String s : behaviours.keySet()) {
             var behaviour = behaviours.get(s);
