@@ -64,10 +64,8 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             System.err.println("not the same continuation roots size");
             return false;
         }
-        for (int i = 0; i < communicationsRoots.size(); i++) {
-            if(!communicationsRoots.get(i).isComplementary(comp.communicationsRoots.get(i))){
-                return false;
-            }
+        for (Communication communicationsRoot : communicationsRoots) {
+            if(comp.communicationsRoots.stream().noneMatch(co -> co.isComplementary(communicationsRoot))) return false;
         }
         return true;
     }
