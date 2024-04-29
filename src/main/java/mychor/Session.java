@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 public record Session(String peerA, String peerB, ArrayList<Communication> communicationsRoots) {
     public Session {
@@ -137,18 +138,13 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
     }
 
     private static void processCdt(SmallContext ctx, Cdt cdt) {
-        var oldCtx = ctx;
         var ctxs = new ArrayList<SmallContext>();
         for (String s : cdt.nextBehaviours.keySet()) {
-            var newCtx = new SmallContext();
+            var newCtx = new SmallContext(ctx);
             fromBehaviour(cdt.nextBehaviours.get(s), newCtx);
             ctxs.add(newCtx);
         }
-        ctx = ctxs.stream().reduce(new SmallContext(), (acc, it) -> {
-            mergeSessionsHorizontal(acc.sessions, it.sessions);
-            return acc;
-        });
-        mergeSessionsVertical(oldCtx.sessions, ctx.sessions);
+        ctx = SmallContext.mergeHorizontalStub(ctxs).mergeWithPrevious();
     }
 
     private static void processComm(SmallContext ctx, Comm comm) {
@@ -158,7 +154,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         if(direction.equals(Utils.Direction.BRANCH)){
             //There can be several nextNodes
             var ctxs = new ArrayList<SmallContext>();
-            var oldCtx=ctx;
             for (String label : comm.nextBehaviours.keySet()) {
                 var newCtx = new SmallContext(ctx);
                 var session = new Session(peerA, peerB, new Communication(direction, label));
@@ -228,17 +223,20 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             return previousContext;
         }
 
-        public static SmallContext mergeHorizontal(List<SmallContext> ctxs){
-            var resultContext = new SmallContext();
-            if(ctxs == null || ctxs.isEmpty()) return resultContext;
+        public static SmallContext mergeHorizontalGeneral(
+                ArrayList<SmallContext> ctxs,
+                BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionsMerger){
+            if(ctxs == null || ctxs.isEmpty()) return new SmallContext();
+
             //all mergeable contexts must have same previous context, else there is a problem;
-            resultContext.previousContext = ctxs.getFirst().previousContext;
+            var resultContext = ctxs.getFirst();
+            ctxs.removeFirst();
             for (SmallContext ctx : ctxs) {
                 if(ctx.previousContext != resultContext.previousContext) return null;
             }
             // merge sessions
             resultContext = ctxs.stream().reduce(resultContext, (acc,it) -> {
-                mergeSessionsHorizontal(acc.sessions, it.sessions);
+                acc.sessions = sessionsMerger.apply(acc.sessions, it.sessions);
                 return acc;
             });
             // merge calledVariables
@@ -248,6 +246,19 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             });
             // merge recursiveCommunicationsEntrypoint
             return resultContext;
+        }
+
+        public static SmallContext mergeHorizontalStub(ArrayList<SmallContext> ctxs){
+            if(ctxs.size() < 2){
+                var stub = new SmallContext();
+                stub.previousContext = ctxs.getFirst().previousContext;
+                ctxs.addFirst(stub);
+            }
+            return mergeHorizontalGeneral(ctxs, Session::mergeSessionsHorizontalStub);
+        }
+
+        public static SmallContext mergeHorizontal(ArrayList<SmallContext> ctxs){
+            return mergeHorizontalGeneral(ctxs, Session::mergeSessionsHorizontal);
         }
     }
     public static ArrayList<Session> fromBehaviours(Map<String, Behaviour> behaviours){
@@ -333,25 +344,14 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                     s1.expandTopCommunicationRoots(toAdd.communicationsRoots());
                 })
                 .toList());
-
-        common.addAll(new ArrayList<>(leftOnly.peek(s -> s.expandTopCommunicationRoots(
-                new ArrayList<>(
-                        List.of(
-                                new Communication(
-                                        Utils.Direction.VOID,
-                                        new ArrayList<>())
-                        )
-                )
-        )).toList()));
-        common.addAll(new ArrayList<>(rightOnly.peek(s -> s.expandTopCommunicationRoots(
-                new ArrayList<>(
-                        List.of(
-                                new Communication(
-                                        Utils.Direction.VOID,
-                                        new ArrayList<>())
-                        )
-                )
-        )).toList()));
+        var lo = new ArrayList<>(leftOnly.peek(s -> s.expandTopCommunicationRoots(new ArrayList<>(List.of(
+                new Communication(Utils.Direction.VOID)
+        )))).toList());
+        var ro = new ArrayList<>(rightOnly.peek(s -> s.expandTopCommunicationRoots(new ArrayList<>(List.of(
+                new Communication(Utils.Direction.VOID)
+        )))).toList());
+        common.addAll(lo);
+        common.addAll(ro);
         return common;
     }
 

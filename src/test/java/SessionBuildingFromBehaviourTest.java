@@ -1,3 +1,4 @@
+import mychor.Comm;
 import mychor.Communication;
 import mychor.Session;
 import mychor.Session.SmallContext;
@@ -111,7 +112,8 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
         var spc = testFile("behavioursCombinations/cdt_select_right.sp");
         var sessions = Session.fromBehaviours(spc.compilerCtx.behaviours);
         var session = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SELECT,"\"success\"")
+                new Communication(Utils.Direction.SELECT,"\"success\""),
+                new Communication(Utils.Direction.VOID)
         )));
         assertEquals(sessions.stream().filter(s->s.peerA().equals("client")).findFirst().get(), session);
     }
@@ -120,7 +122,8 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
         var spc = testFile("behavioursCombinations/cdt_select_left.sp");
         var sessions = Session.fromBehaviours(spc.compilerCtx.behaviours);
         var session = new Session("client", "server", new ArrayList<>(List.of(
-                new Communication(Utils.Direction.SELECT,"\"success\"")
+                new Communication(Utils.Direction.SELECT,"\"success\""),
+                new Communication(Utils.Direction.VOID)
         )));
         assertEquals(sessions.stream().filter(s->s.peerA().equals("client")).findFirst().get(), session);
     }
@@ -130,7 +133,8 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
         var sessions = Session.fromBehaviours(spc.compilerCtx.behaviours);
         var session = new Session("client", "server", new ArrayList<>(List.of(
                 new Communication(Utils.Direction.BRANCH,"\"right\""),
-                new Communication(Utils.Direction.BRANCH,"\"left\"")
+                new Communication(Utils.Direction.BRANCH,"\"left\""),
+                new Communication(Utils.Direction.VOID)
         )));
         assertEquals(sessions.stream().filter(s->s.peerA().equals("client")).findFirst().get(), session);
     }
@@ -140,7 +144,8 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
         var sessions = Session.fromBehaviours(spc.compilerCtx.behaviours);
         var session = new Session("client", "server", new ArrayList<>(List.of(
                 new Communication(Utils.Direction.BRANCH,"\"right\""),
-                new Communication(Utils.Direction.BRANCH,"\"left\"")
+                new Communication(Utils.Direction.BRANCH,"\"left\""),
+                new Communication(Utils.Direction.VOID)
         )));
         assertEquals(sessions.stream().filter(s->s.peerA().equals("client")).findFirst().get(), session);
     }
@@ -197,7 +202,7 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
             var ctx2 = new SmallContext(session2);
             var ctx3 = new SmallContext(session3);
             var ctx4 = new SmallContext(session4);
-            var newCtx = SmallContext.mergeHorizontal(List.of(ctx1, ctx2, ctx3, ctx4));
+            var newCtx = SmallContext.mergeHorizontal(new ArrayList<>(List.of(ctx1, ctx2, ctx3, ctx4)));
             assertNotNull(newCtx);
             assertEquals(newCtx.sessions.size(), 1);
             var session = newCtx.sessions.get(0);
@@ -220,7 +225,7 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
             var ctx2 = new SmallContext(session2);
             var ctx3 = new SmallContext(List.of(session3, session31));
             var ctx4 = new SmallContext(session4);
-            var newCtx = SmallContext.mergeHorizontal(List.of(ctx1, ctx2, ctx3, ctx4));
+            var newCtx = SmallContext.mergeHorizontal(new ArrayList<>(List.of(ctx1, ctx2, ctx3, ctx4)));
             assertNotNull(newCtx);
             assertEquals(newCtx.sessions.size(), 2);
             var sessions = newCtx.sessions.stream().filter(s -> s.peerB().equals("b")).findFirst().get();
@@ -257,7 +262,7 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
             ctx2.calledVariables.addAll(List.of("X1", "X2", "X3"));
             var ctx3 = new SmallContext();
             ctx3.calledVariables.addAll(List.of("X5", "X4"));
-            var newCtx=SmallContext.mergeHorizontal(List.of(ctx1, ctx2, ctx3));
+            var newCtx=SmallContext.mergeHorizontal(new ArrayList<>(List.of(ctx1, ctx2, ctx3)));
             assertEquals(newCtx.calledVariables.size(), 5);
             assertTrue(newCtx.calledVariables.containsAll(List.of("X1", "X2", "X3", "X4", "X5")));
         }
