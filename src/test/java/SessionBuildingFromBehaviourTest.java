@@ -1,3 +1,6 @@
+import mychor.Behaviour;
+import mychor.Call;
+import mychor.Cdt;
 import mychor.Comm;
 import mychor.Communication;
 import mychor.Session;
@@ -8,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -277,5 +281,16 @@ public class SessionBuildingFromBehaviourTest extends ProgramReaderTest{
             assertEquals(ctx1.calledVariables.size(), 4);
             assertTrue(ctx1.calledVariables.containsAll(List.of("X1", "X2", "X3", "X4")));
         }
+    }
+    @Test
+    public void recursiveCallOnBothBranchesConditionalShouldProduceCorrectSessions() throws IOException {
+        var spc = testFile("behavioursCombinations/cdt_recursive_both.sp");
+        var sessions = spc.compilerCtx.sessions;
+        var com = new Communication(Utils.Direction.SEND);
+        com.addRecursiveCallee(com);
+        assertEquals(sessions.get(0), new Session("proc", "client", new ArrayList(List.of(
+                new Communication(Utils.Direction.RECEIVE, com),
+                com
+        ))));
     }
 }
