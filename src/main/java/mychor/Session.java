@@ -126,9 +126,35 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                 var pB = s.split("-")[1];
                 var exactSession = ctx.sessions.stream().filter(se -> se.peerA.equals(pA) && se.peerB.equals(pB)).findFirst();
                 if(exactSession.isEmpty()){
-                    ctx.sessions.add(new Session(pA, pB, sessionsCommunicationMap.get(s)));
+                    //get the last communication of the same session, check if the recursive communication endpoints are above, add them or put them recursive
+                    var lastSession = ctx.getLastSession(pA, pB);
+                    if(lastSession == null){
+                        ctx.sessions.add(new Session(pA, pB, sessionsCommunicationMap.get(s)));
+                    }else{
+                        var newComs = new ArrayList<Communication>();
+                        for (Communication communication : sessionsCommunicationMap.get(s)) {
+                            if(ctx.previousContext.communicationIsPresentInPreviousContexts(communication))
+                                for (Communication leaf : lastSession.getLeaves()) {
+                                    leaf.addRecursiveCallee(communication);
+                                }
+                            else
+                                newComs.add(communication);
+                            if(!newComs.isEmpty()) ctx.sessions.add(new Session(pA,pB, newComs));
+                        }
+                    }
                 }else{
-                    exactSession.get().addLeafCommunicationRoots(sessionsCommunicationMap.get(pA+"-"+pB));
+                    var previousNodes = sessionsCommunicationMap.get(s).stream()
+                            .filter(ctx::communicationIsPresentInPreviousContexts).toList();
+                    var nonPreviousNodes = sessionsCommunicationMap.get(s).stream()
+                            .filter(co -> !ctx.communicationIsPresentInPreviousContexts(co)).toList();
+                    for (Communication communication : previousNodes) {
+                        for (Communication leaf : exactSession.get().getLeaves()) {
+                            leaf.addRecursiveCallee(communication);
+                        }
+                    }for (Communication leaf : exactSession.get().getLeaves()) {
+                        leaf.addLeafCommunicationRoots(new ArrayList<>(nonPreviousNodes));
+                    }
+
                 }
             }
         }else{
@@ -159,16 +185,21 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         var mustUpdateRecursiveCommunicationsEntrypoint =
                 lastVariable != null &&
                         ctx.recursiveCommunicationsEntrypoint.containsKey(lastVariable) &&
-                                !ctx.recursiveCommunicationsEntrypoint.containsKey(sessionKey);
+                                !ctx.recursiveCommunicationsEntrypoint.get(lastVariable).containsKey(sessionKey);
         if(direction.equals(Utils.Direction.BRANCH)){
             //There can be several nextNodes
             var ctxs = new ArrayList<SmallContext>();
-            for (String label : comm.nextBehaviours.keySet()) {
+            List<Communication> comms = comm.nextBehaviours.keySet().stream()
+                    .map(label -> new Communication(Utils.Direction.BRANCH, label)).toList();
+            if(mustUpdateRecursiveCommunicationsEntrypoint){
+                ctx.recursiveCommunicationsEntrypoint.get(lastVariable).put(sessionKey, new ArrayList<>(comms));
+            }
+            for (Communication communication : comms) {
                 var newCtx = new SmallContext(ctx);
                 newCtx.recursiveCommunicationsEntrypoint = ctx.recursiveCommunicationsEntrypoint;
-                var session = new Session(peerA, peerB, new Communication(direction, label));
+                var session = new Session(peerA, peerB, communication);
                 newCtx.sessions.add(session);
-                fromBehaviour(comm.nextBehaviours.get(label), newCtx);
+                fromBehaviour(comm.nextBehaviours.get(communication.getLabel()), newCtx);
                 ctxs.add(newCtx);
             }
             ctx = SmallContext.mergeHorizontal(ctxs).mergeWithPrevious();
@@ -235,6 +266,23 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             mergeSessionsVertical(previousContext.sessions, sessions);
             previousContext.calledVariables.addAll(calledVariables);
             return previousContext;
+        }
+
+        public Session getLastSession(String peerA, String peerB){
+            var optionalSession = sessions.stream().filter(s -> s.peerB.equals(peerB) && s.peerA.equals(peerA)).findFirst();
+            if(optionalSession.isPresent()) return optionalSession.get();
+            if(previousContext == null) return null;
+            return previousContext.getLastSession(peerA, peerB);
+        }
+
+        public boolean communicationIsPresentInPreviousContexts(Communication co){
+            if(previousContext == null) return false;
+            for (Session session : previousContext.sessions) {
+                for (Communication communicationsRoot : session.communicationsRoots) {
+                    if(communicationsRoot.nodeIsSelfOrBelow(co)) return true;
+                }
+            }
+            return previousContext.communicationIsPresentInPreviousContexts(co);
         }
 
         public static SmallContext mergeHorizontalGeneral(

@@ -182,11 +182,25 @@ public class Communication {
         }
         return false;
     }
+    public boolean changeNextToRecursive(Communication target){
+        var changed = false;
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            if(nextCommunicationNode == target) {
+                nextCommunicationNodes.remove(nextCommunicationNode);
+                recursiveCallees.add(nextCommunicationNode);
+                changed = true;
+            } else {
+                if(nextCommunicationNode.changeNextToRecursive(target)) changed = true;
+            }
+        }
+        return false;
+    }
     public void addLeafCommunicationRoots(ArrayList<Communication> roots){
         if(nextCommunicationNodes.isEmpty()){
             for (Communication root : roots) {
                 if(nodeIsSelfOrAbove(root)) addRecursiveCallee(root);
                 else {
+                    //check that roots chain aren't previous communications
                     if(direction == VOID){
                         for (Communication previousCommunicationNode : previousCommunicationNodes) {
                             previousCommunicationNode.nextCommunicationNodes.add(root);
