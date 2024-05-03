@@ -118,25 +118,51 @@ public class Communication {
     public boolean equals(Object o){
         if (!(o instanceof Communication comp)) return false;
         if(!(direction == comp.direction && Objects.equals(label, comp.label))) return false;
-        if(nextCommunicationNodes.size() != comp.nextCommunicationNodes.size()) return false;
         //handling recursive branches
-        if(recursiveCallees.size() != comp.recursiveCallees.size()) return false;
+        if(nextCommunicationNodes.size() + recursiveCallees.size()
+                != comp.nextCommunicationNodes.size() + comp.recursiveCallees.size()) return false;
+
+        for(int i = 0; i < nextCommunicationNodes.size(); i++){
+            if(!comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i))){
+                 if(!comp.recursiveCallees.contains(nextCommunicationNodes.get(i))) return false;
+            }
+        }
         if(!recursiveCallees.isEmpty()){
             if(visitedRecursiveBranches.containsKey(this)){
                 var recursiveIndex = visitedRecursiveBranches.get(this);
                 if(recursiveIndex < recursiveCallees.size()){
                     visitedRecursiveBranches.put(this, recursiveIndex+1);
-                    return comp.recursiveCallees.contains(recursiveCallees.get(recursiveIndex));
+                    if(!comp.recursiveCallees.contains(recursiveCallees.get(recursiveIndex))){
+                        return comp.nextCommunicationNodes.contains(recursiveCallees.get(recursiveIndex));
+                    }else{
+                        return true;
+                    }
                 }
             }else{
                 visitedRecursiveBranches.put(this, 1);
-                return comp.recursiveCallees.contains(recursiveCallees.get(0));
+                if(!comp.recursiveCallees.contains(recursiveCallees.get(0))){
+                    return comp.nextCommunicationNodes.contains(recursiveCallees.get(0));
+                }else{
+                    return true;
+                }
             }
         }
-        for (int i = 0; i < nextCommunicationNodes.size(); i++) {
-            if(!(nextCommunicationNodes.contains(comp.nextCommunicationNodes.get(i))
-                    & comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i)))) return false;
-        }
+//        if(!recursiveCallees.isEmpty()){
+//            if(visitedRecursiveBranches.containsKey(this)){
+//                var recursiveIndex = visitedRecursiveBranches.get(this);
+//                if(recursiveIndex < recursiveCallees.size()){
+//                    visitedRecursiveBranches.put(this, recursiveIndex+1);
+//                    return comp.recursiveCallees.contains(recursiveCallees.get(recursiveIndex));
+//                }
+//            }else{
+//                visitedRecursiveBranches.put(this, 1);
+//                return comp.recursiveCallees.contains(recursiveCallees.get(0));
+//            }
+//        }
+//        for (int i = 0; i < nextCommunicationNodes.size(); i++) {
+//            if(!(nextCommunicationNodes.contains(comp.nextCommunicationNodes.get(i))
+//                    & comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i)))) return false;
+//        }
         return true;
     }
 
