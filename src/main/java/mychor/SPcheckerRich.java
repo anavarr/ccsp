@@ -257,9 +257,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var varName = ctx.getChild(1).getText();
         var errors = new ArrayList<String>();
 
-        //add behaviour to processDefinition
-        addBehaviour(new Call(compilerCtx.currentProcess, varName));
-
         //we check if the variable is already mapped
         if (compilerCtx.recvar2proc.containsKey(varName)){
             //if it is it can't be mapped to another process
@@ -272,31 +269,16 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             compilerCtx.recvar2proc.put(varName, compilerCtx.currentProcess);
         }
 
-        //we attach it to the good subgraph of sessions
-        var previousCommunicationsMap = new HashMap<Session, List<Communication>>();
-        compilerCtx.sessions.stream().filter(s ->
-                        s.peerA().equals(compilerCtx.currentProcess)
-        ).forEach(s -> {
-            previousCommunicationsMap.put(s, s.getLeaves());
-        });
+        //add behaviour to processDefinition
+        addBehaviour(new Call(compilerCtx.currentProcess, varName));
 
         //we handle recursion here
         var phantomGraph = compilerCtx.phantomGraph.get(compilerCtx.currentProcess);
         var callGraph = compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess);
-        if(phantomGraph != null && phantomGraph.isVarNameInGraph(varName)){ //we first check if the phantom graph exists and contains a loop
-            loopSessionToPreviousVarNameInvocation(phantomGraph, varName);
-            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
+        if(callGraph.isVarNameInGraph(varName) || (phantomGraph != null && phantomGraph.isVarNameInGraph(varName))){
             return errors;
         }
-
-        //this process exists and has already called a method
-        if(callGraph.isVarNameInGraph(varName)){
-            loopSessionToPreviousVarNameInvocation(callGraph, varName);
-            callGraph.addLeafFrame(new StackFrame(varName, new ArrayList<>(), previousCommunicationsMap));
-            return errors;
-        }
-        compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(
-                new StackFrame(varName, new ArrayList<>()));
+        compilerCtx.calledProceduresGraph.get(compilerCtx.currentProcess).addLeafFrame(varName);
 
         //if the variable is not in the set of recursive variable definitions we add an error and return
         if(!recDefs.containsKey(varName)) {
@@ -327,11 +309,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var contextElse = compilerCtx;
         //we merge the "horizontal contexts to create one context corresponding to the conditional
         var mergedContext = CompilerContext.mergeContexts(contextThen, contextElse,
-                Session::mergeSessionsHorizontalStub, ProceduresCallGraphMap::mergeCalledProceduresHorizontal, ctx);
+                ProceduresCallGraphMap::mergeCalledProceduresHorizontal, ctx);
         var errors = mergedContext.errors;
 
         //we merge it
-        compilerCtx = CompilerContext.mergeContexts(oldContext, mergedContext, Session::mergeSessionsVertical,
+        compilerCtx = CompilerContext.mergeContexts(oldContext, mergedContext,
                 ProceduresCallGraphMap::mergeCalledProceduresVertical, ctx);
 
         var hm = new HashMap<String, Behaviour>();
@@ -343,15 +325,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     @Override
     public List<String> visitSnd(SPparserRich.SndContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.SEND), 7);
+        return visitComm(ctx, Utils.Direction.SEND, null, 7);
     }
     @Override
     public List<String> visitRcv(SPparserRich.RcvContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.RECEIVE), 7);
+        return visitComm(ctx, Utils.Direction.RECEIVE, null, 7);
     }
     @Override
     public List<String> visitSel(SPparserRich.SelContext ctx) {
-        return visitComm(ctx, new Communication(Utils.Direction.SELECT, ctx.getChild(2).getText()), 7);
+        return visitComm(ctx, Utils.Direction.SELECT, ctx.getChild(2).getText(), 7);
     }
     @Override
     public List<String> visitBra(SPparserRich.BraContext ctx) {
@@ -366,27 +348,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var oldContext = compilerCtx;
         var contexts = new ArrayList<CompilerContext>();
         var errors = new ArrayList<String>();
-        var recursiveCallersToTopLevelBranching = new ArrayList<Communication>();
-        var oldRecursiveCallers = new ArrayList<Communication>();
-        Communication branch = null;
-        Communication oldBranch;
         for(int i=5; i< ctx.getChildCount();i+=6){
             compilerCtx = oldContext.duplicateContext();
-            oldRecursiveCallers = recursiveCallersToTopLevelBranching;
-            oldBranch = branch;
-            branch = new Communication(Utils.Direction.BRANCH, ctx.getChild(i-2).getText());
-            errors.addAll(visitComm(ctx, branch, i));
-            recursiveCallersToTopLevelBranching.addAll(branch.getRecursiveCallersTo(branch));
-            if(!oldRecursiveCallers.isEmpty()){
-                Communication finalBranch = branch;
-                oldRecursiveCallers
-                        .forEach(c -> c.addLeafCommunicationRoots(new ArrayList<>(List.of(finalBranch))));
-            }
-            if(oldBranch != null && !recursiveCallersToTopLevelBranching.isEmpty()){
-                for (Communication communication : recursiveCallersToTopLevelBranching) {
-                    communication.addLeafCommunicationRoots(new ArrayList<>(List.of(oldBranch)));
-                }
-            }
+            errors.addAll(visitComm(ctx, Utils.Direction.BRANCH, ctx.getChild(i-2).getText(), i));
             contexts.add(compilerCtx);
         }
         Behaviour merged = contexts.get(0).behaviours.get(compilerCtx.currentProcess);
@@ -409,11 +373,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         //merge all "horizontal" contexts together (pretty much merge their sessions and errors and stuff
         compilerCtx = contexts.stream().reduce(
                 new CompilerContext(),
-                (context1, context2) -> CompilerContext.mergeContexts(context1, context2, Session::mergeSessionsHorizontal,
+                (context1, context2) -> CompilerContext.mergeContexts(context1, context2,
                         ProceduresCallGraphMap::mergeCalledProceduresHorizontal, ctx));
 
         //we merge it with the previous context
-        compilerCtx = CompilerContext.mergeContexts(oldContext, compilerCtx, Session::mergeSessionsVertical,
+        compilerCtx = CompilerContext.mergeContexts(oldContext, compilerCtx,
                 ProceduresCallGraphMap::mergeCalledProceduresVertical, ctx);
         //now we check for loops
         return errors;
@@ -427,22 +391,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public List<String> visitSom(SPparserRich.SomContext ctx) {
         return ctx.getChild(2).accept(this);
     }
-    public <T extends SPparserRich.BehaviourContext> List<String> visitComm(T ctx, Communication communication, int continuationIndex){
+    public <T extends SPparserRich.BehaviourContext> List<String> visitComm(
+            T ctx, Utils.Direction direction, String label, int continuationIndex){
         var errors = new ArrayList<String>();
         var dest = ctx.getChild(0).getText();
-        var source = compilerCtx.currentProcess;
         if(compilerCtx.currentProcess == null){
             errors.add(ERROR_NULL_PROCESS(ctx));
-        }else{
-            var session = getSession(source, dest);
-            if(session == null){
-                compilerCtx.sessions.add(new Session(source, dest, communication));
-            }else{
-                session.addLeafCommunicationRoots(new ArrayList<>(List.of(communication)));
-            }
         }
         addBehaviour(new Comm(
-                compilerCtx.currentProcess, dest, communication.getDirection(), communication.getLabel()));
+                compilerCtx.currentProcess, dest, direction, label));
         errors.addAll(ctx.getChild(continuationIndex).accept(this));
         return errors;
     }
@@ -452,35 +409,4 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return new ArrayList<>();
     }
 
-    private void loopSessionToPreviousVarNameInvocation(ProceduresCallGraph callGraph, String varName){
-        var stackFrames = callGraph.stream().filter(sf -> sf.varName.equals(varName)).toList();
-        if(stackFrames.size() != 1){
-            System.err.println("Already twice in the loop");
-        }else{
-            var previousComms = stackFrames.get(0).previousCommunications;
-            var sessionsStream = compilerCtx.sessions.stream()
-                    .filter(s -> s.peerA().equals(compilerCtx.currentProcess));
-            if(previousComms.isEmpty()){
-                //Call was before the first communication
-                if(sessionsStream.findAny().isEmpty()) System.err.println("NO SESSION WAS FOUND, RECURSIVITY MIGHT BE FALTY");
-                compilerCtx.sessions.stream()
-                        .filter(s -> s.peerA().equals(compilerCtx.currentProcess)).forEach(session -> {
-                    session.addLeafCommunicationRoots(session.communicationsRoots());
-                });
-            }else{
-                sessionsStream.forEach(session -> {
-                            var comms = previousComms.get(session);
-                            if(comms != null){
-                                var recursiveDestination = new ArrayList<>(comms.stream()
-                                        .map(Communication::getNextCommunicationNodes)
-                                        .reduce(new ArrayList<>(), (acc, it) -> {
-                                            acc.addAll(it);
-                                            return acc;
-                                        }).stream().toList());
-                                session.addLeafCommunicationRoots(recursiveDestination);
-                            }
-                        });
-            }
-        }
-    }
 }
