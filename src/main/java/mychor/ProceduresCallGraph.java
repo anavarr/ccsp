@@ -4,34 +4,26 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ProceduresCallGraph extends ArrayList<StackFrame>{
+public class ProceduresCallGraph extends ArrayList<String>{
 
     public ProceduresCallGraph() {
         super();
     }
 
-    public ProceduresCallGraph(ArrayList<StackFrame> roots) {
+    public ProceduresCallGraph(ArrayList<String> roots) {
         super(roots);
     }
 
     public boolean isVarNameInGraph(String varName) {
-        return stream().anyMatch(it -> it.isVarNameInGraph(varName));
+        return this.contains(varName);
     }
 
-    public void addLeafFrame(StackFrame stackFrame) {
-        if(size()==0){
-            add(stackFrame);
-        }else{
-            get(0).addLeafFrame(stackFrame);
-        }
+    public void addLeafFrame(String varName) {
+        this.add(varName);
     }
 
-    public void addLeafFrames(ArrayList<StackFrame> frames) {
-        if(size()==0){
-            addAll(frames);
-        }else{
-            get(0).addLeafFrames(frames);
-        }
+    public void addLeafFrames(ArrayList<String> frames) {
+        addAll(frames);
     }
 
     @Override
@@ -52,21 +44,7 @@ public class ProceduresCallGraph extends ArrayList<StackFrame>{
 
     public ProceduresCallGraph duplicate() {
         var pcg = new ProceduresCallGraph();
-        for (StackFrame stackFrame : this) {
-            pcg.add(stackFrame.duplicate());
-        }
+        pcg.addAll(this);
         return pcg;
-    }
-
-    public boolean containsLoop(){
-        return stream().anyMatch(StackFrame::containsSelf);
-    }
-
-    public Set<String> getLoopedVariables(){
-        var looped= new HashSet<String>();
-        for (StackFrame stackFrame : this) {
-            looped.addAll(stackFrame.getLoopedVariables().get(1));
-        }
-        return looped;
     }
 }

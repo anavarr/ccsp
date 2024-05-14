@@ -1,10 +1,13 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 public record Session(String peerA, String peerB, ArrayList<Communication> communicationsRoots) {
     public Session {
@@ -22,6 +25,14 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
 
     public String getInitiated(){
         return (communicationsRoots.get(0).isReceive() || communicationsRoots.get(0).isBranch()) ? peerA : peerB;
+    }
+
+    public List<Communication> getRecursiveCallersTo(Communication comm){
+        var recursiveCallersTo = new ArrayList<Communication>();
+        for (Communication communicationsRoot : communicationsRoots) {
+            recursiveCallersTo.addAll(communicationsRoot.getRecursiveCallersTo(comm));
+        }
+        return recursiveCallersTo;
     }
 
     public boolean areEnds(String peerAP, String peerBP){
@@ -53,10 +64,8 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             System.err.println("not the same continuation roots size");
             return false;
         }
-        for (int i = 0; i < communicationsRoots.size(); i++) {
-            if(!communicationsRoots.get(i).isComplementary(comp.communicationsRoots.get(i))){
-                return false;
-            }
+        for (Communication communicationsRoot : communicationsRoots) {
+            if(comp.communicationsRoots.stream().noneMatch(co -> co.isComplementary(communicationsRoot))) return false;
         }
         return true;
     }
@@ -80,13 +89,263 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         return peerA.equals(comp.peerA()) && peerB.equals(comp.peerB());
     }
 
+    public static void fromBehaviour(Behaviour b, SmallContext ctx){
+        switch(b){
+            case null -> {
+                return;
+            }
+            case Comm comm -> {
+                processComm(ctx, comm);
+            }
+            case Cdt cdt -> {
+                processCdt(ctx, cdt);
+            }
+            case End end -> {
+
+            }
+            case None none -> {
+
+            }
+            case Call call -> {
+                processCall(ctx, call);
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + b);
+        }
+    }
+    private static void processCall(SmallContext ctx, Call call) {
+        var nextBehaviour = call.nextBehaviours.isEmpty() ? null : call.nextBehaviours.get("unfold");
+        if(ctx.recursiveCommunicationsEntrypoint.containsKey(call.variableName)){
+            //already called it
+            if(ctx.recursiveCommunicationsEntrypoint.get(call.variableName) == null){
+                //tight loop with nothing going on between calls to this method
+                return;
+            }
+            var sessionsCommunicationMap = ctx.recursiveCommunicationsEntrypoint.get(call.variableName);
+            for (String s : sessionsCommunicationMap.keySet()) {
+                var pA = s.split("-")[0];
+                var pB = s.split("-")[1];
+                var exactSession = ctx.sessions.stream().filter(se -> se.peerA.equals(pA) && se.peerB.equals(pB)).findFirst();
+                if(exactSession.isEmpty()){
+                    //get the last communication of the same session, check if the recursive communication endpoints are above, add them or put them recursive
+                    var lastSession = ctx.getLastSession(pA, pB);
+                    if(lastSession == null){
+                        ctx.sessions.add(new Session(pA, pB, sessionsCommunicationMap.get(s)));
+                    }else{
+                        var newComs = new ArrayList<Communication>();
+                        for (Communication communication : sessionsCommunicationMap.get(s)) {
+                            if(ctx.previousContext.communicationIsPresentInPreviousContexts(communication))
+                                for (Communication leaf : lastSession.getLeaves()) {
+                                    leaf.addRecursiveCallee(communication);
+                                }
+                            else
+                                newComs.add(communication);
+                            if(!newComs.isEmpty()) ctx.sessions.add(new Session(pA,pB, newComs));
+                        }
+                    }
+                }else{
+                    var previousNodes = sessionsCommunicationMap.get(s).stream()
+                            .filter(ctx::communicationIsPresentInPreviousContexts).toList();
+                    var nonPreviousNodes = sessionsCommunicationMap.get(s).stream()
+                            .filter(co -> !ctx.communicationIsPresentInPreviousContexts(co)).toList();
+                    for (Communication communication : previousNodes) {
+                        for (Communication leaf : exactSession.get().getLeaves()) {
+                            leaf.addRecursiveCallee(communication);
+                        }
+                    }for (Communication leaf : exactSession.get().getLeaves()) {
+                        leaf.addLeafCommunicationRoots(new ArrayList<>(nonPreviousNodes));
+                    }
+
+                }
+            }
+        }else{
+            //not called
+            ctx.recursiveCommunicationsEntrypoint.put(call.variableName, new HashMap<>());
+            ctx.lastVariable = call.variableName;
+            fromBehaviour(nextBehaviour, ctx);
+        }
+    }
+
+    private static void processCdt(SmallContext ctx, Cdt cdt) {
+        var ctxs = new ArrayList<SmallContext>();
+        for (String s : cdt.nextBehaviours.keySet()) {
+            var newCtx = new SmallContext(ctx);
+            newCtx.recursiveCommunicationsEntrypoint = ctx.recursiveCommunicationsEntrypoint;
+            fromBehaviour(cdt.nextBehaviours.get(s), newCtx);
+            ctxs.add(newCtx);
+        }
+        ctx = SmallContext.mergeHorizontalStub(ctxs).mergeWithPrevious();
+    }
+
+    private static void processComm(SmallContext ctx, Comm comm) {
+        var peerA = comm.process;
+        var peerB = comm.destination;
+        var direction = comm.direction;
+        var lastVariable = ctx.getLastCalledVariable();
+        var sessionKey = peerA+"-"+peerB;
+        var mustUpdateRecursiveCommunicationsEntrypoint =
+                lastVariable != null &&
+                        ctx.recursiveCommunicationsEntrypoint.containsKey(lastVariable) &&
+                                !ctx.recursiveCommunicationsEntrypoint.get(lastVariable).containsKey(sessionKey);
+        if(direction.equals(Utils.Direction.BRANCH)){
+            //There can be several nextNodes
+            var ctxs = new ArrayList<SmallContext>();
+            List<Communication> comms = comm.nextBehaviours.keySet().stream()
+                    .map(label -> new Communication(Utils.Direction.BRANCH, label)).toList();
+            if(mustUpdateRecursiveCommunicationsEntrypoint){
+                ctx.recursiveCommunicationsEntrypoint.get(lastVariable).put(sessionKey, new ArrayList<>(comms));
+            }
+            for (Communication communication : comms) {
+                var newCtx = new SmallContext(ctx);
+                newCtx.recursiveCommunicationsEntrypoint = ctx.recursiveCommunicationsEntrypoint;
+                var session = new Session(peerA, peerB, communication);
+                newCtx.sessions.add(session);
+                fromBehaviour(comm.nextBehaviours.get(communication.getLabel()), newCtx);
+                ctxs.add(newCtx);
+            }
+            ctx = SmallContext.mergeHorizontal(ctxs).mergeWithPrevious();
+        }else{
+            String label=null;
+            String nextBehaviourKey = comm.nextBehaviours.keySet().stream().findAny().get();
+            if(direction == Utils.Direction.SELECT) label = nextBehaviourKey;
+            Communication co = new Communication(direction, label);
+            var maybeSession = ctx.sessions.stream()
+                    .filter(sess-> sess.peerA.equals(peerA) && sess.peerB.equals(peerB))
+                    .findFirst();
+            Session session;
+            if(maybeSession.isEmpty()) {
+                session = new Session(peerA, peerB, co);
+                ctx.sessions.add(session);
+            }else{
+                session = maybeSession.get();
+                session.addLeafCommunicationRoots(new ArrayList<>(List.of(co)));
+            }
+            if(mustUpdateRecursiveCommunicationsEntrypoint){
+                ctx.recursiveCommunicationsEntrypoint.get(lastVariable).put(sessionKey, new ArrayList<>(List.of(co)));
+            }
+            if(!comm.nextBehaviours.isEmpty()){
+                fromBehaviour(comm.nextBehaviours.get(nextBehaviourKey), ctx);
+            }
+        }
+    }
+
+    public static class SmallContext{
+        public ArrayList<Session> sessions = new ArrayList<>();
+        public Set<String> calledVariables = new HashSet<>();
+        public String lastVariable = null;
+        public HashMap<String, HashMap<String, ArrayList<Communication>>> recursiveCommunicationsEntrypoint = new HashMap<>();
+        public SmallContext previousContext;
+
+        public SmallContext(){};
+        public SmallContext(
+                ArrayList<Session> sessions, Set<String> calledVariables,
+                HashMap<String, HashMap<String, ArrayList<Communication>>> recursiveCommunicationsEntrypoint,
+                SmallContext previousContext){
+            if(sessions != null) this.sessions = sessions;
+            if(calledVariables != null) this.calledVariables = calledVariables;
+            if(recursiveCommunicationsEntrypoint != null) this.recursiveCommunicationsEntrypoint =
+                    recursiveCommunicationsEntrypoint;
+            this.previousContext = previousContext;
+        }
+        public SmallContext(List<Session> sessions){
+            this.sessions = new ArrayList<>(sessions);
+        }
+        public SmallContext(Session s){
+            sessions.add(s);
+        }
+        public SmallContext(SmallContext previousContext){
+            this.previousContext = previousContext;
+        }
+
+        public boolean alreadyCalledVariable(String variable){
+            if(calledVariables.contains(variable)) return true;
+            return previousContext != null && previousContext.alreadyCalledVariable(variable);
+        }
+
+        public SmallContext mergeWithPrevious(){
+            if(previousContext == null) return this;
+            mergeSessionsVertical(previousContext.sessions, sessions);
+            previousContext.calledVariables.addAll(calledVariables);
+            return previousContext;
+        }
+
+        public Session getLastSession(String peerA, String peerB){
+            var optionalSession = sessions.stream().filter(s -> s.peerB.equals(peerB) && s.peerA.equals(peerA)).findFirst();
+            if(optionalSession.isPresent()) return optionalSession.get();
+            if(previousContext == null) return null;
+            return previousContext.getLastSession(peerA, peerB);
+        }
+
+        public boolean communicationIsPresentInPreviousContexts(Communication co){
+            if(previousContext == null) return false;
+            for (Session session : previousContext.sessions) {
+                for (Communication communicationsRoot : session.communicationsRoots) {
+                    if(communicationsRoot.nodeIsSelfOrBelow(co)) return true;
+                }
+            }
+            return previousContext.communicationIsPresentInPreviousContexts(co);
+        }
+
+        public static SmallContext mergeHorizontalGeneral(
+                ArrayList<SmallContext> ctxs,
+                BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionsMerger){
+            if(ctxs == null || ctxs.isEmpty()) return new SmallContext();
+
+            //all mergeable contexts must have same previous context, else there is a problem;
+            var resultContext = ctxs.getFirst();
+            ctxs.removeFirst();
+            for (SmallContext ctx : ctxs) {
+                if(ctx.previousContext != resultContext.previousContext) return null;
+            }
+            // merge sessions
+            resultContext = ctxs.stream().reduce(resultContext, (acc,it) -> {
+                acc.sessions = sessionsMerger.apply(acc.sessions, it.sessions);
+                return acc;
+            });
+            // merge calledVariables
+            resultContext = ctxs.stream().reduce(resultContext, (acc, it) -> {
+                acc.calledVariables.addAll(it.calledVariables);
+                return acc;
+            });
+            // merge recursiveCommunicationsEntrypoint
+            return resultContext;
+        }
+
+        public static SmallContext mergeHorizontalStub(ArrayList<SmallContext> ctxs){
+            if(ctxs.size() < 2){
+                var stub = new SmallContext();
+                stub.previousContext = ctxs.getFirst().previousContext;
+                ctxs.addFirst(stub);
+            }
+            return mergeHorizontalGeneral(ctxs, Session::mergeSessionsHorizontalStub);
+        }
+
+        public static SmallContext mergeHorizontal(ArrayList<SmallContext> ctxs){
+            return mergeHorizontalGeneral(ctxs, Session::mergeSessionsHorizontal);
+        }
+
+        public String getLastCalledVariable() {
+            return lastVariable != null ? lastVariable : (previousContext != null ? previousContext.lastVariable : null);
+        }
+    }
+    public static ArrayList<Session> fromBehaviours(Map<String, Behaviour> behaviours){
+        var sessions = new ArrayList<Session>();
+        for (String s : behaviours.keySet()) {
+            var behaviour = behaviours.get(s);
+            var ctx = new SmallContext();
+            fromBehaviour(behaviour, ctx);
+            sessions.addAll(ctx.sessions);
+        }
+        return sessions;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if(!(obj instanceof Session comp)) return false;
         if (!hasSameEnds(comp)) return false;
         if (communicationsRoots.size() != comp.communicationsRoots().size()) return false;
         for (int i = 0; i < communicationsRoots().size(); i++) {
-            if(!communicationsRoots.get(i).equals(comp.communicationsRoots.get(i))) return false;
+            if(!(communicationsRoots.containsAll(comp.communicationsRoots)
+                    && comp.communicationsRoots.containsAll(communicationsRoots))) return false;
         }
         return true;
     }
@@ -151,25 +410,14 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                     s1.expandTopCommunicationRoots(toAdd.communicationsRoots());
                 })
                 .toList());
-
-        common.addAll(new ArrayList<>(leftOnly.peek(s -> s.expandTopCommunicationRoots(
-                new ArrayList<>(
-                        List.of(
-                                new Communication(
-                                        Utils.Direction.VOID,
-                                        new ArrayList<>())
-                        )
-                )
-        )).toList()));
-        common.addAll(new ArrayList<>(rightOnly.peek(s -> s.expandTopCommunicationRoots(
-                new ArrayList<>(
-                        List.of(
-                                new Communication(
-                                        Utils.Direction.VOID,
-                                        new ArrayList<>())
-                        )
-                )
-        )).toList()));
+        var lo = new ArrayList<>(leftOnly.peek(s -> s.expandTopCommunicationRoots(new ArrayList<>(List.of(
+                new Communication(Utils.Direction.VOID)
+        )))).toList());
+        var ro = new ArrayList<>(rightOnly.peek(s -> s.expandTopCommunicationRoots(new ArrayList<>(List.of(
+                new Communication(Utils.Direction.VOID)
+        )))).toList());
+        common.addAll(lo);
+        common.addAll(ro);
         return common;
     }
 

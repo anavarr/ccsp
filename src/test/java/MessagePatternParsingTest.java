@@ -1,4 +1,3 @@
-import mychor.Comm;
 import mychor.Communication;
 import mychor.MessagePatternLexer;
 import mychor.MessagePatternMaker;
@@ -129,8 +128,10 @@ public class MessagePatternParsingTest {
         var map = mpm.getSessionsMap();
         var send = new Communication(Utils.Direction.SEND);
         send.addLeafCommunicationRoots(new ArrayList<>(List.of(send)));
+        send.addNextCommunicationNodes(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         var recv = new Communication(Utils.Direction.RECEIVE);
         recv.addLeafCommunicationRoots(new ArrayList<>(List.of(recv)));
+        recv.addNextCommunicationNodes(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         Session repetition_a = new Session("a", "b", send);
         repetition_a.expandTopCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         Session repetition_b = new Session("b", "a", recv);
@@ -148,8 +149,10 @@ public class MessagePatternParsingTest {
         var map = mpm.getSessionsMap();
         var send = new Communication(Utils.Direction.SEND);
         send.addLeafCommunicationRoots(new ArrayList<>(List.of(send)));
+        send.addNextCommunicationNodes(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         var recv = new Communication(Utils.Direction.RECEIVE);
         recv.addLeafCommunicationRoots(new ArrayList<>(List.of(recv)));
+        recv.addNextCommunicationNodes(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID))));
         Session repetition_a = new Session("alice", "bob", send);
         Session repetition_b = new Session("bob", "alice", recv);
         assertTrue(map.containsKey("AtLeastOnce_alice"));
@@ -208,11 +211,11 @@ public class MessagePatternParsingTest {
         assertTrue(map.containsKey("GRPC_st_un_server"));
         var clientCommunications = new Communication(Utils.Direction.SEND, new ArrayList<>(List.of(
                 new Communication(Utils.Direction.RECEIVE))));
-        clientCommunications.addRecursiveCallers(clientCommunications);
+        clientCommunications.addRecursiveCallee(clientCommunications);
 
         var serverCommunications = new Communication(Utils.Direction.RECEIVE, new ArrayList<>(List.of(
                 new Communication(Utils.Direction.SEND))));
-        serverCommunications.addRecursiveCallers(serverCommunications);
+        serverCommunications.addRecursiveCallee(serverCommunications);
 
         Session client = new Session("client", "server", new ArrayList<>(List.of(clientCommunications)));
         Session server = new Session("server","client",  new ArrayList<>(List.of(serverCommunications)));
@@ -233,14 +236,20 @@ public class MessagePatternParsingTest {
         assertTrue(map.containsKey("GRPC_un_st_server"));
         var clientCommunications = new Communication(Utils.Direction.SEND);
         var clientCommunicationsContinuations = new Communication(Utils.Direction.RECEIVE);
-        clientCommunicationsContinuations.addRecursiveCallers(clientCommunicationsContinuations);
+        clientCommunicationsContinuations.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                clientCommunicationsContinuations,
+                new Communication(Utils.Direction.VOID)
+        )));
         clientCommunications.addLeafCommunicationRoots(new ArrayList<>(List.of(
                 clientCommunicationsContinuations,
                 new Communication(Utils.Direction.VOID))));
 
         var serverCommunications = new Communication(Utils.Direction.RECEIVE);
         var serverCommunicationsContinuation = new Communication(Utils.Direction.SEND);
-        serverCommunicationsContinuation.addRecursiveCallers(serverCommunicationsContinuation);
+        serverCommunicationsContinuation.addLeafCommunicationRoots(new ArrayList<>(List.of(
+                serverCommunicationsContinuation,
+                new Communication(Utils.Direction.VOID)
+        )));
         serverCommunications.addLeafCommunicationRoots(new ArrayList<>(List.of(
                 serverCommunicationsContinuation,
                 new Communication(Utils.Direction.VOID))));
@@ -268,7 +277,7 @@ public class MessagePatternParsingTest {
         var commClient31 = new Communication(Utils.Direction.RECEIVE);
         var commClientVoid = new Communication(Utils.Direction.VOID);
         commClient21.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient31, commClient21, commClientVoid)));
-        commClient31.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient21, commClient31)));
+        commClient31.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient21, commClient31, commClientVoid)));
         commClient1.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient21, commClient31, commClientVoid)));
 
         var commServer1 = new Communication(Utils.Direction.RECEIVE);
@@ -276,7 +285,7 @@ public class MessagePatternParsingTest {
         var commServer31 = new Communication(Utils.Direction.SEND);
         var commServerVoid = new Communication(Utils.Direction.VOID);
         commServer21.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer31, commServer21, commServerVoid)));
-        commServer31.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer21, commServer31)));
+        commServer31.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer21, commServer31, commServerVoid)));
         commServer1.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer21, commServer31, commServerVoid)));
 
 
@@ -304,7 +313,7 @@ public class MessagePatternParsingTest {
         var commClient41 = new Communication(Utils.Direction.RECEIVE);
         var commClientVoid = new Communication(Utils.Direction.VOID);
         commClient31.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient31, commClient41, commClientVoid)));
-        commClient41.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient31, commClient41)));
+        commClient41.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient31, commClient41, commClientVoid)));
         commClient21.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient31, commClient41, commClientVoid)));
         commClient1.addLeafCommunicationRoots(new ArrayList<>(List.of(commClient21)));
 
@@ -314,7 +323,7 @@ public class MessagePatternParsingTest {
         var commServer41 = new Communication(Utils.Direction.SEND);
         var commServerVoid = new Communication(Utils.Direction.VOID);
         commServer31.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer31, commServer41, commServerVoid)));
-        commServer41.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer31, commServer41)));
+        commServer41.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer31, commServer41, commServerVoid)));
         commServer21.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer31, commServer41, commServerVoid)));
         commServer1.addLeafCommunicationRoots(new ArrayList<>(List.of(commServer21)));
 

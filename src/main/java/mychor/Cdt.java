@@ -55,7 +55,6 @@ public class Cdt extends Behaviour {
             return nextBehaviours.get("then");
         }
         if(nextBehaviours.containsKey("else") && !visitedSelections.contains("else")){
-            System.err.println("visit else");
             visitedSelections.add("else");
             return nextBehaviours.get("else");
         }

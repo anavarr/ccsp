@@ -241,7 +241,7 @@ public class BehaviourTest {
             var select = new Comm("a", "b", Utils.Direction.SELECT, "GET");
             select.addBehaviour(new End("a"));
             var fullSelect = new Comm("a", "b", Utils.Direction.SELECT, "GET");
-            fullSelect.nextBehaviours.put("GET;", new End("a"));
+            fullSelect.nextBehaviours.put("GET", new End("a"));
             assertEquals(select, fullSelect);
         }
         @Test
@@ -286,13 +286,13 @@ public class BehaviourTest {
         @Test
         public void addContinuationToContinuedSelectShouldAppendIt(){
             var nb = new HashMap<String, Behaviour>();
-            nb.put("GET;", new Call("a","MyVar"));
+            nb.put("GET", new Call("a","MyVar"));
             var select = new Comm("a","b", Utils.Direction.SELECT, "GET");
             select.nextBehaviours = nb;
             select.addBehaviour(new End("a"));
 
             var fullSelect = new Comm("a","b", Utils.Direction.SELECT, "GET");
-            fullSelect.nextBehaviours = new HashMap<>(Map.of("GET;",
+            fullSelect.nextBehaviours = new HashMap<>(Map.of("GET",
                     new Call("a", new HashMap<>(Map.of("unfold", new End("a"))), "MyVar")));
             assertEquals(select, fullSelect);
         }

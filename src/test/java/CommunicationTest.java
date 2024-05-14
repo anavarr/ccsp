@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,35 +19,35 @@ public class CommunicationTest {
 
     ArrayList<Communication> cSelect = new ArrayList<>(List.of(
             new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SEND)
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SEND,
                                     new Communication(Utils.Direction.RECEIVE))
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.RECEIVE,
                                     new Communication(Utils.Direction.SEND))
-                    )), "left")
+                    )))
     ));
     ArrayList<Communication> cBranch = new ArrayList<>(List.of(
             new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.RECEIVE)
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.RECEIVE,
                                     new Communication(Utils.Direction.SEND))
-                    )), "left"),
+                    ))),
             new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(
+                    "left", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SEND,
                                     new Communication(Utils.Direction.RECEIVE))
-                    )), "left")
+                    )))
     ));
 
     @Nested
@@ -122,8 +121,8 @@ public class CommunicationTest {
                     new ArrayList<>(List.of(c1)));
             assertTrue(c2.nodeIsSelfOrAbove(c1));
             assertFalse(c2.nodeIsSelfOrBelow(c3));
-            assertEquals(c2.getRecursiveCallers().size(),1);
-            assertTrue(c2.getRecursiveCallers().contains(c3));
+            assertEquals(c2.getRecursiveCallees().size(),1);
+            assertTrue(c2.getRecursiveCallees().contains(c3));
         }
     }
     @Nested
@@ -191,13 +190,49 @@ public class CommunicationTest {
         @Test
         public void inequalityDifferentRecursiveCallersSize(){
             var send1 = new Communication(Utils.Direction.SEND);
-            send1.addRecursiveCallers(new Communication(Utils.Direction.RECEIVE));
-            System.out.println(send1.getRecursiveCallers());
-            send1.addRecursiveCallers(new Communication(Utils.Direction.SEND));
+            send1.addRecursiveCallee(new Communication(Utils.Direction.RECEIVE));
+            send1.addRecursiveCallee(new Communication(Utils.Direction.SEND));
             var send2 = new Communication(Utils.Direction.SEND);
-            send2.addRecursiveCallers(new Communication(Utils.Direction.RECEIVE));
-            System.out.println(send2.getRecursiveCallers().size());
+            send2.addRecursiveCallee(new Communication(Utils.Direction.RECEIVE));
             assertNotEquals(send1, send2);
+        }
+        @Test
+        public void inequalityDifferentRecursiveCalls(){
+            var comm1 = new Communication(Utils.Direction.SEND);
+            var comm11 = new Communication(Utils.Direction.RECEIVE);
+            var comm111 = new Communication(Utils.Direction.SEND);
+            comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm11)));
+            comm11.addLeafCommunicationRoots(new ArrayList<>(List.of(comm111)));
+            comm111.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm1)));
+
+
+            var comm2 = new Communication(Utils.Direction.SEND);
+            var comm22 = new Communication(Utils.Direction.RECEIVE);
+            var comm222 = new Communication(Utils.Direction.SEND);
+            comm2.addLeafCommunicationRoots(new ArrayList<>(List.of(comm22)));
+            comm22.addLeafCommunicationRoots(new ArrayList<>(List.of(comm222)));
+            comm222.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm22)));
+
+            assertNotEquals(comm1, comm2);
+        }
+        @Test
+        public void equalitySameRecursiveCalls(){
+            var comm1 = new Communication(Utils.Direction.SEND);
+            var comm11 = new Communication(Utils.Direction.RECEIVE);
+            var comm111 = new Communication(Utils.Direction.SEND);
+            comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm11)));
+            comm11.addLeafCommunicationRoots(new ArrayList<>(List.of(comm111)));
+            comm111.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm1)));
+
+
+            var comm2 = new Communication(Utils.Direction.SEND);
+            var comm22 = new Communication(Utils.Direction.RECEIVE);
+            var comm222 = new Communication(Utils.Direction.SEND);
+            comm2.addLeafCommunicationRoots(new ArrayList<>(List.of(comm22)));
+            comm22.addLeafCommunicationRoots(new ArrayList<>(List.of(comm222)));
+            comm222.addLeafCommunicationRoots(new ArrayList<>(List.of(new Communication(Utils.Direction.VOID), comm2)));
+
+            assertEquals(comm1, comm2);
         }
     }
     @Nested
@@ -439,9 +474,9 @@ public class CommunicationTest {
             var c = new Communication(Utils.Direction.SEND,
                     new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SELECT,
-                                    new ArrayList<>(List.of(c1)), "left"),
+                                    "left", new ArrayList<>(List.of(c1))),
                             new Communication(Utils.Direction.SELECT,
-                                    new ArrayList<>(List.of(c2)), "left"),
+                                    "left", new ArrayList<>(List.of(c2))),
                             c3
                     )));
             var leaves = c.getLeaves();
@@ -567,7 +602,7 @@ public class CommunicationTest {
         @Test
         public void branchingAndSelectShouldOnlyReturnQueriedDirectionLabels(){
             var select = new Communication(Utils.Direction.SELECT,"GETS");
-            var branch = new Communication(Utils.Direction.BRANCH, new ArrayList<>(List.of(select)), "GET");
+            var branch = new Communication(Utils.Direction.BRANCH, "GET", new ArrayList<>(List.of(select)));
             assertTrue(branch.getDirectedLabels(Utils.Direction.BRANCH).contains("GET"));
             assertFalse(branch.getDirectedLabels(Utils.Direction.BRANCH).contains("GETS"));
             assertTrue(branch.getDirectedLabels(Utils.Direction.SELECT).contains("GETS"));
@@ -627,7 +662,7 @@ public class CommunicationTest {
             assertTrue(v.supports(v2));
         }
         @Test
-        public void singleSendDoesntSupportRecursiveSend(){
+        public void singleSendShouldNotSupportRecursiveSend(){
             var singleSend = new Communication(Utils.Direction.SEND);
             var recursiveSend = new Communication(Utils.Direction.SEND);
             recursiveSend.addLeafCommunicationRoots(new ArrayList<>(List.of(recursiveSend)));
@@ -670,9 +705,9 @@ public class CommunicationTest {
             assertFalse(com1.supports(com2));
         }
         @Test
-        public void recursiveSendSupportsDoubleSend(){
+        public void recursiveSendShouldSupportsDoubleSend(){
             var com1 = new Communication(Utils.Direction.SEND);
-            com1.addRecursiveCallers(com1);
+            com1.addRecursiveCallee(com1);
             com1.addLeafCommunicationRoots(new ArrayList<>(List.of(
                 new Communication(Utils.Direction.VOID))
             ));
@@ -684,7 +719,7 @@ public class CommunicationTest {
         @Test
         public void recursiveSendDoesntSupportsPresenceOfReceive(){
             var com1 = new Communication(Utils.Direction.SEND);
-            com1.addRecursiveCallers(com1);
+            com1.addRecursiveCallee(com1);
             com1.addLeafCommunicationRoots(new ArrayList<>(List.of(
                     new Communication(Utils.Direction.VOID))
             ));
@@ -696,7 +731,7 @@ public class CommunicationTest {
         @Test
         public void recursiveSendWithoutVoidEscapeDoesntSupportsDoubleSend(){
             var com1 = new Communication(Utils.Direction.SEND);
-            com1.addRecursiveCallers(com1);
+            com1.addRecursiveCallee(com1);
             var com2 = new Communication(Utils.Direction.SEND);
             var com21 = new Communication(Utils.Direction.SEND);
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(com21)));

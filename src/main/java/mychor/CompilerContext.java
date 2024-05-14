@@ -40,7 +40,6 @@ public class CompilerContext {
     }
 
     public static CompilerContext mergeContexts(CompilerContext superCtx, CompilerContext context,
-                                          BiFunction<ArrayList<Session>, ArrayList<Session>, ArrayList<Session>> sessionMerger,
                                           BiFunction<
                                                   ProceduresCallGraphMap,
                                                   ProceduresCallGraphMap,
@@ -48,7 +47,6 @@ public class CompilerContext {
                                                   > calledGraphMerger,
                                           ParserRuleContext ctx){
         superCtx.errors.addAll(context.errors);
-        superCtx.sessions = sessionMerger.apply(superCtx.sessions, context.sessions);
         superCtx.calledProceduresGraph = calledGraphMerger
                 .apply(superCtx.calledProceduresGraph, context.calledProceduresGraph);
         //merge recvar2proc

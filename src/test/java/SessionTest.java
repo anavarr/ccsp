@@ -5,6 +5,7 @@ import mychor.Utils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import javax.sql.CommonDataSource;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,6 +106,81 @@ public class SessionTest {
 
         }
 
+        // ISOMORPHISM
+        @Test
+        public void test1(){
+            var comLeft = new Communication(Utils.Direction.BRANCH, "left");
+            var comRight = new Communication(Utils.Direction.BRANCH, "right");
+            comLeft.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft, comRight)));
+            comRight.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft, comRight)));
+            var session1 = new Session("a","b", new ArrayList<>(List.of(
+                    comLeft,
+                    comRight
+            )));
+
+            var comLeft1 = new Communication(Utils.Direction.BRANCH, "left");
+            var comRight1 = new Communication(Utils.Direction.BRANCH, "right");
+            comRight1.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft1, comRight1)));
+            comLeft1.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft1, comRight1)));
+            var session2 = new Session("a", "b", new ArrayList<>(List.of(
+                    comLeft1,
+                    comRight1
+            )));
+            assertEquals(session1, session2);
+        }
+        @Test
+        public void test2(){
+            var comLeft = new Communication(Utils.Direction.BRANCH, "left");
+            var comRight = new Communication(Utils.Direction.BRANCH, "right");
+            comLeft.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft, comRight)));
+            comRight.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft)));
+            var session1 = new Session("a","b", new ArrayList<>(List.of(
+                    comLeft,
+                    comRight
+            )));
+
+            var comLeft1 = new Communication(Utils.Direction.BRANCH, "left");
+            var comRight1 = new Communication(Utils.Direction.BRANCH, "right");
+            comRight1.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft1, comRight1)));
+            comLeft1.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft1, comRight1)));
+            var session2 = new Session("a", "b", new ArrayList<>(List.of(
+                    comLeft1,
+                    comRight1
+            )));
+            assertNotEquals(session1, session2);
+        }
+        @Test
+        public void test3(){
+            var comLeft = new Communication(Utils.Direction.BRANCH, "left");
+            var comRight = new Communication(Utils.Direction.BRANCH, "right");
+            comLeft.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft, comRight)));
+            comRight.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeft, comRight)));
+            var session1 = new Session("a","b", new ArrayList<>(List.of(
+                    comLeft,
+                    comRight
+            )));
+
+            var comLeft1 = new Communication(Utils.Direction.BRANCH, "left");
+            var comLeftLeft = new Communication(Utils.Direction.BRANCH, "left");
+            var comLeftRight = new Communication(Utils.Direction.BRANCH, "right");
+            comLeft1.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeftLeft, comLeftRight)));
+            comLeftLeft.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeftLeft, comLeftRight)));
+            comLeftRight.addLeafCommunicationRoots(new ArrayList<>(List.of(comLeftLeft, comLeftRight)));
+
+            var comRight1 = new Communication(Utils.Direction.BRANCH, "right");
+            var comRightLeft = new Communication(Utils.Direction.BRANCH, "left");
+            var comRightRight = new Communication(Utils.Direction.BRANCH, "right");
+            comRight1.addLeafCommunicationRoots(new ArrayList<>(List.of(comRightLeft, comRightRight)));
+            comRightRight.addLeafCommunicationRoots(new ArrayList<>(List.of(comRightRight, comRightLeft)));
+            comRightLeft.addLeafCommunicationRoots(new ArrayList<>(List.of(comRightLeft, comRightRight)));
+
+            var session2 = new Session("a", "b", new ArrayList<>(List.of(
+                    comLeft1,
+                    comRight1
+            )));
+            assertEquals(session1, session2);
+        }
+
         // REFLEXIVITY
         @Test
         public void isReflexive(){
@@ -168,13 +244,13 @@ public class SessionTest {
         @Test
         public void sessionFirstSelectorIsInitiator(){
             var s = new Session("a", "b", new Communication(Utils.Direction.SELECT,
-                    new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE))), "GET"));
+                    "GET", new ArrayList<>(List.of(new Communication(Utils.Direction.RECEIVE)))));
             assertEquals(s.getInitiator(), "a");
         }
         @Test
         public void sessionFirstBranchingIsInitiated(){
             var s = new Session("a", "b", new Communication(Utils.Direction.BRANCH,
-                    new ArrayList<>(List.of(new Communication(Utils.Direction.SEND))), "GET"));
+                    "GET", new ArrayList<>(List.of(new Communication(Utils.Direction.SEND)))));
             assertEquals(s.getInitiated(), "a");
         }
         @Test
@@ -241,9 +317,9 @@ public class SessionTest {
         public void branchingValidityAllSelect(){
             Session s = new Session("client", "server", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.SELECT,
-                                    new ArrayList<>(List.of(
+                                    "GET", new ArrayList<>(List.of(
                                             new Communication(Utils.Direction.SEND)
-                                    )), "GET"),
+                                    ))),
                             new Communication(Utils.Direction.SELECT,"POST"),
                             new Communication(Utils.Direction.SELECT, "DELETE")
                     ))
@@ -254,9 +330,9 @@ public class SessionTest {
         public void branchingValidityAllBranch(){
             Session s = new Session("client", "server", new ArrayList<>(List.of(
                             new Communication(Utils.Direction.BRANCH,
-                                    new ArrayList<>(List.of(
+                                    "GET", new ArrayList<>(List.of(
                                             new Communication(Utils.Direction.SEND)
-                                    )), "GET"),
+                                    ))),
                             new Communication(Utils.Direction.BRANCH,"POST"),
                             new Communication(Utils.Direction.BRANCH, "DELETE")
                     ))

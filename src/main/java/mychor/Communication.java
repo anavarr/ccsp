@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -17,7 +18,8 @@ public class Communication {
     private final ArrayList<Communication> nextCommunicationNodes = new ArrayList<>();
     private final String label;
     private final ArrayList<Communication> previousCommunicationNodes = new ArrayList<>();
-    private final ArrayList<Communication> recursiveCallers = new ArrayList<>();
+    private final ArrayList<Communication> recursiveCallees = new ArrayList<>();
+    private final HashMap<Communication, Integer> visitedRecursiveBranches = new HashMap<>();
 
     public Communication(Utils.Direction direction, ArrayList<Communication> nextNodes, String label, ArrayList<Communication> previousNodes){
         Objects.requireNonNull(direction);
@@ -28,7 +30,7 @@ public class Communication {
             Objects.requireNonNull(label);
         }
         for (Communication comBranch : nextNodes) {
-            if(nodeIsSelfOrAbove(comBranch)) recursiveCallers.add(comBranch);
+            if(nodeIsSelfOrAbove(comBranch)) addRecursiveCallee(comBranch);
             else {
                 nextCommunicationNodes.add(comBranch);
                 comBranch.previousCommunicationNodes.add(this);
@@ -49,7 +51,7 @@ public class Communication {
     public Communication(Utils.Direction direction, ArrayList<Communication> nextCommunicationNodes){
         this(direction, nextCommunicationNodes, null, new ArrayList<>());
     }
-    public Communication(Utils.Direction direction, ArrayList<Communication> nextCommunicationNodes, String label){
+    public Communication(Utils.Direction direction, String label, ArrayList<Communication> nextCommunicationNodes){
         this(direction, nextCommunicationNodes, label, new ArrayList<>());
     }
     public Communication(Utils.Direction direction, Communication nextCommunication){
@@ -76,11 +78,18 @@ public class Communication {
     public boolean isBranch(){
         return direction == Utils.Direction.BRANCH;
     }
-    public void addRecursiveCallers(Communication c){
-        recursiveCallers.add(c);
+    public void addRecursiveCallee(Communication c){
+        var canAdd = true;
+        for (Communication recursiveCallee : recursiveCallees) {
+            if(recursiveCallee == c) {
+                canAdd = false;
+                break;
+            }
+        }
+        if(canAdd) recursiveCallees.add(c);
     }
-    public List<Communication> getRecursiveCallers(){
-        return recursiveCallers;
+    public List<Communication> getRecursiveCallees(){
+        return recursiveCallees;
     }
 
     public int getBranchesSize(){
@@ -109,13 +118,56 @@ public class Communication {
     public boolean equals(Object o){
         if (!(o instanceof Communication comp)) return false;
         if(!(direction == comp.direction && Objects.equals(label, comp.label))) return false;
-        if(nextCommunicationNodes.size() != comp.nextCommunicationNodes.size()) return false;
-        if(recursiveCallers.size() != comp.recursiveCallers.size()) return false;
-        for (int i = 0; i < nextCommunicationNodes.size(); i++) {
-            if(!(nextCommunicationNodes.contains(comp.nextCommunicationNodes.get(i))
-                    & comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i)))) return false;
+        //handling recursive branches
+        if(nextCommunicationNodes.size() + recursiveCallees.size()
+                != comp.nextCommunicationNodes.size() + comp.recursiveCallees.size()) return false;
+
+        for(int i = 0; i < nextCommunicationNodes.size(); i++){
+            if(!comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i))){
+                 if(!comp.recursiveCallees.contains(nextCommunicationNodes.get(i))) return false;
+            }
         }
+        if(!recursiveCallees.isEmpty()){
+            if(visitedRecursiveBranches.containsKey(this)){
+                var recursiveIndex = visitedRecursiveBranches.get(this);
+                if(recursiveIndex < recursiveCallees.size()){
+                    visitedRecursiveBranches.put(this, recursiveIndex+1);
+                    if(!comp.recursiveCallees.contains(recursiveCallees.get(recursiveIndex))){
+                        return comp.nextCommunicationNodes.contains(recursiveCallees.get(recursiveIndex));
+                    }else{
+                        return true;
+                    }
+                }
+            }else{
+                visitedRecursiveBranches.put(this, 1);
+                if(!comp.recursiveCallees.contains(recursiveCallees.get(0))){
+                    return comp.nextCommunicationNodes.contains(recursiveCallees.get(0));
+                }else{
+                    return true;
+                }
+            }
+        }
+//        if(!recursiveCallees.isEmpty()){
+//            if(visitedRecursiveBranches.containsKey(this)){
+//                var recursiveIndex = visitedRecursiveBranches.get(this);
+//                if(recursiveIndex < recursiveCallees.size()){
+//                    visitedRecursiveBranches.put(this, recursiveIndex+1);
+//                    return comp.recursiveCallees.contains(recursiveCallees.get(recursiveIndex));
+//                }
+//            }else{
+//                visitedRecursiveBranches.put(this, 1);
+//                return comp.recursiveCallees.contains(recursiveCallees.get(0));
+//            }
+//        }
+//        for (int i = 0; i < nextCommunicationNodes.size(); i++) {
+//            if(!(nextCommunicationNodes.contains(comp.nextCommunicationNodes.get(i))
+//                    & comp.nextCommunicationNodes.contains(nextCommunicationNodes.get(i)))) return false;
+//        }
         return true;
+    }
+
+    public void resetVisitedRecursiveBranches(){
+        visitedRecursiveBranches.clear();
     }
 
     public boolean isBranchingValid() {
@@ -156,11 +208,25 @@ public class Communication {
         }
         return false;
     }
+    public boolean changeNextToRecursive(Communication target){
+        var changed = false;
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            if(nextCommunicationNode == target) {
+                nextCommunicationNodes.remove(nextCommunicationNode);
+                recursiveCallees.add(nextCommunicationNode);
+                changed = true;
+            } else {
+                if(nextCommunicationNode.changeNextToRecursive(target)) changed = true;
+            }
+        }
+        return false;
+    }
     public void addLeafCommunicationRoots(ArrayList<Communication> roots){
         if(nextCommunicationNodes.isEmpty()){
             for (Communication root : roots) {
-                if(nodeIsSelfOrAbove(root)) recursiveCallers.add(root);
+                if(nodeIsSelfOrAbove(root)) addRecursiveCallee(root);
                 else {
+                    //check that roots chain aren't previous communications
                     if(direction == VOID){
                         for (Communication previousCommunicationNode : previousCommunicationNodes) {
                             previousCommunicationNode.nextCommunicationNodes.add(root);
@@ -182,7 +248,7 @@ public class Communication {
     public String toString() {
         StringBuilder s = new StringBuilder("Communication").append(" ").append(this.hashCode()).append("[\n");
         s.append(String.format("\tdirection=%s\n\tlabel=%s\n\trecursive calls=%s\n\t[",
-                direction, label, recursiveCallers.stream().map((it -> it.hashCode())).toList()));
+                direction, label, recursiveCallees.stream().map((it -> it.hashCode())).toList()));
         for (Communication communicationsRoot : nextCommunicationNodes) {
             s.append("\n\t\t").append(communicationsRoot.toString().replace("\n", "\n\t\t"));
         }
@@ -215,10 +281,11 @@ public class Communication {
         if(direction == RECEIVE && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
         if(direction == VOID && targetNode.direction != VOID) return false;
         boolean oneCompatiblePath;
-        //if there are no more target nodes then the protocol must be over
-        if(targetNode.nextCommunicationNodes.isEmpty() &&
-                !(nextCommunicationNodes.isEmpty() || nextCommunicationNodes.contains(new Communication(VOID))))
-            return false;
+        // If target node is in final state, we need to make sure the template can reach final state
+        if(targetNode.isFinal() && !canBeFinal()) return false;
+        // If template can only reach final state, need to make sure that node is final state
+        if(isFinal()  && !targetNode.isFinal()) return false;
+
         for (Communication nextTargetCommunicationNode : targetNode.nextCommunicationNodes) {
             oneCompatiblePath = false;
             //try next nodes first
@@ -230,7 +297,7 @@ public class Communication {
             }
             //then try recursive calls next nodes didn't give anything
             if(!oneCompatiblePath){
-                for (Communication recursiveCommunicationNode : recursiveCallers) {
+                for (Communication recursiveCommunicationNode : recursiveCallees) {
                     if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
                         oneCompatiblePath = true;
                         break;
@@ -253,10 +320,24 @@ public class Communication {
     public void cleanVoid() {
         for (Communication nextCommunicationNode : nextCommunicationNodes)
             nextCommunicationNode.cleanVoid();
-        if(nextCommunicationNodes.size() == 1 && nextCommunicationNodes.get(0).direction == VOID){
+        if(recursiveCallees.isEmpty() &&
+                nextCommunicationNodes.size() == 1 && nextCommunicationNodes.get(0).direction == VOID){
             nextCommunicationNodes.get(0).previousCommunicationNodes.remove(this);
             nextCommunicationNodes.remove(0);
         }
+    }
+
+    public boolean canBeFinal(){
+        for (Communication nextCommunicationNode: nextCommunicationNodes){
+            if(nextCommunicationNode.direction == VOID) return true;
+        }
+        return nextCommunicationNodes.isEmpty() && recursiveCallees.isEmpty();
+    }
+    public boolean isFinal(){
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            if(nextCommunicationNode.direction != VOID) return false;
+        }
+        return nextCommunicationNodes.isEmpty() && recursiveCallees.isEmpty();
     }
 
     public void addNextCommunicationNodes(ArrayList<Communication> communications) {
@@ -264,5 +345,18 @@ public class Communication {
         for (Communication communication : communications) {
             communication.previousCommunicationNodes.add(this);
         }
+    }
+
+    public List<Communication> getNextCommunicationNodes(){
+        return nextCommunicationNodes;
+    }
+
+    public List<Communication> getRecursiveCallersTo(Communication comm) {
+        var recursiveCallersTo = new ArrayList<Communication>();
+        if(recursiveCallees.contains(comm)) recursiveCallersTo.add(this);
+        for (Communication nextNode : nextCommunicationNodes) {
+            recursiveCallersTo.addAll(nextNode.getRecursiveCallersTo(comm));
+        }
+        return recursiveCallersTo;
     }
 }
