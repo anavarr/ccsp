@@ -20,7 +20,6 @@ public class ProgramReaderTest {
         var spp = new SPparserRich(new CommonTokenStream(spl));
         var spc = new SPcheckerRich();
         spp.program().accept(spc);
-        spc.compilerCtx.sessions = Session.fromBehaviours(spc.compilerCtx.behaviours);
         return spc;
     }
 }

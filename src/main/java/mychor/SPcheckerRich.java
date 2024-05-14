@@ -228,6 +228,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 //            errors.addAll(ctx.getChild(i).accept(this));
         }
         compilerCtx.errors.addAll(ctx.getChild(0).accept(this));
+        compilerCtx.sessions = Session.fromBehaviours(compilerCtx.behaviours);
         return errors;
     }
     @Override
