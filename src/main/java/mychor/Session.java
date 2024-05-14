@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -228,6 +229,14 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         }
     }
 
+    public Set<String> getLabels(Utils.Direction dir) {
+        Set<String> labels = new HashSet<>();
+        for (Communication communicationsRoot : communicationsRoots) {
+            labels.addAll(communicationsRoot.getDirectedLabels(dir));
+        }
+        return labels;
+    }
+
     public static class SmallContext{
         public ArrayList<Session> sessions = new ArrayList<>();
         public Set<String> calledVariables = new HashSet<>();
@@ -347,6 +356,9 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             if(!(communicationsRoots.containsAll(comp.communicationsRoots)
                     && comp.communicationsRoots.containsAll(communicationsRoots))) return false;
         }
+        for (Communication communicationsRoot : communicationsRoots) {
+            communicationsRoot.resetVisitedRecursiveBranches();
+        }
         return true;
     }
 
@@ -358,7 +370,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         if(communicationsRoots.isEmpty()){
             communicationsRoots.addAll(roots);
         }else{
-            communicationsRoots.get(0).addLeafCommunicationRoots(roots);
+            communicationsRoots.getFirst().addLeafCommunicationRoots(roots);
         }
     }
 

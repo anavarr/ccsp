@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class Comm extends Behaviour {
     Utils.Direction direction;
-    List<String> labels = new ArrayList<>();
+    public List<String> labels = new ArrayList<>();
     String destination;
 
 
