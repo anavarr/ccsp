@@ -146,7 +146,6 @@ public class SPcheckerTest extends ProgramReaderTest{
     @Test
     public void loop() throws IOException {
         var spc = testFile("loop.sp");
-        System.out.println(spc);
         assertTrue(spc.compilerCtx.sessions.isEmpty());
         assertTrue(spc.compilerCtx.behaviours.containsKey("client"));
     }
@@ -163,7 +162,6 @@ public class SPcheckerTest extends ProgramReaderTest{
     @Test
     public void loopCdt() throws IOException {
         var spc = testFile("loopCdt.sp");
-        System.out.println(spc);
         assertTrue(spc.compilerCtx.sessions.isEmpty());
         assertTrue(spc.compilerCtx.behaviours.containsKey("client"));
     }
@@ -181,7 +179,6 @@ public class SPcheckerTest extends ProgramReaderTest{
     @Test
     public void exampleSimpleRecursiveSend() throws IOException {
         var spc = testFile("simple_recursive_send.sp");
-        System.out.println(spc);
         var session = spc.compilerCtx.sessions.get(0);
         var comm1 = new Communication(Utils.Direction.SEND);
         comm1.addLeafCommunicationRoots(new ArrayList<>(List.of(comm1)));

@@ -191,11 +191,9 @@ public class CommunicationTest {
         public void inequalityDifferentRecursiveCallersSize(){
             var send1 = new Communication(Utils.Direction.SEND);
             send1.addRecursiveCallee(new Communication(Utils.Direction.RECEIVE));
-            System.out.println(send1.getRecursiveCallees());
             send1.addRecursiveCallee(new Communication(Utils.Direction.SEND));
             var send2 = new Communication(Utils.Direction.SEND);
             send2.addRecursiveCallee(new Communication(Utils.Direction.RECEIVE));
-            System.out.println(send2.getRecursiveCallees().size());
             assertNotEquals(send1, send2);
         }
         @Test
