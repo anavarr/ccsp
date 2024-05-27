@@ -1,13 +1,11 @@
 import mychor.CompilerContext;
 import mychor.PatternDetector;
 import mychor.SPcheckerRich;
-import mychor.SPcodeGenerator;
 import mychor.SPlexer;
 import mychor.SPparserRich;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.stringtemplate.v4.compiler.Compiler;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,11 +45,5 @@ public class Main {
     public static void detectMessagingPattern(CompilerContext cCtx){
         var pd = new PatternDetector(cCtx);
         pd.detectCompatibleFrameworks();
-    }
-
-    public static void compileToQuarkusServices(SPparserRich spp){
-        var spc = new SPcodeGenerator();
-        spc.setOutputPath("/tmp/myDistributedApplication");
-        spp.program().accept(spc);
     }
 }

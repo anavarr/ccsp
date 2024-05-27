@@ -233,12 +233,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     @Override
     public List<String> visitNetwork(SPparserRich.NetworkContext ctx) {
-        // 0 : first process name
+        // 0 : first process serviceName
         // 1 : [
         // 2 : behaviour
         // 3 : ]
         // 4 : |
-        // 5 : second process name
+        // 5 : second process serviceName
         var children = ctx.getChildCount();
         var errors = new ArrayList<String>();
         for(int i =0; i < children -1; i+=5){
@@ -254,7 +254,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     @Override
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
-        // 1 : name
+        // 1 : serviceName
         var varName = ctx.getChild(1).getText();
         var errors = new ArrayList<String>();
 
@@ -326,11 +326,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     @Override
     public List<String> visitSnd(SPparserRich.SndContext ctx) {
-        return visitComm(ctx, Utils.Direction.SEND, null, 7);
+        return visitComm(ctx, Utils.Direction.SEND, ctx.getChild(2).getText(), 7);
     }
     @Override
     public List<String> visitRcv(SPparserRich.RcvContext ctx) {
-        return visitComm(ctx, Utils.Direction.RECEIVE, null, 7);
+        return visitComm(ctx, Utils.Direction.RECEIVE, ctx.getChild(2).getText(), 7);
     }
     @Override
     public List<String> visitSel(SPparserRich.SelContext ctx) {
@@ -393,14 +393,14 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return ctx.getChild(2).accept(this);
     }
     public <T extends SPparserRich.BehaviourContext> List<String> visitComm(
-            T ctx, Utils.Direction direction, String label, int continuationIndex){
+            T ctx, Utils.Direction direction, String payload, int continuationIndex){
         var errors = new ArrayList<String>();
         var dest = ctx.getChild(0).getText();
         if(compilerCtx.currentProcess == null){
             errors.add(ERROR_NULL_PROCESS(ctx));
         }
         addBehaviour(new Comm(
-                compilerCtx.currentProcess, dest, direction, label));
+                compilerCtx.currentProcess, dest, direction, payload));
         errors.addAll(ctx.getChild(continuationIndex).accept(this));
         return errors;
     }

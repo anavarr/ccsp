@@ -1,9 +1,19 @@
 package mychor;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import mychor.Generators.GenerationConfig;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,22 +25,30 @@ public class PatternDetector {
 
     HashMap<String, Session> patterns = new HashMap<>();
 
+    List<String> patternTemplates;
 
-    public PatternDetector(){
-        var path = Path.of("src", "main", "messaging-patterns", "all_patterns.txt");
-        MessagePatternLexer spl = null;
+    public PatternDetector() {
+        var path = Path.of("src", "main","resources", "messaging-patterns", "patterns.json");
         try {
-            spl = new MessagePatternLexer(CharStreams.fromPath(path));
+            JsonNode parent= new ObjectMapper().readTree(Files.readString(path));
+            ArrayList<String> patternsString = new ArrayList<>();
+            ;
+            MessagePatternLexer spl = null;
+            parent.elements().forEachRemaining(node -> {
+                patternsString.add(node.get("name").asText()+'"'+node.get("pattern").asText()+'"');
+            });
+            spl = new MessagePatternLexer(CharStreams.fromString(String.join("\n", patternsString)));
+            var spp = new MessagePatternParser(new CommonTokenStream(spl));
+            var mpm = new MessagePatternMaker();
+            spp.pattern().accept(mpm);
+            patterns = mpm.getSessionsMap();
+            for (Session session : patterns.values()) {
+                session.cleanVoid();
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        var spp = new MessagePatternParser(new CommonTokenStream(spl));
-        var mpm = new MessagePatternMaker();
-        spp.pattern().accept(mpm);
-        patterns = mpm.getSessionsMap();
-        for (Session session : patterns.values()) {
-            session.cleanVoid();
-        }
+
     }
 
     public PatternDetector(CompilerContext ctx){

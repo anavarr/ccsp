@@ -1,0 +1,227 @@
+[
+  {
+    "name" : "REST",
+    "pattern" : "(client -> server;\nserver -> client)*",
+    "client" : {
+      "needsClass" : true,
+      "pom": {
+        "dependencies" : [],
+        "build": {
+          "extensions" : [],
+          "plugins" : []
+        }
+      },
+      "class": "",
+      "generator" : ""
+    },
+    "server" : {
+      "needsClass": true,
+      "pom": {
+        "dependencies" : [],
+        "build": {
+          "extensions" : [],
+          "plugins" : []
+        }
+      },
+      "class": "",
+      "generator" : ""
+    }
+  },{
+    "name" : "ReactiveStreams",
+    "pattern": "client -> server;\nserver -> client;\n( client -> server | server -> client )*",
+    "client": {
+      "needsClass" : false,
+      "pom" : {
+        "dependencies": [
+          "<groupId>io.smallrye.reactive</groupId>\n<artifactId>mutiny</artifactId>\n<version>2.6.0</version>"
+        ],
+        "build": {
+          "extensions" : [],
+          "plugins" : []
+        }
+      },
+      "class": "",
+      "generator" : ""
+    },
+    "server": {
+      "needsClass" : false,
+      "pom" : {
+        "dependencies": [
+          "<groupId>io.smallrye.reactive</groupId>\n<artifactId>mutiny</artifactId>\n<version>2.6.0</version>"
+        ],
+        "build": {
+          "extensions" : [],
+          "plugins" : []
+        }
+      },
+      "class": "",
+      "generator" : ""
+    }
+  },{
+    "name" : "GRPC_un_un",
+    "pattern": "(client -> server;\n  server -> client)*",
+    "client" : {
+      "needsClass" : true,
+      "pom" : {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": "",
+      "generator" : "GeneratorUnUnClient"
+    },
+    "server" : {
+      "needsClass": true,
+      "pom": {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": "",
+      "generator" : "GeneratorUnUnServer"
+    }
+  },{
+    "name": "GRPC_un_st",
+    "pattern" : "client -> server;\n(server -> client)*",
+    "client" : {
+      "needsClass" : true,
+      "pom": {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": ""
+    },
+    "server" : {
+      "needsClass": true,
+      "pom": {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": ""
+    }
+  },{
+    "name" : "GRPC_st_un",
+    "pattern" : "(client -> server)+;\nserver -> client",
+    "client" : {
+      "needsClass" : true,
+      "pom":  {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": ""
+    },
+    "server" : {
+      "needsClass": true,
+      "pom":  {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": ""
+    }
+  },{
+    "name":"GRPC_st_st",
+    "pattern": "client -> server;\n( client -> server | server -> client )*",
+    "client" : {
+      "needsClass" : true,
+      "pom":  {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": ""
+    },
+    "server" : {
+      "needsClass": true,
+      "pom":  {
+        "dependencies" : [
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-protobuf</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-stub</artifactId>",
+          "<groupId>io.grpc</groupId>\n<artifactId>grpc-netty-shaded</artifactId>"
+        ],
+        "build" : {
+          "extensions" : [
+            "<groupId>kr.motd.maven</groupId>\n<artifactId>os-maven-plugin</artifactId>\n<version>1.4.1.Final</version>"
+          ],
+          "plugins" : [
+            "<groupId>org.xolstice.maven.plugins</groupId>\n<artifactId>protobuf-maven-plugin</artifactId>\n<version>0.6.1</version>\n<configuration>\n<protocArtifact>com.google.protobuf:protoc:3.25.3:exe:linux-x86_64</protocArtifact>\n<pluginId>grpc-java</pluginId>\n<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:linux-x86_64</pluginArtifact>\n</configuration>\n<executions>\n<execution>\n<configuration>\n<pluginParameter>@generated=omit</pluginParameter>\n</configuration>\n<goals>\n<goal>compile</goal>\n<goal>compile-custom</goal>\n</goals>\n</execution>\n</executions>"
+          ]
+        }
+      },
+      "class": ""
+    }
+  }
+]
