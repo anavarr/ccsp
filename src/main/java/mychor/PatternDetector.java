@@ -17,7 +17,7 @@ public class PatternDetector {
 
 
     public PatternDetector(){
-        var path = Path.of("src", "main", "messaging-patterns", "all_patterns.txt");
+        var path = Path.of("src", "main","resources", "messaging-patterns", "all_patterns.txt");
         MessagePatternLexer spl = null;
         try {
             spl = new MessagePatternLexer(CharStreams.fromPath(path));

@@ -9,6 +9,7 @@ public class Comm extends Behaviour {
     Utils.Direction direction;
     List<String> labels = new ArrayList<>();
     String destination;
+    String payload;
 
 
     public Comm(String pr, String dest, Utils.Direction direction, List<String> labels){
