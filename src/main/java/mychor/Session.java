@@ -1,6 +1,7 @@
 package mychor;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -226,6 +227,14 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                 fromBehaviour(comm.nextBehaviours.get(nextBehaviourKey), ctx);
             }
         }
+    }
+
+    public Set<String> getLabels(Utils.Direction dir) {
+        Set<String> labels = new HashSet<>();
+        for (Communication communicationsRoot : communicationsRoots) {
+            labels.addAll(communicationsRoot.getDirectedLabels(dir));
+        }
+        return labels;
     }
 
     public static class SmallContext{

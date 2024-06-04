@@ -204,7 +204,7 @@ public class SPcodeGenerator extends SPparserRichBaseVisitor<ArrayList<String>>{
 
     @Override
     public ArrayList<String> visitRecdef(SPparserRich.RecdefContext ctx) {
-        // 0 : name
+        // 0 : serviceName
         // 1 : ':'
         // 2 : behaviour
         currentRecvar = ctx.getChild(0).getText();

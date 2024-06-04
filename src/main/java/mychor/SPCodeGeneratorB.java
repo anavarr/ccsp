@@ -1,24 +1,29 @@
 package mychor;
 
-import com.ibm.icu.impl.ICUResourceBundle;
+import mychor.Generators.GenerationConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static mychor.Generators.GenerationConfig.localizedFrameworkSettingList;
+
 public class SPCodeGeneratorB {
     CompilerContext ctx;
     String outPath;
-    String name;
+    String applicationName;
+    ArrayList<String> highPriorityFrameworks = new ArrayList<>();
+    public List<String> necessaryFrameworks;
     PatternDetector pd;
-    static HashMap<String, String> patternsPom = new HashMap<>();
-    GenerationContext generationCtx = new GenerationContext();
+    public GenerationContext generationCtx = new GenerationContext();
     public ArrayList<GenerationContext> gcs = new ArrayList<>();
+
     public static class GenerationContext{
         public ArrayList<String> code = new ArrayList<>();
         public HashMap<String, ArrayList<String>> functions= new HashMap<>();
@@ -32,66 +37,38 @@ public class SPCodeGeneratorB {
         }
     }
 
-    static{
-        String grpcPom = """
-                
-                <dependency>
-                      <groupId>io.grpc</groupId>
-                      <artifactId>grpc-protobuf</artifactId>
-                    </dependency>
-                    <dependency>
-                      <groupId>io.grpc</groupId>
-                      <artifactId>grpc-stub</artifactId>
-                    </dependency>
-                    <dependency>
-                      <groupId>io.grpc</groupId>
-                      <artifactId>grpc-netty-shaded</artifactId>
-                    </dependency>""";
-        String restPom = """
-                
-                <dependency>
-                    <groupId>io.rest.reactive</groupId>
-                    <artifactId>myRestStuff</artifactId>
-                    <version>2.6.0</version>
-                </dependency>
-                """;
-        String mutinyPom = """
-                
-                <dependency>
-                    <groupId>io.smallrye.reactive</groupId>
-                    <artifactId>mutiny</artifactId>
-                    <version>2.6.0</version>
-                </dependency>
-                """;
-        patternsPom.put("REST", restPom);
-        patternsPom.put("REST_Recursive", restPom);
-        patternsPom.put("GRPC_un_un", grpcPom);
-        patternsPom.put("GRPC_un_st", grpcPom);
-        patternsPom.put("GRPC_st_un", grpcPom);
-        patternsPom.put("GRPC_st_st", grpcPom);
-        patternsPom.put("ReactiveStreams",mutinyPom);
+
+    record ServiceConfiguration(String serviceName, String version, List<String> necessaryFrameworks){
     }
 
-    record ServiceConfiguration(String name, String version, List<String> necessaryFrameworks){
-    }
-
-    public SPCodeGeneratorB(CompilerContext ctx, String path, String name){
+    public SPCodeGeneratorB(CompilerContext ctx, String path, String applicationName){
         this.ctx=ctx;
         this.outPath = path;
-        this.name = name;
+        this.applicationName = applicationName;
         pd = new PatternDetector(ctx);
         try{
-            Files.createDirectories(Paths.get(outPath+"/"+name));
+            Files.createDirectories(Paths.get(outPath+"/"+ applicationName));
         } catch (IOException e) {
             System.err.println("Problem while creating the distributed application folder");
         }
+    }
+    public SPCodeGeneratorB(CompilerContext ctx, String path, String applicationName, List<String> hpf){
+        this(ctx, path, applicationName);
+        this.highPriorityFrameworks.addAll(hpf);
     }
 
     public HashMap<Session, String> pickRandomCompatibleFramework(Map<Session, List<String>> compatibleFrameworks){
         var hm = new HashMap<Session, String>();
         compatibleFrameworks.keySet().forEach(se -> {
             //compatibleFrameworks can't be empty
-            hm.put(se, compatibleFrameworks.get(se).stream().findAny().get());
+            var found = false;
+            for (String highPriorityFramework : highPriorityFrameworks) {
+                if(compatibleFrameworks.get(se).contains(highPriorityFramework)){
+                    hm.put(se, highPriorityFramework);
+                    found = true;
+                }
+            }
+            if(!found) hm.put(se, compatibleFrameworks.get(se).stream().findAny().get());
         });
         return hm;
     }
@@ -101,15 +78,16 @@ public class SPCodeGeneratorB {
         try(var lines = Files.lines(path)) {
             var linesMod = new ArrayList<>(lines.toList());
             var idx = linesMod.indexOf("    <dependencies>");
+            List<String> pom;
             for (String necessaryFramework : config.necessaryFrameworks) {
-                necessaryFramework = necessaryFramework.replace("_server", "");
-                necessaryFramework = necessaryFramework.replace("_client", "");
-                linesMod.addAll(idx+1, List.of(
-                        patternsPom.get(necessaryFramework).replace("\n", "\n\t\t")
-                                .split("\n")));
+                var frameworkPom = localizedFrameworkSettingList.get(necessaryFramework).pom();
+                if(frameworkPom == null){
+                    throw new RuntimeException("No POM was provided with this framework");
+                }
+                linesMod.addAll(idx+1, List.of(frameworkPom.split("\n")));
             }
             Files.write(Path.of(
-                    outPath,"/",name,"/",config.name,"/","pom.xml"),
+                    outPath,"/", applicationName,"/",config.serviceName,"/","pom.xml"),
                     String.join("\n", linesMod).getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -117,7 +95,9 @@ public class SPCodeGeneratorB {
     }
 
     public void generateCode() throws IOException {
-        HashMap<Session, String> necessaryFrameworks = pickRandomCompatibleFramework(pd.detectCompatibleFrameworks());
+        var cf = pd.detectCompatibleFrameworks();
+        HashMap<Session, String> necessaryFrameworks = pickRandomCompatibleFramework(cf);
+        this.necessaryFrameworks = new ArrayList<>(necessaryFrameworks.values());
         for (String service : ctx.behaviours.keySet()) {
             generationCtx = new GenerationContext();
             //serviceSessions filters sessions to keep only those where this service is the source
@@ -130,6 +110,14 @@ public class SPCodeGeneratorB {
                     generationCtx.sessionsFrameworks.values().stream().toList());
             createMicroService(service);
             populatePom(config);
+            for (Session serviceSession : serviceSessions) {
+                var framework = necessaryFrameworks.get(serviceSession);
+                if(localizedFrameworkSettingList.get(framework).needsClass()){
+                    //gotta generate the class
+                    generateClass(service, framework, serviceSession,
+                            localizedFrameworkSettingList.get(serviceSession));
+                }
+            }
             var root = ctx.behaviours.get(service);
             unfoldBehaviour(root);
             gcs.add(new GenerationContext(generationCtx));
@@ -137,13 +125,63 @@ public class SPCodeGeneratorB {
         }
     }
 
+    private void generateClass(String service,
+                               String framework,
+                               Session session, GenerationConfig.LocalizedFrameworkSetting localizedFrameworkSetting) {
+        if(framework.contains("GRPC")) {
+            String firstStream = "";
+            String secondStream = "";
+            if(framework.contains("_st_un")){
+                firstStream = "stream ";
+            } else if (framework.contains("_un_st")) {
+                secondStream = "stream ";
+            } else if (framework.contains("_st_st")) {
+                firstStream = "stream ";
+                secondStream = "stream ";
+            }
+            var proto = String.format("""
+                package %s;
+                message Message {
+                  string msg = 1;
+                }
+                service service {
+                  rpc Communicate(%s Message) returns (%s Message);
+                }""",service, firstStream, secondStream);
+        }else if(framework.contains("REST")){
+            if(framework.contains("_client")){
+                var selectLabels = session.getLabels(Utils.Direction.SELECT);
+                var clientClass = String.format("""
+                    package org.acme.rest.client;
+                    import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+                    import jakarta.ws.rs.GET;
+                    import jakarta.ws.rs.Path;
+                    import jakarta.ws.rs.QueryParam;
+                    import java.util.Set;
+                    @Path("/")
+                    @RegisterRestClient
+                    public interface ExtensionsService {
+                    """);
+                for (String selectLabel : selectLabels) {
+                    clientClass+= String.format("""
+                            @GET
+                            @Path("/%s")
+                            Object get%s();
+                            """, selectLabel, selectLabel);
+                }
+                clientClass+="}";
+            }else if(framework.contains("_server")){
+
+            }
+        }
+    }
+
     private void writeCode(ServiceConfiguration config) throws IOException {
         String code = Files.readString(Paths.get("src/main/resources/quarkus_default_files/main.txt"));
-        Files.createDirectories(Paths.get(outPath,"/",name,"/",config.name, "src/main/java"));
+        Files.createDirectories(Paths.get(outPath,"/", applicationName,"/",config.serviceName, "src/main/java"));
         code = code.replace("public int run(String... args) {",
                 String.format("public int run(String... args) {\n%s",
                         String.join("\n",generationCtx.code).replace("\n","\n\t\t")));
-        Files.write(Paths.get(outPath,"/", name,"/", config.name, "src/main/java", "Main.java"), code.getBytes());
+        Files.write(Paths.get(outPath,"/", applicationName,"/", config.serviceName, "src/main/java", "Main.java"), code.getBytes());
     }
 
     private void unfoldBehaviour(Behaviour root) {
@@ -221,13 +259,14 @@ public class SPCodeGeneratorB {
     }
 
     private void generateSend(Comm comm) {
+        
         generationCtx.code.add(String.format("send(%s,%s);", comm.destination, comm.labels.getFirst()));
         unfoldBehaviour(comm.nextBehaviours.get(";"));
     }
 
     public void createMicroService(String pa){
         try{
-            Files.createDirectories(Paths.get(outPath+"/"+name+"/"+pa));
+            Files.createDirectories(Paths.get(outPath+"/"+ applicationName +"/"+pa));
         } catch (IOException e) {
             System.err.println("Problem while creating the folder for µservice "+pa);
         }

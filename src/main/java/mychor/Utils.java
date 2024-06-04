@@ -21,7 +21,7 @@ public class Utils {
 
     static String ERROR_RECVAR_UNKNOWN(String vname, ParserRuleContext ctx){
         return ERROR_DEFAULT(String.format(
-                "No recursive variable with the name %s exists",
+                "No recursive variable with the serviceName %s exists",
                 vname
         ), ctx);
     }

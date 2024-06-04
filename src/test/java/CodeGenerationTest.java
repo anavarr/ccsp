@@ -1,16 +1,44 @@
+import mychor.Generators.GenerationConfig;
 import mychor.SPCodeGeneratorB;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CodeGenerationTest extends ProgramReaderTest{
     String path = "/tmp";
     String name = "MyQuarkusDistributedApplication";
+
+    @BeforeEach
+    public void cleanOutput() throws IOException {
+        deleteDir(new File(path+"/"+name));
+        assertFalse(Files.exists(Path.of(path, name)));
+    }
+
+    void deleteDir(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                deleteDir(f);
+            }
+        }
+        file.delete();
+    }
+
+    @Test
+    public void ParsingJSONPatternsShouldGiveBothLocalizedAndFrameworkSettings(){
+        assertEquals(GenerationConfig.localizedFrameworkSettingList.size(), 14);
+        assertEquals(GenerationConfig.settingsList.size(), 7);
+    }
+
     @Test
     public void generatingMicroServiceFromEmptyFileShouldCreateEmptyFolder() throws IOException {
         var ctx = testFile("empty.sp").compilerCtx;
@@ -20,7 +48,7 @@ public class CodeGenerationTest extends ProgramReaderTest{
 
     @Test
     public void simpleClientServerApplicationShouldCreateClientMicroserviceAndServerMicroservice() throws IOException {
-        var ctx = testFile("program_1.sp").compilerCtx;
+        var ctx = testFile("recursive_request_response.sp").compilerCtx;
         var generator = new SPCodeGeneratorB(ctx, path, name);
         generator.generateCode();
         assertTrue(Files.exists(Path.of(path, name)));
@@ -38,5 +66,15 @@ public class CodeGenerationTest extends ProgramReaderTest{
             assertTrue(gc.functions.isEmpty());
             assertFalse(gc.code.isEmpty());
         }
+    }
+
+    @Test
+    public void basicGRPC_un_unShouldCreateProtoFilesAndServerAndClient() throws IOException {
+        var ctx = testFile("recursive_request_response.sp").compilerCtx;
+        var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_recursive_un_un_server","GRPC_recursive_un_un_client"));
+        generator.generateCode();
+        assertTrue(generator.necessaryFrameworks.containsAll(List.of(
+                "GRPC_recursive_un_un_server",
+                "GRPC_recursive_un_un_client")));
     }
 }

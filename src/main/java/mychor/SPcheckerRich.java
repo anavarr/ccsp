@@ -233,12 +233,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
     @Override
     public List<String> visitNetwork(SPparserRich.NetworkContext ctx) {
-        // 0 : first process name
+        // 0 : first process serviceName
         // 1 : [
         // 2 : behaviour
         // 3 : ]
         // 4 : |
-        // 5 : second process name
+        // 5 : second process serviceName
         var children = ctx.getChildCount();
         var errors = new ArrayList<String>();
         for(int i =0; i < children -1; i+=5){
@@ -254,7 +254,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     @Override
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
-        // 1 : name
+        // 1 : serviceName
         var varName = ctx.getChild(1).getText();
         var errors = new ArrayList<String>();
 
