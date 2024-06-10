@@ -1,4 +1,5 @@
 import mychor.Generators.GenerationConfig;
+import mychor.Generators.GenerationContext;
 import mychor.SPCodeGeneratorB;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,8 +36,8 @@ public class CodeGenerationTest extends ProgramReaderTest{
 
     @Test
     public void ParsingJSONPatternsShouldGiveBothLocalizedAndFrameworkSettings(){
-        assertEquals(GenerationConfig.localizedFrameworkSettingList.size(), 14);
-        assertEquals(GenerationConfig.settingsList.size(), 7);
+        assertEquals(GenerationConfig.localizedFrameworkSettingList.size(), 12);
+        assertEquals(GenerationConfig.settingsList.size(), 6);
     }
 
     @Test
@@ -62,7 +63,7 @@ public class CodeGenerationTest extends ProgramReaderTest{
         var generator = new SPCodeGeneratorB(ctx, path, name);
         generator.generateCode();
         assertFalse(generator.gcs.isEmpty());
-        for (SPCodeGeneratorB.GenerationContext gc : generator.gcs) {
+        for (GenerationContext gc : generator.gcs) {
             assertTrue(gc.functions.isEmpty());
             assertFalse(gc.code.isEmpty());
         }
@@ -71,10 +72,14 @@ public class CodeGenerationTest extends ProgramReaderTest{
     @Test
     public void basicGRPC_un_unShouldCreateProtoFilesAndServerAndClient() throws IOException {
         var ctx = testFile("recursive_request_response.sp").compilerCtx;
-        var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_recursive_un_un_server","GRPC_recursive_un_un_client"));
+        var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_un_un_server","GRPC_un_un_client"));
         generator.generateCode();
         assertTrue(generator.necessaryFrameworks.containsAll(List.of(
-                "GRPC_recursive_un_un_server",
-                "GRPC_recursive_un_un_client")));
+                "GRPC_un_un_server",
+                "GRPC_un_un_client")));
+        assertTrue(Files.exists(Path.of(path,name,"protobuf", "client-server.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"protobuf", "client-server.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
+        assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
     }
 }

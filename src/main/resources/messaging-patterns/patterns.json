@@ -5,12 +5,14 @@
     "client" : {
       "needsClass" : true,
       "pom": "",
-      "class": ""
+      "class": "",
+      "generator" : ""
     },
     "server" : {
       "needsClass": true,
       "pom": "",
-      "class": ""
+      "class": "",
+      "generator" : ""
     }
   },{
     "name" : "ReactiveStreams",
@@ -18,50 +20,41 @@
     "client": {
       "needsClass" : false,
       "pom" : "\n\t<dependency>\n\t\t<groupId>io.smallrye.reactive</groupId>\n\t\t<artifactId>mutiny</artifactId>\n\t\t<version>2.6.0</version>\n\t</dependency>",
-      "class": ""
+      "class": "",
+      "generator" : ""
     },
     "server": {
       "needsClass" : false,
       "pom" : "\n\t<dependency>\n\t\t<groupId>io.smallrye.reactive</groupId>\n\t\t<artifactId>mutiny</artifactId>\n\t\t<version>2.6.0</version>\n\t</dependency>",
-      "class": ""
+      "class": "",
+      "generator" : ""
     }
   },{
     "name" : "GRPC_un_un",
-    "pattern": "client -> server;\n  server -> client",
+    "pattern": "(client -> server;\n  server -> client)*",
     "client" : {
       "needsClass" : true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
-      "class": ""
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
+      "class": "",
+      "generator" : "GeneratorUnUnClient"
     },
     "server" : {
       "needsClass": true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
-      "class": ""
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
+      "class": "",
+      "generator" : "GeneratorUnUnServer"
     }
   },{
-  "name" : "GRPC_recursive_un_un",
-  "pattern": "(client -> server;\n  server -> client)*",
-  "client" : {
-    "needsClass" : true,
-    "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
-    "class": ""
-  },
-  "server" : {
-    "needsClass": true,
-    "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
-    "class": ""
-  }
-},{
     "name": "GRPC_un_st",
     "pattern" : "client -> server;\n(server -> client)*",
     "client" : {
       "needsClass" : true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
       "class": ""
     },
     "server" : {
       "needsClass": true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
       "class": ""
     }
   },{
@@ -69,12 +62,12 @@
     "pattern" : "(client -> server)+;\nserver -> client",
     "client" : {
       "needsClass" : true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
       "class": ""
     },
     "server" : {
       "needsClass": true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
       "class": ""
     }
   },{
@@ -82,12 +75,12 @@
     "pattern": "client -> server;\n( client -> server | server -> client )*",
     "client" : {
       "needsClass" : true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
       "class": ""
     },
     "server" : {
       "needsClass": true,
-      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t/dependency>",
+      "pom": "\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-protobuf</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-stub</artifactId>\n\t</dependency>\n\t<dependency>\n\t\t<groupId>io.grpc</groupId>\n\t\t<artifactId>grpc-netty-shaded</artifactId>\n\t</dependency>",
       "class": ""
     }
   }
