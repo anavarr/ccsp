@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
 public class CodeGenerationTest extends ProgramReaderTest{
     String path = "/tmp";
     String name = "MyQuarkusDistributedApplication";
@@ -69,6 +70,49 @@ public class CodeGenerationTest extends ProgramReaderTest{
         }
     }
 
+    // ===== GRPC =====
+    @Test
+    public void basicGRPC_st_stShouldCreateProtoFilesAndServerAndClient() throws IOException {
+        var ctx = testFile("recursive_request_response.sp").compilerCtx;
+        var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_st_st_server","GRPC_st_st_client"));
+        generator.generateCode();
+        assertTrue(generator.necessaryFrameworks.containsAll(List.of(
+                "GRPC_st_st_server",
+                "GRPC_st_st_client")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "client-server.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "server-client.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
+        assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
+    }
+
+    @Test
+    public void basicGRPC_st_unShouldCreateProtoFilesAndServerAndClient() throws IOException {
+        var ctx = testFile("recursive_request_response.sp").compilerCtx;
+        var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_st_un_server","GRPC_st_un_client"));
+        generator.generateCode();
+        assertTrue(generator.necessaryFrameworks.containsAll(List.of(
+                "GRPC_st_un_server",
+                "GRPC_st_un_client")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "client-server.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "server-client.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
+        assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
+    }
+
+    @Test
+    public void basicGRPC_un_stShouldCreateProtoFilesAndServerAndClient() throws IOException {
+        var ctx = testFile("recursive_request_response.sp").compilerCtx;
+        var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_un_st_server","GRPC_un_st_client"));
+        generator.generateCode();
+        assertTrue(generator.necessaryFrameworks.containsAll(List.of(
+                "GRPC_un_st_server",
+                "GRPC_un_st_client")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "client-server.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "server-client.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
+        assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
+    }
+
     @Test
     public void basicGRPC_un_unShouldCreateProtoFilesAndServerAndClient() throws IOException {
         var ctx = testFile("recursive_request_response.sp").compilerCtx;
@@ -77,8 +121,8 @@ public class CodeGenerationTest extends ProgramReaderTest{
         assertTrue(generator.necessaryFrameworks.containsAll(List.of(
                 "GRPC_un_un_server",
                 "GRPC_un_un_client")));
-        assertTrue(Files.exists(Path.of(path,name,"protobuf", "client-server.proto")));
-        assertTrue(Files.exists(Path.of(path,name,"protobuf", "client-server.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "protofile.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "protofile.proto")));
         assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
         assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
     }

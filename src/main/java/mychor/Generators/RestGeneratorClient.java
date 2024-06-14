@@ -5,8 +5,10 @@ import mychor.Session;
 import mychor.Utils;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 
-public class RestGenerator implements Generator{
+public class RestGeneratorClient implements Generator{
 
     @Override
     public String generateSend(Comm comm) {
@@ -54,6 +56,16 @@ public class RestGenerator implements Generator{
 //        }else if(framework.contains("_server")){
 //
 //        }
+    }
+
+    @Override
+    public String closeSession() {
+        return "";
+    }
+
+    @Override
+    public Collection<String> generateMainImports() {
+        return List.of();
     }
 
 }

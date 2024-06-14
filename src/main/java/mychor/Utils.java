@@ -11,6 +11,10 @@ public class Utils {
         VOID
     }
 
+    public static String capitalize(String str){
+        return str.substring(0,1).toUpperCase()+str.substring(1);
+    }
+
     static String ERROR_RECVAR_ADD(String key, String boundProcess, String newProcess, ParserRuleContext ctx){
         return ERROR_DEFAULT(String.format(
                 "Procedure %s is already bound to process %s, can't bind it to %s",

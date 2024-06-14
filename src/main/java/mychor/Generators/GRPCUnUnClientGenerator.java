@@ -1,28 +1,16 @@
 package mychor.Generators;
-
 import mychor.Comm;
 import mychor.Session;
+import java.util.Collection;
+import java.util.List;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.locks.ReentrantLock;
-
-public class GRPCUnUnClientGenerator implements Generator{
-    private boolean alreadySetup = false;
+public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
     String channelName;
     String asyncStubName;
-    private final Session session;
-    static int generatorCounter = 0;
-    private long counter = 0;
+
     public GRPCUnUnClientGenerator(Session session){
-        this.session = session;
+        super(session);
     }
-    ReentrantLock setupLock = new ReentrantLock();
-    ReentrantLock messageLock = new ReentrantLock();
-    ArrayBlockingQueue<Long> counterQueue = new ArrayBlockingQueue<>(100);
 
     private String setup(){
         if(alreadySetup) return "";
@@ -38,17 +26,17 @@ public class GRPCUnUnClientGenerator implements Generator{
                 .usePlaintext()
                 .build();
             // Create an asynchronous stub
-            ServiceGrpc.ServiceStub %s = ServiceGrpc.newStub(%s);
-            """, channelName, asyncStubName, channelName);
+            %sGrpc.%sStub %s = %sGrpc.newStub(%s);
+            """, channelName, serviceName, serviceName, asyncStubName, serviceName, channelName);
     }
 
     @Override
     public String generateSend(Comm comm) {
         var setup = setup();
         messageLock.lock();
-        var suffix = counter;
+        var suffix = generatorCounter;
         counterQueue.add(suffix);
-        counter++;
+        generatorCounter++;
         messageLock.unlock();
         var requestName = "request_"+suffix;
         var cfName = "cf_"+suffix;
@@ -80,7 +68,7 @@ public class GRPCUnUnClientGenerator implements Generator{
                         // do nothing ?
                     }
                 });
-                """, requestName, asyncStubName, cfName, cfName);
+                """, asyncStubName,requestName, cfName, cfName);
 
         return setup+"\n"+createRequest+"\n"+createCF+"\n"+createCb;
 
@@ -95,7 +83,12 @@ public class GRPCUnUnClientGenerator implements Generator{
         }
         var cfName = "cf_"+suffix;
         return String.format("""
-        var %s = %s.get();
+        try {
+            var %s = %s.get();
+        } catch (InterruptedException | ExecutionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         """, variableName, cfName);
     }
 
@@ -112,19 +105,20 @@ public class GRPCUnUnClientGenerator implements Generator{
     }
 
     @Override
-    public void generateClass(String service, String applicationPath) throws IOException {
-        var proto = String.format("""
-                syntax = "proto3";
-                package %s;
-                message Message {
-                  string msg = 1;
-                }
-                service %s {
-                  rpc Communicate(Message) returns (Message);
-                }""",service,session.peerA()+"-"+session.peerB());
-        Files.createDirectories(Paths.get(applicationPath,"protobuf"));
-        Files.write(Path.of(
-                        applicationPath,"protobuf",session.peerA()+"-"+session.peerB()+".proto"),
-                proto.getBytes());
+    public String closeSession() {
+        return "";
+    }
+
+    @Override
+    public Collection<String> generateMainImports() {
+        var i = super.generateMainImports();
+        i.addAll(List.of(
+                "import client.ClientServerGrpc;",
+                "import client.ClientServerOuterClass.Message;",
+                "import io.grpc.ManagedChannel;",
+                "import java.util.concurrent.ExecutionException;",
+                "import io.grpc.stub.StreamObserver;",
+                "import io.grpc.ManagedChannelBuilder;"));
+        return i;
     }
 }

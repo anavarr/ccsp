@@ -1,15 +1,21 @@
 package mychor;
 
+import mychor.Generators.GRPCStStClientGenerator;
+import mychor.Generators.GRPCStStServerGenerator;
 import mychor.Generators.GRPCUnUnClientGenerator;
 import mychor.Generators.GRPCUnUnServerGenerator;
 import mychor.Generators.GenerationContext;
-import mychor.Generators.RestGenerator;
+import mychor.Generators.ReactiveStreamsClientGenerator;
+import mychor.Generators.ReactiveStreamsServerGenerator;
+import mychor.Generators.RestGeneratorClient;
+import mychor.Generators.RestGeneratorServer;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,14 +71,43 @@ public class SPCodeGeneratorB {
         Path path = Paths.get("src/main/resources/quarkus_default_files/template_pom.xml");
         try(var lines = Files.lines(path)) {
             var linesMod = new ArrayList<>(lines.toList());
-            var idx = linesMod.indexOf("    <dependencies>");
-            List<String> pom;
             for (String necessaryFramework : config.necessaryFrameworks) {
-                var frameworkPom = localizedFrameworkSettingList.get(necessaryFramework).pom();
-                if(frameworkPom == null){
+                var idxDep = linesMod.indexOf("    <dependencies>");
+                var pomDependencies = localizedFrameworkSettingList.get(necessaryFramework).pomDependencies();
+                if(pomDependencies == null){
                     throw new RuntimeException("No POM was provided with this framework");
                 }
-                linesMod.addAll(idx+1, List.of(frameworkPom.split("\n")));
+                for (String s : pomDependencies) {
+                    var offset = s.split("\n").length;
+                    linesMod.add(idxDep+1, "\t\t<dependency>");
+                    linesMod.addAll(idxDep+2, Arrays.stream(s.split("\n")).map(l -> "\t\t\t"+l).toList());
+                    linesMod.add(idxDep+2+offset, "\t\t</dependency>");
+                }
+
+
+                var idxBuildExtension = linesMod.indexOf("        <extensions>");
+                var pomBuildExtensions = localizedFrameworkSettingList.get(necessaryFramework).pomBuildExtensions();
+                if(pomBuildExtensions == null){
+                    throw new RuntimeException("No POM was provided with this framework");
+                }
+                for (String s : pomBuildExtensions) {
+                    var offset = s.split("\n").length;
+                    linesMod.add(idxBuildExtension+1, "\t\t\t<extension>");
+                    linesMod.addAll(idxBuildExtension+2, Arrays.stream(s.split("\n")).map(l -> "\t\t\t"+l).toList());
+                    linesMod.add(idxBuildExtension+2+offset, "\t\t\t</extension>");
+                }
+
+                var idxBuildPlugins = linesMod.indexOf("        <plugins>");
+                var pomBuildPlugins = localizedFrameworkSettingList.get(necessaryFramework).pomBuildPlugins();
+                if(pomBuildPlugins == null){
+                    throw new RuntimeException("No POM was provided with this framework");
+                }
+                for (String s : pomBuildPlugins) {
+                    var offset = s.split("\n").length;
+                    linesMod.add(idxBuildPlugins+1, "\t\t\t<plugin>");
+                    linesMod.addAll(idxBuildPlugins+2, Arrays.stream(s.split("\n")).map(l -> "\t\t\t"+l).toList());
+                    linesMod.add(idxBuildPlugins+2+offset, "\t\t\t</plugin>");
+                }
             }
             Files.write(Path.of(
                     outPath,"/", applicationName,"/",config.serviceName,"/","pom.xml"),
@@ -95,15 +130,27 @@ public class SPCodeGeneratorB {
             serviceSessions.forEach(serviceSession -> {
                 var framework = necessaryFrameworks.get(serviceSession);
                 generationCtx.sessionsFrameworks.put(serviceSession.peerB(), framework);
-                if(framework.equals("GRPC_un_un_client")){
-                    generationCtx.generators.put(serviceSession.peerB(), new GRPCUnUnClientGenerator(serviceSession));
-                }else if(framework.equals("GRPC_un_un_server")){
-                    generationCtx.generators.put(serviceSession.peerB(), new GRPCUnUnServerGenerator(serviceSession));
-                }else if(framework.contains("REST")){
-                    generationCtx.generators.put(serviceSession.peerB(), new RestGenerator());
-                }else{
-                    System.err.println("NOT IMPLEMENTED");
-                    throw new RuntimeException("No generator found for this framework");
+                switch (framework) {
+                    case "GRPC_un_un_client" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCUnUnClientGenerator(serviceSession));
+                    case "GRPC_un_un_server" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCUnUnServerGenerator(serviceSession));
+                    case "GRPC_st_st_client" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCStStClientGenerator(serviceSession));
+                    case "GRPC_st_st_server" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCStStServerGenerator(serviceSession));
+                    case "REST_client" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new RestGeneratorClient());
+                    case "REST_server" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new RestGeneratorServer());
+                    case "ReactiveStreams_client" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new ReactiveStreamsClientGenerator());
+                    case "ReactiveStreams_server" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new ReactiveStreamsServerGenerator());
+                    default -> {
+                        System.err.println("NOT IMPLEMENTED");
+                        throw new RuntimeException("No generator found for framework " + framework);
+                    }
                 }
             });
             var config = new ServiceConfiguration(service, "1.0.0",
@@ -113,6 +160,7 @@ public class SPCodeGeneratorB {
             for (Session serviceSession : serviceSessions) {
                 generationCtx.generators.get(serviceSession.peerB())
                         .generateClass(service, outPath+"/"+applicationName);
+                generationCtx.imports.addAll(generationCtx.generators.get(serviceSession.peerB()).generateMainImports());
             }
             var root = ctx.behaviours.get(service);
             unfoldBehaviour(root);
@@ -122,7 +170,8 @@ public class SPCodeGeneratorB {
     }
 
     private void writeCode(ServiceConfiguration config) throws IOException {
-        String code = Files.readString(Paths.get("src/main/resources/quarkus_default_files/main.txt"));
+        String code = String.join("\n",generationCtx.imports) + "\n" +
+                Files.readString(Paths.get("src/main/resources/quarkus_default_files/main.txt"));
         Files.createDirectories(Paths.get(outPath,"/", applicationName,"/",config.serviceName, "src/main/java"));
         code = code.replace("public int run(String... args) {",
                 String.format("public int run(String... args) {\n%s",
