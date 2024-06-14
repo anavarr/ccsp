@@ -29,8 +29,7 @@ public abstract class GRPCUnUnGenerator implements Generator{
     public GRPCUnUnGenerator(Session serviceSession) {
         session = serviceSession;
         protoName = "GrpcService";
-        serviceName = capitalize(serviceSession.peerA())
-                +capitalize(serviceSession.peerB());
+        serviceName = "GRPCService";
     }
 
     @Override

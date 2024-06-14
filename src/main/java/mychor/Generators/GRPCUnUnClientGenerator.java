@@ -22,7 +22,7 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
         setupLock.unlock();
         return
             String.format("""
-                    ManagedChannel %s = ManagedChannelBuilder.forAddress("localhost", 50051)
+                    ManagedChannel %s = ManagedChannelBuilder.forAddress("localhost", 5001)
                 .usePlaintext()
                 .build();
             // Create an asynchronous stub
@@ -113,7 +113,7 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
     public Collection<String> generateMainImports() {
         var i = super.generateMainImports();
         i.addAll(List.of(
-                "import "+packageName+".ClientServerGrpc;",
+                "import "+packageName+"."+serviceName+"Grpc;",
                 "import "+packageName+"."+protoName+".Message;",
                 "import io.grpc.ManagedChannel;",
                 "import java.util.concurrent.ExecutionException;",
