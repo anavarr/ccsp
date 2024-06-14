@@ -20,6 +20,7 @@ public abstract class GRPCUnUnGenerator implements Generator{
     String protoName;
     Session session;
     boolean alreadySetup = false;
+    String packageName = "grpc";
     static long generatorCounter = 0;
     static ReentrantLock setupLock = new ReentrantLock();
     static ReentrantLock messageLock = new ReentrantLock();
@@ -27,7 +28,7 @@ public abstract class GRPCUnUnGenerator implements Generator{
 
     public GRPCUnUnGenerator(Session serviceSession) {
         session = serviceSession;
-        protoName = serviceSession.peerA()+"-"+serviceSession.peerB()+".proto";
+        protoName = "GrpcService";
         serviceName = capitalize(serviceSession.peerA())
                 +capitalize(serviceSession.peerB());
     }
@@ -36,16 +37,16 @@ public abstract class GRPCUnUnGenerator implements Generator{
     public void generateClass(String service, String applicationPath) throws IOException {
         var proto = String.format("""
                 syntax = "proto3";
-                package %s;
+                package grpc;
                 message Message {
                   string msg = 1;
                 }
                 service %s {
                   rpc Communicate(Message) returns (Message);
-                }""",service, serviceName);
+                }""", serviceName);
         Files.createDirectories(Paths.get(applicationPath,service, "src", "main", "proto"));
         Files.write(Path.of(
-                        applicationPath,service, "src", "main", "proto",session.peerA()+"-"+session.peerB()+".proto"),
+                        applicationPath,service, "src", "main", "proto",protoName+".proto"),
                 proto.getBytes());
     }
 

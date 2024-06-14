@@ -72,9 +72,9 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
                 import %s.%sGrpc;
                 import java.util.concurrent.CompletableFuture;
                 import java.util.concurrent.ExecutionException;
-                import %s.%sOuterClass.Message;
+                import %s.%s.Message;
                 import java.io.IOException;
-                """, service, service, serviceName, service, serviceName);
+                """, packageName, packageName, serviceName, packageName, protoName);
         var classText = String.format("""
                 public class %sImpl extends %sGrpc.%sImplBase {
                     public CompletableFuture<String> cfReceive;
@@ -109,9 +109,9 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
                     }
                 }
                 """, serviceName, serviceName, serviceName, serviceName);
-        Files.createDirectories(Paths.get(applicationPath,service,"src", "main", "java", "server"));
+        Files.createDirectories(Paths.get(applicationPath,service,"src", "main", "java", packageName));
         Files.write(Path.of(applicationPath,service,"src", "main", "java",
-                        "server", String.format("%sImpl.java", serviceName)),
+                        packageName, String.format("%sImpl.java", serviceName)),
                 (header+classText).getBytes());
     }
 
@@ -129,7 +129,7 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         i.addAll(List.of(
                 "import io.grpc.Server;",
                 "import io.grpc.ServerBuilder;",
-                String.format("import server.%sImpl;", serviceName)));
+                String.format("import %s.%sImpl;", packageName, serviceName)));
         return i;
     }
 

@@ -113,8 +113,8 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
     public Collection<String> generateMainImports() {
         var i = super.generateMainImports();
         i.addAll(List.of(
-                "import client.ClientServerGrpc;",
-                "import client.ClientServerOuterClass.Message;",
+                "import "+packageName+".ClientServerGrpc;",
+                "import "+packageName+"."+protoName+".Message;",
                 "import io.grpc.ManagedChannel;",
                 "import java.util.concurrent.ExecutionException;",
                 "import io.grpc.stub.StreamObserver;",
