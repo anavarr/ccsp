@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
@@ -19,14 +19,12 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
 
     @Override
     public String generateSend(Comm comm) {
-        var code = setup();
-        return code + String.format("cfSend.complete(%s);", comm.labels.getFirst());
+        return String.format("cfSend.complete(%s);", comm.labels.getFirst());
     }
 
     @Override
     public String generateRcv(Comm comm) {
-        var code = setup();
-        return code + String.format("var %s = cfReceive.get();", comm.labels.getFirst());
+        return String.format("var %s = cfReceive.get();", comm.labels.getFirst());
     }
 
     @Override
@@ -39,29 +37,20 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         return "";
     }
 
-    private String setup(){
-        if(alreadySetup) return "";
-        alreadySetup = true;
+    @Override
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
+        super.generateClass(service, applicationPath);
         setupLock.lock();
         var suffix = generatorCounter;
         setupLock.unlock();
         var serverName = "server_"+suffix;
-        return String.format("""
-                var cfSend = new CompletableFuture<String>();
-        var cfReceive = new CompletableFuture<String>();
-        Server %s = ServerBuilder.forPort(%d)
+        var imports = String.format("""
+                static CompletableFuture cfSend = new CompletableFuture<String>();
+        static CompletableFuture cfReceive = new CompletableFuture<String>();
+        static Server %s = ServerBuilder.forPort(%d)
                 .addService(new %sImpl(cfSend, cfReceive))
-                .build();
+                .build();""", serverName, port, serviceName);
 
-        // Start the server
-        %s.start();
-        System.out.println("Server started on port %d");
-        """, serverName, port, serviceName, serverName, port);
-    }
-
-    @Override
-    public void generateClass(String service, String applicationPath) throws IOException {
-        super.generateClass(service, applicationPath);
         var header = String.format("""
                 package %s;
                 
@@ -84,7 +73,6 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
                         this.cfSend = cfSend;
                         this.cfReceive = cfReceive;
                     }
-                    
                     @Override
                     public void communicate(Message request, StreamObserver<Message> responseObserver) {
                         // Handle the request and send a response
@@ -113,6 +101,7 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         Files.write(Path.of(applicationPath,service,"src", "main", "java",
                         packageName, String.format("%sImpl.java", serviceName)),
                 (header+classText).getBytes());
+        return new ArrayList<>(List.of(imports.split("\n")));
     }
 
     @Override
@@ -124,7 +113,7 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
     }
 
     @Override
-    public Collection<String> generateMainImports() {
+    public ArrayList<String> generateMainImports() {
         var i = super.generateMainImports();
         i.addAll(List.of(
                 "import io.grpc.Server;",

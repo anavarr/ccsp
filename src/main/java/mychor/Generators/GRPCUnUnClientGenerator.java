@@ -1,7 +1,8 @@
 package mychor.Generators;
 import mychor.Comm;
 import mychor.Session;
-import java.util.Collection;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
@@ -110,7 +111,7 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
     }
 
     @Override
-    public Collection<String> generateMainImports() {
+    public ArrayList<String> generateMainImports() {
         var i = super.generateMainImports();
         i.addAll(List.of(
                 "import "+packageName+"."+serviceName+"Grpc;",

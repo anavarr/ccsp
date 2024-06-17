@@ -3,6 +3,7 @@ package mychor.Generators;
 import mychor.Comm;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -28,8 +29,9 @@ public class RestGeneratorServer implements Generator {
     }
 
     @Override
-    public void generateClass(String service, String applicationPath) throws IOException {
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
 
+        return null;
     }
 
     @Override
@@ -38,7 +40,7 @@ public class RestGeneratorServer implements Generator {
     }
 
     @Override
-    public Collection<String> generateMainImports() {
-        return List.of();
+    public ArrayList<String> generateMainImports() {
+        return new ArrayList<>();
     }
 }

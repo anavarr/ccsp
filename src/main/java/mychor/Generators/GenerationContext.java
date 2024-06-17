@@ -7,6 +7,7 @@ public class GenerationContext{
     public ArrayList<String> code = new ArrayList<>();
     public HashMap<String, ArrayList<String>> functions= new HashMap<>();
     public HashMap<String, String> sessionsFrameworks = new HashMap<>();
+    public ArrayList<String> staticInit = new ArrayList<>();
     public HashMap<String, Generator> generators = new HashMap<>();
     public ArrayList<String> imports = new ArrayList<>();
 
@@ -18,5 +19,6 @@ public class GenerationContext{
         sessionsFrameworks.putAll(gc.sessionsFrameworks);
         generators.putAll(gc.generators);
         imports.addAll(gc.imports);
+        staticInit.addAll(gc.staticInit);
     }
 }

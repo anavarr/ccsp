@@ -1,0 +1,22 @@
+{
+  "imports": [
+    "import io.quarkus.runtime.Quarkus;",
+    "import io.quarkus.runtime.QuarkusApplication;",
+    "import io.quarkus.runtime.annotations.QuarkusMain;",
+    "import io.vertx.core.Vertx;",
+    "import io.vertx.core.http.HttpServer;",
+    "import io.vertx.ext.web.Router;",
+    "import org.eclipse.microprofile.config.ConfigProvider,;"
+  ],
+  "mainClass" : {
+    "mainFunction" : {
+      "signature" : "public static void main(String... args)",
+      "body" : ["Quarkus.run(Main.class, args);"]
+    },
+    "runFuction" : {
+      "annotations" : ["@Override"],
+      "signature" : "public int run(String... args)",
+      "body" : ["return 0;"]
+    }
+  }
+}

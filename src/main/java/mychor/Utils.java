@@ -14,6 +14,9 @@ public class Utils {
     public static String capitalize(String str){
         return str.substring(0,1).toUpperCase()+str.substring(1);
     }
+    public static String minimize(String str){
+        return str.substring(0,1).toLowerCase()+str.substring(1);
+    }
 
     static String ERROR_RECVAR_ADD(String key, String boundProcess, String newProcess, ParserRuleContext ctx){
         return ERROR_DEFAULT(String.format(

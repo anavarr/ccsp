@@ -1,9 +1,9 @@
 package mychor.Generators;
 
 import mychor.Comm;
-import mychor.Session;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 
 public interface Generator {
@@ -11,8 +11,8 @@ public interface Generator {
     String generateRcv(Comm comm);
     String generateSelect(Comm comm);
     String generateBranch(Comm comm);
-    void generateClass(String service, String applicationPath) throws IOException;
+    ArrayList<String> generateClass(String service, String applicationPath) throws IOException;
     String closeSession();
 
-    Collection<String> generateMainImports();
+    ArrayList<String> generateMainImports();
 }

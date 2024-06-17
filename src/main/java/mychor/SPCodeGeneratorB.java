@@ -2,6 +2,10 @@ package mychor;
 
 import mychor.Generators.GRPCStStClientGenerator;
 import mychor.Generators.GRPCStStServerGenerator;
+import mychor.Generators.GRPCStUnClientGenerator;
+import mychor.Generators.GRPCStUnServerGenerator;
+import mychor.Generators.GRPCUnStClientGenerator;
+import mychor.Generators.GRPCUnStServerGenerator;
 import mychor.Generators.GRPCUnUnClientGenerator;
 import mychor.Generators.GRPCUnUnServerGenerator;
 import mychor.Generators.GenerationContext;
@@ -21,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static mychor.Generators.GenerationConfig.localizedFrameworkSettingList;
+import static mychor.Utils.minimize;
 
 public class SPCodeGeneratorB {
     CompilerContext ctx;
@@ -139,6 +144,14 @@ public class SPCodeGeneratorB {
                             generationCtx.generators.put(serviceSession.peerB(), new GRPCStStClientGenerator(serviceSession));
                     case "GRPC_st_st_server" ->
                             generationCtx.generators.put(serviceSession.peerB(), new GRPCStStServerGenerator(serviceSession));
+                    case "GRPC_un_st_client" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCUnStClientGenerator(serviceSession));
+                    case "GRPC_un_st_server" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCUnStServerGenerator(serviceSession));
+                    case "GRPC_st_un_client" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCStUnClientGenerator(serviceSession));
+                    case "GRPC_st_un_server" ->
+                            generationCtx.generators.put(serviceSession.peerB(), new GRPCStUnServerGenerator(serviceSession));
                     case "REST_client" ->
                             generationCtx.generators.put(serviceSession.peerB(), new RestGeneratorClient());
                     case "REST_server" ->
@@ -158,8 +171,9 @@ public class SPCodeGeneratorB {
             createMicroService(service);
             populatePom(config);
             for (Session serviceSession : serviceSessions) {
-                generationCtx.generators.get(serviceSession.peerB())
-                        .generateClass(service, outPath+"/"+applicationName);
+                generationCtx.staticInit.addAll(generationCtx.generators
+                        .get(serviceSession.peerB())
+                        .generateClass(service, outPath+"/"+applicationName));
                 generationCtx.imports.addAll(generationCtx.generators.get(serviceSession.peerB()).generateMainImports());
             }
             var root = ctx.behaviours.get(service);
@@ -173,13 +187,38 @@ public class SPCodeGeneratorB {
         String code = String.join("\n",generationCtx.imports) + "\n" +
                 Files.readString(Paths.get("src/main/resources/quarkus_default_files/main.txt"));
         Files.createDirectories(Paths.get(outPath,"/", applicationName,"/",config.serviceName, "src/main/java"));
-        code = code.replace("public int run(String... args) {",
-                String.format("public int run(String... args) {\n%s",
-                        String.join("\n",generationCtx.code).replace("\n","\n\t\t")));
+        if(generationCtx.functions.isEmpty()){
+            code = code.replace("public int run(String... args) {",
+                    String.format("public int run(String... args) {\n%s",
+                            String.join("\n",generationCtx.code).replace("\n","\n\t\t")));
+        }else{
+            var mainList = new ArrayList<String>();
+            for (String s : generationCtx.functions.keySet()) {
+                if(!s.equals("main")){
+                    mainList.add(String.format("public static void %s(){", s));
+                    mainList.addAll(generationCtx.functions.get(s));
+                    mainList.add("}");
+                }
+            }
+            code = code.replace("public static void main(String... args) {",
+                    String.format("%s\n\tpublic static void main(String... args) {",
+                            String.join("\n", generationCtx.staticInit)));
+            code = code.replace("@Override\n" +
+                            "    public int run(String... args) {",
+                    String.format("""
+                                    %s
+                                    @Override
+                                        public int run(String... args) {
+                                            %s
+                                    """,
+                            String.join("\n", mainList).replace("\n", "\n\t\t"),
+                            String.join("\n",generationCtx.functions.get("main")).replace("\n","\n\t\t")));
+        }
         Files.write(Paths.get(outPath,"/", applicationName,"/", config.serviceName, "src/main/java", "Main.java"), code.getBytes());
     }
 
     private void unfoldBehaviour(Behaviour root) {
+        if(generationCtx.code == null) generationCtx.code = new ArrayList<>();
         switch (root) {
             case Cdt cdt -> {
                 generationCtx.code.add(String.format("if(%s)",cdt.expr));
@@ -195,11 +234,16 @@ public class SPCodeGeneratorB {
                 }
             }
             case Call call -> {
+                var vname = minimize(call.variableName);
+                generationCtx.code.add(vname+"();");
+                if(generationCtx.functions.isEmpty()){
+                    generationCtx.functions.put("main", generationCtx.code);
+                    generationCtx.code = new ArrayList<>();
+                }
                 if(!generationCtx.functions.containsKey(call.variableName) && !call.nextBehaviours.isEmpty()){
-                    generationCtx.code.add(call.variableName+"();");
                     generationCtx.code = new ArrayList<>();
                     unfoldBehaviour(call.nextBehaviours.get("unfold"));
-                    generationCtx.functions.put(call.variableName, generationCtx.code);
+                    generationCtx.functions.put(vname, generationCtx.code);
                 }
             }
             case Comm comm -> {

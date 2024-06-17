@@ -1,11 +1,9 @@
 package mychor.Generators;
 
 import mychor.Comm;
-import mychor.Session;
-import mychor.Utils;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RestGeneratorClient implements Generator{
@@ -31,7 +29,7 @@ public class RestGeneratorClient implements Generator{
     }
 
     @Override
-    public void generateClass(String service, String applicationPath) throws IOException {
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
 //        if(framework.contains("_client")){
 //            var selectLabels = session.getLabels(Utils.Direction.SELECT);
 //            var clientClass = String.format("""
@@ -56,6 +54,7 @@ public class RestGeneratorClient implements Generator{
 //        }else if(framework.contains("_server")){
 //
 //        }
+        return null;
     }
 
     @Override
@@ -64,8 +63,8 @@ public class RestGeneratorClient implements Generator{
     }
 
     @Override
-    public Collection<String> generateMainImports() {
-        return List.of();
+    public ArrayList<String> generateMainImports() {
+        return new ArrayList<>();
     }
 
 }

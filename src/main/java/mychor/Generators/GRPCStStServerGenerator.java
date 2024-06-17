@@ -4,7 +4,7 @@ import mychor.Comm;
 import mychor.Session;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GRPCStStServerGenerator implements Generator {
@@ -32,8 +32,9 @@ public class GRPCStStServerGenerator implements Generator {
     }
 
     @Override
-    public void generateClass(String service, String applicationPath) throws IOException {
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
 
+        return null;
     }
 
     @Override
@@ -42,7 +43,7 @@ public class GRPCStStServerGenerator implements Generator {
     }
 
     @Override
-    public Collection<String> generateMainImports() {
-        return List.of();
+    public ArrayList<String> generateMainImports() {
+        return new ArrayList<>();
     }
 }
