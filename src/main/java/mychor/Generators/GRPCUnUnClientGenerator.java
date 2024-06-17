@@ -1,7 +1,9 @@
 package mychor.Generators;
 import mychor.Comm;
 import mychor.Session;
-import java.util.Collection;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
@@ -12,27 +14,30 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
         super(session);
     }
 
-    private String setup(){
-        if(alreadySetup) return "";
+
+    @Override
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
         alreadySetup = true;
         setupLock.lock();
         channelName = "channel_"+generatorCounter;
         asyncStubName = "asyncStubName_"+generatorCounter;
         generatorCounter++;
         setupLock.unlock();
-        return
-            String.format("""
-                    ManagedChannel %s = ManagedChannelBuilder.forAddress("localhost", 5001)
+        var staticInit = super.generateClass(service, applicationPath);
+        staticInit.addAll(new ArrayList<>(List.of(
+                String.format("""
+                    static ManagedChannel %s = ManagedChannelBuilder.forAddress("localhost", 5001)
                 .usePlaintext()
                 .build();
             // Create an asynchronous stub
-            %sGrpc.%sStub %s = %sGrpc.newStub(%s);
-            """, channelName, serviceName, serviceName, asyncStubName, serviceName, channelName);
+            static %sGrpc.%sStub %s = %sGrpc.newStub(%s);
+            """, channelName, serviceName, serviceName, asyncStubName, serviceName, channelName)
+        )));
+        return staticInit;
     }
 
     @Override
     public String generateSend(Comm comm) {
-        var setup = setup();
         messageLock.lock();
         var suffix = generatorCounter;
         counterQueue.add(suffix);
@@ -70,7 +75,7 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
                 });
                 """, asyncStubName,requestName, cfName, cfName);
 
-        return setup+"\n"+createRequest+"\n"+createCF+"\n"+createCb;
+        return createRequest+"\n"+createCF+"\n"+createCb;
 
     }
 
@@ -94,13 +99,11 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
 
     @Override
     public String generateSelect(Comm comm) {
-        setup();
         return "";
     }
 
     @Override
     public String generateBranch(Comm comm) {
-        setup();
         return "";
     }
 
@@ -110,13 +113,14 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
     }
 
     @Override
-    public Collection<String> generateMainImports() {
+    public ArrayList<String> generateMainImports() {
         var i = super.generateMainImports();
         i.addAll(List.of(
                 "import "+packageName+"."+serviceName+"Grpc;",
                 "import "+packageName+"."+protoName+".Message;",
                 "import io.grpc.ManagedChannel;",
                 "import java.util.concurrent.ExecutionException;",
+                "import java.util.concurrent.CompletableFuture;",
                 "import io.grpc.stub.StreamObserver;",
                 "import io.grpc.ManagedChannelBuilder;"));
         return i;

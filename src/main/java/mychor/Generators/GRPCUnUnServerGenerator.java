@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
+
+import static mychor.Utils.minimize;
 
 public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
     static int port = 5001;
@@ -19,14 +21,26 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
 
     @Override
     public String generateSend(Comm comm) {
-        var code = setup();
-        return code + String.format("cfSend.complete(%s);", comm.labels.getFirst());
+        return String.format("""
+            try {
+                cfSend.put(%s);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        """, comm.labels.getFirst());
     }
 
     @Override
     public String generateRcv(Comm comm) {
-        var code = setup();
-        return code + String.format("var %s = cfReceive.get();", comm.labels.getFirst());
+        return String.format("""
+            try{
+                var %s = cfReceive.take();
+            } catch (InterruptedException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            }
+        """, comm.labels.getFirst());
     }
 
     @Override
@@ -39,70 +53,69 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         return "";
     }
 
-    private String setup(){
-        if(alreadySetup) return "";
-        alreadySetup = true;
+    @Override
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
+        super.generateClass(service, applicationPath);
         setupLock.lock();
         var suffix = generatorCounter;
         setupLock.unlock();
         var serverName = "server_"+suffix;
-        return String.format("""
-                var cfSend = new CompletableFuture<String>();
-        var cfReceive = new CompletableFuture<String>();
-        Server %s = ServerBuilder.forPort(%d)
-                .addService(new %sImpl(cfSend, cfReceive))
+        var imports = String.format("""
+                static SynchronousQueue<String> cfSend = new SynchronousQueue<String>();
+        static SynchronousQueue<String> cfReceive = new SynchronousQueue<String>();
+        static %sImpl %s = new %sImpl(cfSend, cfReceive);
+        static Server %s = ServerBuilder.forPort(%d)
+                .addService(%s)
                 .build();
+        static {
+            try {
+                %s.start();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        """, serviceName, minimize(serviceName), serviceName, serverName, port, minimize(serviceName), serverName);
 
-        // Start the server
-        %s.start();
-        System.out.println("Server started on port %d");
-        """, serverName, port, serviceName, serverName, port);
-    }
-
-    @Override
-    public void generateClass(String service, String applicationPath) throws IOException {
-        super.generateClass(service, applicationPath);
         var header = String.format("""
                 package %s;
-                
-                import io.grpc.Server;
-                import io.grpc.ServerBuilder;
                 import io.grpc.stub.StreamObserver;
-                import java.util.concurrent.CompletableFuture;
+                import java.util.concurrent.SynchronousQueue;
                 import %s.%sGrpc;
-                import java.util.concurrent.CompletableFuture;
-                import java.util.concurrent.ExecutionException;
                 import %s.%s.Message;
-                import java.io.IOException;
                 """, packageName, packageName, serviceName, packageName, protoName);
         var classText = String.format("""
                 public class %sImpl extends %sGrpc.%sImplBase {
-                    public CompletableFuture<String> cfReceive;
-                    public CompletableFuture<String> cfSend;
+                    public SynchronousQueue<String> cfReceive;
+                    public SynchronousQueue<String> cfSend;
                 
-                    public %sImpl(CompletableFuture<String> cfSend, CompletableFuture<String> cfReceive){
+                    public %sImpl(SynchronousQueue<String> cfSend, SynchronousQueue<String> cfReceive){
                         this.cfSend = cfSend;
                         this.cfReceive = cfReceive;
                     }
-                    
                     @Override
                     public void communicate(Message request, StreamObserver<Message> responseObserver) {
                         // Handle the request and send a response
                         String requestMessage = request.getMsg();
-                        cfReceive.complete(requestMessage);
+                        try {
+                            cfReceive.put(requestMessage);
+                        } catch (InterruptedException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
                         System.out.println("Received message: " + requestMessage);
                         
                         // Create a response message
                         String responseMessage;
                         try {
-                            responseMessage = cfSend.get();
+                            responseMessage = cfSend.take();
                             Message response = Message.newBuilder()
                                 .setMsg("Hello, " + responseMessage)
                                 .build();
                             // Send the response
                             responseObserver.onNext(response);
                             responseObserver.onCompleted();
-                        } catch (InterruptedException | ExecutionException e) {
+                        } catch (InterruptedException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
@@ -113,6 +126,7 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         Files.write(Path.of(applicationPath,service,"src", "main", "java",
                         packageName, String.format("%sImpl.java", serviceName)),
                 (header+classText).getBytes());
+        return new ArrayList<>(List.of(imports.split("\n")));
     }
 
     @Override
@@ -124,11 +138,12 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
     }
 
     @Override
-    public Collection<String> generateMainImports() {
+    public ArrayList<String> generateMainImports() {
         var i = super.generateMainImports();
         i.addAll(List.of(
                 "import io.grpc.Server;",
                 "import io.grpc.ServerBuilder;",
+                "import java.io.IOException;",
                 String.format("import %s.%sImpl;", packageName, serviceName)));
         return i;
     }

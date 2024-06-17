@@ -1,7 +1,6 @@
 package mychor.Generators;
 
 import mychor.Session;
-import mychor.Utils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,8 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static mychor.Utils.capitalize;
 
 public abstract class GRPCUnUnGenerator implements Generator{
     String serviceName;
@@ -33,7 +30,14 @@ public abstract class GRPCUnUnGenerator implements Generator{
     }
 
     @Override
-    public void generateClass(String service, String applicationPath) throws IOException {
+    public ArrayList<String> generateMainImports() {
+        return new ArrayList<>(List.of(
+                "import java.util.concurrent.SynchronousQueue;"
+                ));
+    }
+
+    @Override
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
         var proto = String.format("""
                 syntax = "proto3";
                 package grpc;
@@ -47,12 +51,6 @@ public abstract class GRPCUnUnGenerator implements Generator{
         Files.write(Path.of(
                         applicationPath,service, "src", "main", "proto",protoName+".proto"),
                 proto.getBytes());
-    }
-
-    @Override
-    public Collection<String> generateMainImports() {
-        return new ArrayList<>(List.of(
-                "import java.util.concurrent.CompletableFuture;"
-                ));
+        return new ArrayList<>();
     }
 }
