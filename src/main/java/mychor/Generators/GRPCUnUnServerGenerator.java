@@ -10,6 +10,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static mychor.Utils.minimize;
+
 public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
     static int port = 5001;
 
@@ -19,12 +21,26 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
 
     @Override
     public String generateSend(Comm comm) {
-        return String.format("cfSend.complete(%s);", comm.labels.getFirst());
+        return String.format("""
+            try {
+                cfSend.put(%s);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        """, comm.labels.getFirst());
     }
 
     @Override
     public String generateRcv(Comm comm) {
-        return String.format("var %s = cfReceive.get();", comm.labels.getFirst());
+        return String.format("""
+            try{
+                var %s = cfReceive.take();
+            } catch (InterruptedException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            }
+        """, comm.labels.getFirst());
     }
 
     @Override
@@ -45,31 +61,35 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         setupLock.unlock();
         var serverName = "server_"+suffix;
         var imports = String.format("""
-                static CompletableFuture cfSend = new CompletableFuture<String>();
-        static CompletableFuture cfReceive = new CompletableFuture<String>();
+                static SynchronousQueue<String> cfSend = new SynchronousQueue<String>();
+        static SynchronousQueue<String> cfReceive = new SynchronousQueue<String>();
+        static %sImpl %s = new %sImpl(cfSend, cfReceive);
         static Server %s = ServerBuilder.forPort(%d)
-                .addService(new %sImpl(cfSend, cfReceive))
-                .build();""", serverName, port, serviceName);
+                .addService(%s)
+                .build();
+        static {
+            try {
+                %s.start();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        """, serviceName, minimize(serviceName), serviceName, serverName, port, minimize(serviceName), serverName);
 
         var header = String.format("""
                 package %s;
-                
-                import io.grpc.Server;
-                import io.grpc.ServerBuilder;
                 import io.grpc.stub.StreamObserver;
-                import java.util.concurrent.CompletableFuture;
+                import java.util.concurrent.SynchronousQueue;
                 import %s.%sGrpc;
-                import java.util.concurrent.CompletableFuture;
-                import java.util.concurrent.ExecutionException;
                 import %s.%s.Message;
-                import java.io.IOException;
                 """, packageName, packageName, serviceName, packageName, protoName);
         var classText = String.format("""
                 public class %sImpl extends %sGrpc.%sImplBase {
-                    public CompletableFuture<String> cfReceive;
-                    public CompletableFuture<String> cfSend;
+                    public SynchronousQueue<String> cfReceive;
+                    public SynchronousQueue<String> cfSend;
                 
-                    public %sImpl(CompletableFuture<String> cfSend, CompletableFuture<String> cfReceive){
+                    public %sImpl(SynchronousQueue<String> cfSend, SynchronousQueue<String> cfReceive){
                         this.cfSend = cfSend;
                         this.cfReceive = cfReceive;
                     }
@@ -77,20 +97,25 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
                     public void communicate(Message request, StreamObserver<Message> responseObserver) {
                         // Handle the request and send a response
                         String requestMessage = request.getMsg();
-                        cfReceive.complete(requestMessage);
+                        try {
+                            cfReceive.put(requestMessage);
+                        } catch (InterruptedException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
                         System.out.println("Received message: " + requestMessage);
                         
                         // Create a response message
                         String responseMessage;
                         try {
-                            responseMessage = cfSend.get();
+                            responseMessage = cfSend.take();
                             Message response = Message.newBuilder()
                                 .setMsg("Hello, " + responseMessage)
                                 .build();
                             // Send the response
                             responseObserver.onNext(response);
                             responseObserver.onCompleted();
-                        } catch (InterruptedException | ExecutionException e) {
+                        } catch (InterruptedException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
@@ -118,6 +143,7 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         i.addAll(List.of(
                 "import io.grpc.Server;",
                 "import io.grpc.ServerBuilder;",
+                "import java.io.IOException;",
                 String.format("import %s.%sImpl;", packageName, serviceName)));
         return i;
     }

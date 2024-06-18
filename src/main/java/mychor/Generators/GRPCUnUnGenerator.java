@@ -32,7 +32,7 @@ public abstract class GRPCUnUnGenerator implements Generator{
     @Override
     public ArrayList<String> generateMainImports() {
         return new ArrayList<>(List.of(
-                "import java.util.concurrent.CompletableFuture;"
+                "import java.util.concurrent.SynchronousQueue;"
                 ));
     }
 
