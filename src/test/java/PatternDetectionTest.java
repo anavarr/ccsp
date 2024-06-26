@@ -175,6 +175,15 @@ public class PatternDetectionTest extends ProgramReaderTest{
             var target = new Session("a","b", send2);
             assertFalse(template.supports(target));
         }
+
+        @Test
+        public void grpcStStShouldSupportRecursivePingPong() throws IOException {
+            var pd = new PatternDetector();
+            var grpcStStPattern = pd.getPattern("GRPC_st_st_server");
+            var recursivePingPong = testFile("recursive_request_response.sp").compilerCtx;
+            var serverSession = recursivePingPong.sessions.stream().filter(s -> s.peerA().equals("server")).toList().getFirst();
+            assertTrue(grpcStStPattern.supports(serverSession));
+        }
     }
 
 

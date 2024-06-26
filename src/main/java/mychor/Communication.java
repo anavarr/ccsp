@@ -304,14 +304,11 @@ public class Communication {
             }
             //then try recursive calls next nodes didn't give anything
             if(!oneCompatiblePath){
-                if(visitedRecursiveBranches.containsKey(this)){
-                    var recursiveIndex = visitedRecursiveBranches.get(this);
-
-                    for (Communication recursiveCommunicationNode : recursiveCallees) {
-                        if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
-                            oneCompatiblePath = true;
-                            break;
-                        }
+                var recursiveIndex = visitedRecursiveBranches.get(this);
+                for (Communication recursiveCommunicationNode : recursiveCallees) {
+                    if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
+                        oneCompatiblePath = true;
+                        break;
                     }
                 }
             }
@@ -329,9 +326,24 @@ public class Communication {
             //then try recursive calls next nodes didn't give anything
             if(!oneCompatiblePath){
                 for (Communication recursiveCommunicationNode : recursiveCallees) {
-                    if(recursiveCommunicationNode.supports(recursiveCallee)){
-                        oneCompatiblePath = true;
-                        break;
+                    if(visitedRecursiveBranches.containsKey(this)){
+                        var recursiveIndex = visitedRecursiveBranches.get(this);
+                        if(recursiveIndex < recursiveCallees.size()){
+                            visitedRecursiveBranches.put(this, recursiveIndex+1);
+                            if(recursiveCommunicationNode.supports(recursiveCallee)){
+                                oneCompatiblePath = true;
+                                break;
+                            }
+                        }else{
+                            oneCompatiblePath = true;
+                            break;
+                        }
+                    }else{
+                        visitedRecursiveBranches.put(this, 1);
+                        if(recursiveCommunicationNode.supports(recursiveCallee)){
+                            oneCompatiblePath = true;
+                            break;
+                        }
                     }
                 }
             }

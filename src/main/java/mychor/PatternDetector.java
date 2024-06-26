@@ -32,7 +32,6 @@ public class PatternDetector {
         try {
             JsonNode parent= new ObjectMapper().readTree(Files.readString(path));
             ArrayList<String> patternsString = new ArrayList<>();
-            ;
             MessagePatternLexer spl = null;
             parent.elements().forEachRemaining(node -> {
                 patternsString.add(node.get("name").asText()+'"'+node.get("pattern").asText()+'"');
@@ -54,6 +53,10 @@ public class PatternDetector {
     public PatternDetector(CompilerContext ctx){
         this();
         this.ctx = ctx;
+    }
+
+    public Session getPattern(String name){
+        return patterns.get(name);
     }
 
     public boolean testCompatibility(Session target, Session template){

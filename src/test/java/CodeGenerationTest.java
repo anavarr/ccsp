@@ -79,10 +79,10 @@ public class CodeGenerationTest extends ProgramReaderTest{
         assertTrue(generator.necessaryFrameworks.containsAll(List.of(
                 "GRPC_st_st_server",
                 "GRPC_st_st_client")));
-        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "client-server.proto")));
-        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "server-client.proto")));
         assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
         assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "GrpcService.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "GrpcService.proto")));
     }
 
     @Test
