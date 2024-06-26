@@ -1,5 +1,9 @@
+import mychor.Comm;
+import mychor.Communication;
 import mychor.PatternDetector;
 import mychor.Session;
+import mychor.Utils;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -15,6 +19,164 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PatternDetectionTest extends ProgramReaderTest{
     static Map<String, List<String>> threeBuyersCompatibilityList = new HashMap<>();
     static Map<String, List<String>> OAuth2FragmentCompatibilityList = new HashMap<>();
+
+//    ====== SUPPORTS
+
+    @Nested
+    public class SendSupportTestSimple{
+
+        @Test
+        public void sendShouldSupportsSend(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
+
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void sendShouldSupportsSelect(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.SELECT, "GET"));
+
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void selectShouldSupportsSend(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.SELECT, "GET"));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
+
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void sendShouldNotSupportsReceive(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            assertFalse(template.supports(target));
+        }
+        @Test
+        public void sendShouldNotSupportsBranch(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "left"));
+            assertFalse(template.supports(target));
+        }
+        @Test
+        public void selectShouldNotSupportsReceive(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.SELECT, "GET"));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            assertFalse(template.supports(target));
+        }
+        @Test
+        public void selectShouldNotSupportsBranch(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.SELECT, "left"));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "left"));
+            assertFalse(template.supports(target));
+        }
+    }
+
+    @Nested
+    public class ReceiveSupportTestSimple{
+
+        @Test
+        public void receiveShouldSupportsReceive(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void receiveShouldSupportsBranch(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "GET"));
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void branchShouldSupportsReceive(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "GET"));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void receiveShouldNotSupportsSend(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
+            assertFalse(template.supports(target));
+        }
+        @Test
+        public void receiveShouldNotSupportsSelect(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.SELECT, "left"));
+            assertFalse(template.supports(target));
+        }
+        @Test
+        public void branchShouldNotSupportsSend(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "GET"));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
+            assertFalse(template.supports(target));
+        }
+        @Test
+        public void branchShouldNotSupportsSelect(){
+            Session template = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "left"));
+            Session target = new Session("a", "b", new Communication(Utils.Direction.SELECT, "left"));
+            assertFalse(template.supports(target));
+        }
+    }
+
+    @Nested
+    public class TwoStepsCommunicationTest{
+        @Test
+        public void sendReceiveShouldSupportSendReceive(){
+            var template = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.RECEIVE)));
+            var target = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.RECEIVE)));
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void sendSendShouldSupportSendSend(){
+            var template = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.SEND)));
+            var target = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.SEND)));
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void receiveSendShouldSupportReceiveSend(){
+            var template = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.SEND)));
+            var target = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.SEND)));
+            assertTrue(template.supports(target));
+        }
+        @Test
+        public void receiveReceiveShouldSupportReceiveReceive(){
+            var template = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.RECEIVE)));
+            var target = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.RECEIVE)));
+            assertTrue(template.supports(target));
+        }
+    }
+
+    @Nested
+    public class RecursiveCommunicationsTest{
+        @Test
+        public void recursiveSendShouldSupportRecursiveSend(){
+            var send = new Communication(Utils.Direction.SEND);
+            send.addLeafCommunicationRoots((new ArrayList<>(List.of(send))));
+            var send2 = new Communication(Utils.Direction.SEND);
+            send2.addLeafCommunicationRoots((new ArrayList<>(List.of(send2))));
+            var template = new Session("a","b", send);
+            var target = new Session("a","b", send2);
+            assertTrue(template.supports(target));
+        }
+
+        @Test
+        public void starSendReceiveStarShouldNotSupportsSendStarReceiveStar(){
+            var send1 = new Communication(Utils.Direction.SEND);
+            var recv1 = new Communication(Utils.Direction.RECEIVE);
+            send1.addLeafCommunicationRoots(new ArrayList<>(List.of(recv1)));
+            recv1.addLeafCommunicationRoots((new ArrayList<>(List.of(send1))));
+
+            var send2 = new Communication(Utils.Direction.SEND);
+            var recv2 = new Communication(Utils.Direction.RECEIVE);
+            send2.addLeafCommunicationRoots((new ArrayList<>(List.of(recv2))));
+            recv2.addLeafCommunicationRoots((new ArrayList<>(List.of(recv2))));
+            var template = new Session("a","b", send1);
+            var target = new Session("a","b", send2);
+            assertFalse(template.supports(target));
+        }
+    }
+
 
     static{
         threeBuyersCompatibilityList.put("alice-store", List.of("GRPC_st_st_client", "ReactiveStreams_client"));

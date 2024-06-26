@@ -29,6 +29,11 @@ public class GRPCUnStServerGenerator extends GRPCUnUnGenerator {
     }
 
     @Override
+    public String generateVoid(Comm comm) {
+        return "";
+    }
+
+    @Override
     public String closeSession() {
         return "";
     }

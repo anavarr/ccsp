@@ -90,11 +90,12 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
         return String.format("""
         try {
             var %s = %s.get();
+            System.out.println(%s);
         } catch (InterruptedException | ExecutionException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        """, variableName, cfName);
+        """, variableName, cfName, variableName);
     }
 
     @Override
@@ -105,6 +106,11 @@ public class GRPCUnUnClientGenerator extends GRPCUnUnGenerator{
     @Override
     public String generateBranch(Comm comm) {
         return "";
+    }
+
+    @Override
+    public String generateVoid(Comm comm) {
+        return String.format("%s.shutdownNow();",channelName);
     }
 
     @Override

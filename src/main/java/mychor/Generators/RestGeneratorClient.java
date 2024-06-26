@@ -29,6 +29,11 @@ public class RestGeneratorClient implements Generator{
     }
 
     @Override
+    public String generateVoid(Comm comm) {
+        return "";
+    }
+
+    @Override
     public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
 //        if(framework.contains("_client")){
 //            var selectLabels = session.getLabels(Utils.Direction.SELECT);
@@ -54,7 +59,7 @@ public class RestGeneratorClient implements Generator{
 //        }else if(framework.contains("_server")){
 //
 //        }
-        return null;
+        return new ArrayList<>();
     }
 
     @Override

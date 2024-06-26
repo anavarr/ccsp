@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static mychor.Utils.minimize;
@@ -23,7 +24,7 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
     public String generateSend(Comm comm) {
         return String.format("""
             try {
-                cfSend.put(%s);
+                cfSend.put("%s");
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -54,13 +55,19 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
     }
 
     @Override
+    public String generateVoid(Comm comm) {
+        return "";
+    }
+
+    @Override
     public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
-        super.generateClass(service, applicationPath);
+        var superImports = super.generateClass(service, applicationPath);
         setupLock.lock();
         var suffix = generatorCounter;
         setupLock.unlock();
         var serverName = "server_"+suffix;
-        var imports = String.format("""
+        superImports.addAll(new ArrayList<>(
+                Arrays.stream(String.format("""
                 static SynchronousQueue<String> cfSend = new SynchronousQueue<String>();
         static SynchronousQueue<String> cfReceive = new SynchronousQueue<String>();
         static %sImpl %s = new %sImpl(cfSend, cfReceive);
@@ -75,7 +82,8 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
                 e.printStackTrace();
             }
         }
-        """, serviceName, minimize(serviceName), serviceName, serverName, port, minimize(serviceName), serverName);
+        """, serviceName, minimize(serviceName), serviceName, serverName, port, minimize(serviceName), serverName).split("\n")).toList()
+        ));
 
         var header = String.format("""
                 package %s;
@@ -126,7 +134,7 @@ public class GRPCUnUnServerGenerator extends GRPCUnUnGenerator {
         Files.write(Path.of(applicationPath,service,"src", "main", "java",
                         packageName, String.format("%sImpl.java", serviceName)),
                 (header+classText).getBytes());
-        return new ArrayList<>(List.of(imports.split("\n")));
+        return superImports;
     }
 
     @Override

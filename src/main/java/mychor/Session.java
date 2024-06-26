@@ -356,6 +356,9 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
             if(!(communicationsRoots.containsAll(comp.communicationsRoots)
                     && comp.communicationsRoots.containsAll(communicationsRoots))) return false;
         }
+        for (Communication communicationsRoot : communicationsRoots) {
+            communicationsRoot.resetVisitedRecursiveBranches();
+        }
         return true;
     }
 
@@ -367,7 +370,7 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
         if(communicationsRoots.isEmpty()){
             communicationsRoots.addAll(roots);
         }else{
-            communicationsRoots.get(0).addLeafCommunicationRoots(roots);
+            communicationsRoots.getFirst().addLeafCommunicationRoots(roots);
         }
     }
 
