@@ -32,9 +32,13 @@ public class GRPCStStServerGenerator implements Generator {
     }
 
     @Override
-    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
+    public String generateVoid(Comm comm) {
+        return "";
+    }
 
-        return null;
+    @Override
+    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
+        return new ArrayList<>();
     }
 
     @Override

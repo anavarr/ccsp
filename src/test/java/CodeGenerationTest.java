@@ -93,8 +93,8 @@ public class CodeGenerationTest extends ProgramReaderTest{
         assertTrue(generator.necessaryFrameworks.containsAll(List.of(
                 "GRPC_st_un_server",
                 "GRPC_st_un_client")));
-        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "client-server.proto")));
-        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "server-client.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "GrpcService.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "GrpcService.proto")));
         assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
         assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
     }
@@ -107,8 +107,8 @@ public class CodeGenerationTest extends ProgramReaderTest{
         assertTrue(generator.necessaryFrameworks.containsAll(List.of(
                 "GRPC_un_st_server",
                 "GRPC_un_st_client")));
-        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "client-server.proto")));
-        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "server-client.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "GrpcService.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "GrpcService.proto")));
         assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
         assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
     }
@@ -125,5 +125,20 @@ public class CodeGenerationTest extends ProgramReaderTest{
         assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "GrpcService.proto")));
         assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
         assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
+    }
+
+    @Test
+    public void finiteGRPC_un_unRecursive() throws IOException {
+        var ctx = testFile("finite_recursion.sp").compilerCtx;
+        var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_un_un_server","GRPC_un_un_client"));
+        generator.generateCode();
+        assertTrue(generator.necessaryFrameworks.containsAll(List.of(
+                "GRPC_un_un_server",
+                "GRPC_un_un_client")));
+        assertTrue(Files.exists(Path.of(path,name,"client","src", "main","proto", "GrpcService.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"server","src", "main","proto", "GrpcService.proto")));
+        assertTrue(Files.exists(Path.of(path,name,"client","pom.xml")));
+        assertTrue(Files.exists(Path.of(path,name,"server","pom.xml")));
+
     }
 }

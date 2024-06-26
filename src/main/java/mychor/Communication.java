@@ -140,8 +140,8 @@ public class Communication {
                 }
             }else{
                 visitedRecursiveBranches.put(this, 1);
-                if(!comp.recursiveCallees.contains(recursiveCallees.get(0))){
-                    return comp.nextCommunicationNodes.contains(recursiveCallees.get(0));
+                if(!comp.recursiveCallees.contains(recursiveCallees.getFirst())){
+                    return comp.nextCommunicationNodes.contains(recursiveCallees.getFirst());
                 }else{
                     return true;
                 }
@@ -168,6 +168,9 @@ public class Communication {
 
     public void resetVisitedRecursiveBranches(){
         visitedRecursiveBranches.clear();
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.resetVisitedRecursiveBranches();
+        }
     }
 
     public boolean isBranchingValid() {
@@ -180,7 +183,7 @@ public class Communication {
                 .allMatch(item -> item.direction == Utils.Direction.BRANCH);
         //else, branching is valid if all branches are the same
         var allSame = nextCommunicationNodes.stream()
-                .allMatch(item -> item.equals(nextCommunicationNodes.get(0)));
+                .allMatch(item -> item.equals(nextCommunicationNodes.getFirst()));
         if(!(allSelect || allBranch || allSame)) return false;
         return nextCommunicationNodes.stream().allMatch(Communication::isBranchingValid);
     }
@@ -278,13 +281,17 @@ public class Communication {
 
     public boolean supports(Communication targetNode) {
         if(direction == SEND && targetNode.direction != SEND  && targetNode.direction != SELECT) return false;
+        if(direction == SELECT && targetNode.direction != SEND  && targetNode.direction != SELECT) return false;
         if(direction == RECEIVE && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
+        if(direction == BRANCH && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
         if(direction == VOID && targetNode.direction != VOID) return false;
         boolean oneCompatiblePath;
         // If target node is in final state, we need to make sure the template can reach final state
         if(targetNode.isFinal() && !canBeFinal()) return false;
         // If template can only reach final state, need to make sure that node is final state
         if(isFinal()  && !targetNode.isFinal()) return false;
+
+
 
         for (Communication nextTargetCommunicationNode : targetNode.nextCommunicationNodes) {
             oneCompatiblePath = false;
@@ -297,8 +304,32 @@ public class Communication {
             }
             //then try recursive calls next nodes didn't give anything
             if(!oneCompatiblePath){
+                if(visitedRecursiveBranches.containsKey(this)){
+                    var recursiveIndex = visitedRecursiveBranches.get(this);
+
+                    for (Communication recursiveCommunicationNode : recursiveCallees) {
+                        if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
+                            oneCompatiblePath = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(!oneCompatiblePath) return false;
+        }
+        for (Communication recursiveCallee : targetNode.recursiveCallees) {
+            oneCompatiblePath = false;
+            //try next nodes first
+            for (Communication nextCommunicationNode : nextCommunicationNodes) {
+                if(nextCommunicationNode.supports(recursiveCallee)){
+                    oneCompatiblePath = true;
+                    break;
+                }
+            }
+            //then try recursive calls next nodes didn't give anything
+            if(!oneCompatiblePath){
                 for (Communication recursiveCommunicationNode : recursiveCallees) {
-                    if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
+                    if(recursiveCommunicationNode.supports(recursiveCallee)){
                         oneCompatiblePath = true;
                         break;
                     }

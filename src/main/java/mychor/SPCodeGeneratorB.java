@@ -228,6 +228,7 @@ public class SPCodeGeneratorB {
                     generationCtx.code.add("}");
                 }
                 if(cdt.nextBehaviours.containsKey("else")){
+                    generationCtx.code.add(String.format("else",cdt.expr));
                     generationCtx.code.add("{");
                     unfoldBehaviour(cdt.nextBehaviours.get("else"));
                     generationCtx.code.add("}");
@@ -250,6 +251,9 @@ public class SPCodeGeneratorB {
                 generateCom(comm);
             }
             case End end -> {
+//                for (String s : generationCtx.sessionsFrameworks.keySet()) {
+//                    generationCtx.sessionsFrameworks.get(s).gen
+//                }
             }
             case None none -> {
             }
@@ -276,6 +280,7 @@ public class SPCodeGeneratorB {
                 if(!comm.nextBehaviours.isEmpty()) unfoldBehaviour(comm.nextBehaviours.get(comm.labels.get(0)));
             }
             case VOID -> {
+                generationCtx.code.add(generator.generateVoid(comm));
             }
             default -> {
 
