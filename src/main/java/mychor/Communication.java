@@ -291,8 +291,6 @@ public class Communication {
         // If template can only reach final state, need to make sure that node is final state
         if(isFinal()  && !targetNode.isFinal()) return false;
 
-
-
         for (Communication nextTargetCommunicationNode : targetNode.nextCommunicationNodes) {
             oneCompatiblePath = false;
             //try next nodes first

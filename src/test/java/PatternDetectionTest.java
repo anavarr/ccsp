@@ -177,12 +177,99 @@ public class PatternDetectionTest extends ProgramReaderTest{
         }
 
         @Test
+        public void starSendStarShouldNotSupportStarSendStarVoid(){
+            var send1 = new Communication(Utils.Direction.SEND);
+            send1.addLeafCommunicationRoots(new ArrayList<>(List.of(send1, new Communication(Utils.Direction.VOID))));
+
+            var send2 = new Communication(Utils.Direction.SEND);
+            send2.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
+            assertTrue(send1.supports(send2));
+            assertFalse(send2.supports(send1));
+        }
+
+        @Test
         public void grpcStStShouldSupportRecursivePingPong() throws IOException {
             var pd = new PatternDetector();
-            var grpcStStPattern = pd.getPattern("GRPC_st_st_server");
+            var grpcStStServerPattern = pd.getPattern("GRPC_st_st_server");
+            var grpcStStClientPattern = pd.getPattern("GRPC_st_st_client");
             var recursivePingPong = testFile("recursive_request_response.sp").compilerCtx;
-            var serverSession = recursivePingPong.sessions.stream().filter(s -> s.peerA().equals("server")).toList().getFirst();
-            assertTrue(grpcStStPattern.supports(serverSession));
+            var serverSession = recursivePingPong.sessions.stream()
+                    .filter(s -> s.peerA().equals("server")).toList().getFirst();
+            var clientSession = recursivePingPong.sessions.stream()
+                    .filter(s -> s.peerA().equals("client")).toList().getFirst();
+            assertTrue(grpcStStServerPattern.supports(serverSession));
+            assertTrue(grpcStStClientPattern.supports(clientSession));
+        }
+
+        @Test
+        public void grpcStStShouldNotSupportServerFirstPingPong() throws IOException {
+            var pd = new PatternDetector();
+            var grpcStStServerPattern = pd.getPattern("GRPC_st_st_server");
+            var grpcStStClientPattern = pd.getPattern("GRPC_st_st_client");
+            var recursivePingPong = testFile("recursive_request_response.sp").compilerCtx;
+            var serverSession = recursivePingPong.sessions.stream()
+                    .filter(s -> s.peerA().equals("server")).toList().getFirst();
+            var clientSession = recursivePingPong.sessions.stream()
+                    .filter(s -> s.peerA().equals("client")).toList().getFirst();
+            assertFalse(grpcStStServerPattern.supports(clientSession));
+            assertFalse(grpcStStClientPattern.supports(serverSession));
+        }
+
+        @Test
+        public void recursiveShouldSuppor4Instance() {
+            var send1 = new Communication(Utils.Direction.SEND);
+            var rcv1 = new Communication(Utils.Direction.RECEIVE);
+            send1.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv1)));
+            rcv1.addLeafCommunicationRoots(new ArrayList<>(List.of(send1, new Communication(Utils.Direction.VOID))));
+
+            var send2 = new Communication(Utils.Direction.SEND,
+                    new Communication(Utils.Direction.RECEIVE,
+                            new Communication(Utils.Direction.SEND,
+                                    new Communication(Utils.Direction.RECEIVE,
+                                            new Communication(Utils.Direction.SEND,
+                                                    new Communication(Utils.Direction.RECEIVE,
+                                                            new Communication(Utils.Direction.SEND,
+                                                                    new Communication(Utils.Direction.RECEIVE))))))));
+            send2.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
+            assertTrue(send1.supports(send2));
+            assertFalse(send2.supports(send1));
+        }
+
+        @Test
+        public void recursiveShouldNotSupporFaulty5thInstance() {
+            var send1 = new Communication(Utils.Direction.SEND);
+            var rcv1 = new Communication(Utils.Direction.RECEIVE);
+            send1.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv1)));
+            rcv1.addLeafCommunicationRoots(new ArrayList<>(List.of(send1, new Communication(Utils.Direction.VOID))));
+
+            var send2 = new Communication(Utils.Direction.SEND,
+                    new Communication(Utils.Direction.RECEIVE,
+                            new Communication(Utils.Direction.SEND,
+                                    new Communication(Utils.Direction.RECEIVE,
+                                            new Communication(Utils.Direction.SEND,
+                                                    new Communication(Utils.Direction.RECEIVE,
+                                                            new Communication(Utils.Direction.SEND,
+                                                                    new Communication(Utils.Direction.SEND))))))));
+            assertFalse(send1.supports(send2));
+            assertFalse(send2.supports(send1));
+        }
+
+        @Test
+        public void test() {
+            var send1 = new Communication(Utils.Direction.SEND);
+            var rcv1 = new Communication(Utils.Direction.RECEIVE);
+            send1.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv1)));
+            rcv1.addLeafCommunicationRoots(new ArrayList<>(List.of(send1, new Communication(Utils.Direction.VOID))));
+
+            var send2 = new Communication(Utils.Direction.SEND,
+                    new Communication(Utils.Direction.RECEIVE,
+                            new Communication(Utils.Direction.SEND,
+                                    new Communication(Utils.Direction.RECEIVE,
+                                            new Communication(Utils.Direction.SEND,
+                                                    new Communication(Utils.Direction.RECEIVE))))));
+            send2.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
+            assertTrue(send1.supports(send2));
+            assertFalse(send2.supports(send1));
         }
     }
 
