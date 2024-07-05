@@ -285,67 +285,49 @@ public class Communication {
         if(direction == RECEIVE && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
         if(direction == BRANCH && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
         if(direction == VOID && targetNode.direction != VOID) return false;
-        boolean oneCompatiblePath;
         // If target node is in final state, we need to make sure the template can reach final state
         if(targetNode.isFinal() && !canBeFinal()) return false;
         // If template can only reach final state, need to make sure that node is final state
         if(isFinal()  && !targetNode.isFinal()) return false;
 
+
         for (Communication nextTargetCommunicationNode : targetNode.nextCommunicationNodes) {
-            oneCompatiblePath = false;
-            //try next nodes first
-            for (Communication nextCommunicationNode : nextCommunicationNodes) {
-                if(nextCommunicationNode.supports(nextTargetCommunicationNode)){
-                    oneCompatiblePath = true;
-                    break;
-                }
+            var supported = !nextCommunicationNodes.stream()
+                    .filter(node -> node.supports(nextTargetCommunicationNode)).toList().isEmpty();
+
+            if(!supported){
+                supported = !recursiveCallees.stream()
+                        .filter(node -> node.supports(nextTargetCommunicationNode)).toList().isEmpty();
             }
-            //then try recursive calls next nodes didn't give anything
-            if(!oneCompatiblePath){
-                var recursiveIndex = visitedRecursiveBranches.get(this);
-                for (Communication recursiveCommunicationNode : recursiveCallees) {
-                    if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
-                        oneCompatiblePath = true;
-                        break;
-                    }
-                }
-            }
-            if(!oneCompatiblePath) return false;
+            if(!supported) return false;
         }
         for (Communication recursiveCallee : targetNode.recursiveCallees) {
-            oneCompatiblePath = false;
-            //try next nodes first
-            for (Communication nextCommunicationNode : nextCommunicationNodes) {
-                if(nextCommunicationNode.supports(recursiveCallee)){
-                    oneCompatiblePath = true;
-                    break;
-                }
-            }
-            //then try recursive calls next nodes didn't give anything
-            if(!oneCompatiblePath){
+            var supported = !nextCommunicationNodes.stream()
+                    .filter(node -> node.supports(recursiveCallee)).toList().isEmpty();
+            if(!supported){
                 for (Communication recursiveCommunicationNode : recursiveCallees) {
                     if(visitedRecursiveBranches.containsKey(this)){
                         var recursiveIndex = visitedRecursiveBranches.get(this);
                         if(recursiveIndex < recursiveCallees.size()){
                             visitedRecursiveBranches.put(this, recursiveIndex+1);
                             if(recursiveCommunicationNode.supports(recursiveCallee)){
-                                oneCompatiblePath = true;
+                                supported = true;
                                 break;
                             }
                         }else{
-                            oneCompatiblePath = true;
+                            supported = true;
                             break;
                         }
                     }else{
                         visitedRecursiveBranches.put(this, 1);
                         if(recursiveCommunicationNode.supports(recursiveCallee)){
-                            oneCompatiblePath = true;
+                            supported = true;
                             break;
                         }
                     }
                 }
             }
-            if(!oneCompatiblePath) return false;
+            if(!supported) return false;
         }
         return true;
     }
