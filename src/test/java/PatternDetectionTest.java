@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static mychor.Utils.Direction.RECEIVE;
+import static mychor.Utils.Direction.SEND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -252,6 +254,35 @@ public class PatternDetectionTest extends ProgramReaderTest{
                                                                     new Communication(Utils.Direction.SEND))))))));
             assertFalse(send1.supports(send2));
             assertFalse(send2.supports(send1));
+        }
+
+        @Test
+        public void test2(){
+            var send11 = new Communication(Utils.Direction.SEND);
+            var rcv11 = new Communication(Utils.Direction.RECEIVE);
+            var send12 = new Communication(Utils.Direction.SEND);
+            send11.addLeafCommunicationRoots(new ArrayList<>(List.of(send11)));
+            send11.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv11)));
+            rcv11.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv11)));
+            send11.addLeafCommunicationRoots(new ArrayList<>(List.of(send12)));
+            send12.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv11)));
+
+            var send21 = new Communication(SEND);
+            var rcv21 = new Communication(RECEIVE);
+            var rcv22 = new Communication(RECEIVE);
+            var rcv23 = new Communication(RECEIVE);
+            var send22 = new Communication(SEND);
+            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(send21)));
+            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv21)));
+            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv22)));
+            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv23)));
+            rcv23.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv23)));
+            rcv23.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv22)));
+            rcv23.addLeafCommunicationRoots(new ArrayList<>(List.of(send21)));
+            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(send22)));
+            send22.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv22)));
+
+            assertTrue(send11.supports(send21));
         }
 
         @Test
