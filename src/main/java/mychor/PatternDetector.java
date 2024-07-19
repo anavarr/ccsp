@@ -1,14 +1,7 @@
 package mychor;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import mychor.Generators.GenerationConfig;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -18,6 +11,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static mychor.automata.PatternUtils.pattern2DFA;
 
 public class PatternDetector {
 
@@ -60,7 +55,7 @@ public class PatternDetector {
     }
 
     public boolean testCompatibility(Session target, Session template){
-        return template.supports(target);
+        return pattern2DFA(target).subsetOf(pattern2DFA(template));
     }
 
     public HashMap<Session, List<String>> detectCompatibleFrameworks() {

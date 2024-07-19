@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static mychor.automata.PatternUtils.pattern2DFA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -615,37 +616,37 @@ public class CommunicationTest {
         public void sendSupportsSelect(){
             var send = new Communication(Utils.Direction.SEND);
             var select = new Communication(Utils.Direction.SELECT, "GET");
-            assertTrue(send.supports(select));
+            assertTrue(pattern2DFA(select).subsetOf(pattern2DFA(send)));
         }
         @Test
         public void sendSupportsSend(){
             var send = new Communication(Utils.Direction.SEND);
             var send2 = new Communication(Utils.Direction.SEND);
-            assertTrue(send.supports(send2));
+            assertTrue(pattern2DFA(send2).subsetOf(pattern2DFA(send)));
         }
         @Test
         public void receiveSupportsReceive(){
             var rcv1 = new Communication(Utils.Direction.RECEIVE);
             var rcv2 = new Communication(Utils.Direction.RECEIVE);
-            assertTrue(rcv1.supports(rcv2));
+            assertTrue(pattern2DFA(rcv2).subsetOf(pattern2DFA(rcv1)));
         }
         @Test
         public void receiveSupportsBranch(){
             var rcv1 = new Communication(Utils.Direction.RECEIVE);
             var rcv2 = new Communication(Utils.Direction.BRANCH, "GET");
-            assertTrue(rcv1.supports(rcv2));
+            assertTrue(pattern2DFA(rcv2).subsetOf(pattern2DFA(rcv1)));
         }
         @Test
         public void sendDoesntSupportReceive(){
             var send = new Communication(Utils.Direction.SEND);
             var rcv = new Communication(Utils.Direction.RECEIVE);
-            assertFalse(send.supports(rcv));
+            assertFalse(pattern2DFA(rcv).subsetOf(pattern2DFA(send)));
         }
         @Test
         public void sendDoesntSupportBranch(){
             var send = new Communication(Utils.Direction.SEND);
             var brch = new Communication(Utils.Direction.BRANCH, "GET");
-            assertFalse(send.supports(brch));
+            assertFalse(pattern2DFA(brch).subsetOf(pattern2DFA(send)));
         }
         @Test
         public void voidSupportsOnlyVoid(){
@@ -655,18 +656,18 @@ public class CommunicationTest {
             var rcv = new Communication(Utils.Direction.RECEIVE);
             var select = new Communication(Utils.Direction.SELECT,"GET");
             var brch = new Communication(Utils.Direction.BRANCH, "GET");
-            assertFalse(v.supports(send));
-            assertFalse(v.supports(rcv));
-            assertFalse(v.supports(select));
-            assertFalse(v.supports(brch));
-            assertTrue(v.supports(v2));
+            assertFalse(pattern2DFA(send).subsetOf(pattern2DFA(v)));
+            assertFalse(pattern2DFA(rcv).subsetOf(pattern2DFA(v)));
+            assertFalse(pattern2DFA(select).subsetOf(pattern2DFA(v)));
+            assertFalse(pattern2DFA(brch).subsetOf(pattern2DFA(v)));
+            assertTrue(pattern2DFA(v2).subsetOf(pattern2DFA(v)));
         }
         @Test
         public void singleSendShouldNotSupportRecursiveSend(){
             var singleSend = new Communication(Utils.Direction.SEND);
             var recursiveSend = new Communication(Utils.Direction.SEND);
             recursiveSend.addLeafCommunicationRoots(new ArrayList<>(List.of(recursiveSend)));
-            assertFalse(singleSend.supports(recursiveSend));
+            assertFalse(pattern2DFA(recursiveSend).subsetOf(pattern2DFA(singleSend)));
         }
         @Test
         public void nonEmptyNonVoidNextNodesDoesntSupportEmpytNodes(){
@@ -674,7 +675,7 @@ public class CommunicationTest {
             var com2 = new Communication(Utils.Direction.SEND);
             var cChild = new Communication(Utils.Direction.RECEIVE);
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(cChild)));
-            assertFalse(com2.supports(com1));
+            assertFalse(pattern2DFA(com1).subsetOf(pattern2DFA(com2)));
         }
         @Test
         public void empytNodesDoesntSupportnonEmptyNonVoidNextNodes(){
@@ -682,7 +683,7 @@ public class CommunicationTest {
             var com2 = new Communication(Utils.Direction.SEND);
             var cChild = new Communication(Utils.Direction.RECEIVE);
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(cChild)));
-            assertFalse(com1.supports(com2));
+            assertFalse(pattern2DFA(com2).subsetOf(pattern2DFA(com1)));
         }
         @Test
         public void deepCommunicationsSupport(){
@@ -692,7 +693,7 @@ public class CommunicationTest {
             var com21 = new Communication(Utils.Direction.RECEIVE);
             com1.addLeafCommunicationRoots(new ArrayList<>(List.of(com11)));
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(com21)));
-            assertTrue(com1.supports(com2));
+            assertTrue(pattern2DFA(com2).subsetOf(pattern2DFA(com1)));
         }
         @Test
         public void deepCommunicationsNonSupport(){
@@ -702,7 +703,7 @@ public class CommunicationTest {
             var com21 = new Communication(Utils.Direction.SEND);
             com1.addLeafCommunicationRoots(new ArrayList<>(List.of(com11)));
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(com21)));
-            assertFalse(com1.supports(com2));
+            assertFalse(pattern2DFA(com2).subsetOf(pattern2DFA(com1)));
         }
         @Test
         public void recursiveSendShouldSupportsDoubleSend(){
@@ -714,7 +715,7 @@ public class CommunicationTest {
             var com2 = new Communication(Utils.Direction.SEND);
             var com21 = new Communication(Utils.Direction.SEND);
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(com21)));
-            assertTrue(com1.supports(com2));
+            assertTrue(pattern2DFA(com2).subsetOf(pattern2DFA(com1)));
         }
         @Test
         public void recursiveSendDoesntSupportsPresenceOfReceive(){
@@ -726,7 +727,7 @@ public class CommunicationTest {
             var com2 = new Communication(Utils.Direction.SEND,
                     new Communication(Utils.Direction.SEND,
                             new Communication(Utils.Direction.RECEIVE)));
-            assertFalse(com1.supports(com2));
+            assertFalse(pattern2DFA(com2).subsetOf(pattern2DFA(com1)));
         }
         @Test
         public void recursiveSendWithoutVoidEscapeDoesntSupportsDoubleSend(){
@@ -735,7 +736,7 @@ public class CommunicationTest {
             var com2 = new Communication(Utils.Direction.SEND);
             var com21 = new Communication(Utils.Direction.SEND);
             com2.addLeafCommunicationRoots(new ArrayList<>(List.of(com21)));
-            assertFalse(com1.supports(com2));
+            assertFalse(pattern2DFA(com2).subsetOf(pattern2DFA(com1)));
         }
     }
 }

@@ -14,6 +14,8 @@ import java.util.Map;
 
 import static mychor.Utils.Direction.RECEIVE;
 import static mychor.Utils.Direction.SEND;
+import static mychor.Utils.Direction.VOID;
+import static mychor.automata.PatternUtils.pattern2DFA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,45 +34,45 @@ public class PatternDetectionTest extends ProgramReaderTest{
             Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
             Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
 
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void sendShouldSupportsSelect(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
             Session target = new Session("a", "b", new Communication(Utils.Direction.SELECT, "GET"));
 
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void selectShouldSupportsSend(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.SELECT, "GET"));
             Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
 
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void sendShouldNotSupportsReceive(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
             Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void sendShouldNotSupportsBranch(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.SEND));
             Session target = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "left"));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void selectShouldNotSupportsReceive(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.SELECT, "GET"));
             Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void selectShouldNotSupportsBranch(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.SELECT, "left"));
             Session target = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "left"));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
     }
 
@@ -81,43 +83,43 @@ public class PatternDetectionTest extends ProgramReaderTest{
         public void receiveShouldSupportsReceive(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
             Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void receiveShouldSupportsBranch(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
             Session target = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "GET"));
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void branchShouldSupportsReceive(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "GET"));
             Session target = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void receiveShouldNotSupportsSend(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
             Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void receiveShouldNotSupportsSelect(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.RECEIVE));
             Session target = new Session("a", "b", new Communication(Utils.Direction.SELECT, "left"));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void branchShouldNotSupportsSend(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "GET"));
             Session target = new Session("a", "b", new Communication(Utils.Direction.SEND));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void branchShouldNotSupportsSelect(){
             Session template = new Session("a", "b", new Communication(Utils.Direction.BRANCH, "left"));
             Session target = new Session("a", "b", new Communication(Utils.Direction.SELECT, "left"));
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
     }
 
@@ -127,25 +129,25 @@ public class PatternDetectionTest extends ProgramReaderTest{
         public void sendReceiveShouldSupportSendReceive(){
             var template = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.RECEIVE)));
             var target = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.RECEIVE)));
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void sendSendShouldSupportSendSend(){
             var template = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.SEND)));
             var target = new Session("a","b", new Communication(Utils.Direction.SEND, new Communication(Utils.Direction.SEND)));
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void receiveSendShouldSupportReceiveSend(){
             var template = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.SEND)));
             var target = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.SEND)));
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
         @Test
         public void receiveReceiveShouldSupportReceiveReceive(){
             var template = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.RECEIVE)));
             var target = new Session("a","b", new Communication(Utils.Direction.RECEIVE, new Communication(Utils.Direction.RECEIVE)));
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
     }
 
@@ -154,12 +156,13 @@ public class PatternDetectionTest extends ProgramReaderTest{
         @Test
         public void recursiveSendShouldSupportRecursiveSend(){
             var send = new Communication(Utils.Direction.SEND);
-            send.addLeafCommunicationRoots((new ArrayList<>(List.of(send))));
+            send.addLeafCommunicationRoots((new ArrayList<>(List.of(send, new Communication(VOID)))));
             var send2 = new Communication(Utils.Direction.SEND);
-            send2.addLeafCommunicationRoots((new ArrayList<>(List.of(send2))));
+            send2.addLeafCommunicationRoots((new ArrayList<>(List.of(send2, new Communication(VOID)))));
             var template = new Session("a","b", send);
             var target = new Session("a","b", send2);
-            assertTrue(template.supports(target));
+            assertTrue(pattern2DFA(target).subsetOf(pattern2DFA(template)));
+            assertTrue(pattern2DFA(target).run("s"));
         }
 
         @Test
@@ -175,7 +178,7 @@ public class PatternDetectionTest extends ProgramReaderTest{
             recv2.addLeafCommunicationRoots((new ArrayList<>(List.of(recv2))));
             var template = new Session("a","b", send1);
             var target = new Session("a","b", send2);
-            assertFalse(template.supports(target));
+            assertFalse(pattern2DFA(target).subsetOf(pattern2DFA(template)));
         }
 
         @Test
@@ -185,8 +188,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
 
             var send2 = new Communication(Utils.Direction.SEND);
             send2.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
-            assertTrue(send1.supports(send2));
-            assertFalse(send2.supports(send1));
+            assertTrue(pattern2DFA(send2).subsetOf(pattern2DFA(send1)));
+            assertFalse(pattern2DFA(send1).subsetOf(pattern2DFA(send2)));
         }
 
         @Test
@@ -199,8 +202,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
                     .filter(s -> s.peerA().equals("server")).toList().getFirst();
             var clientSession = recursivePingPong.sessions.stream()
                     .filter(s -> s.peerA().equals("client")).toList().getFirst();
-            assertTrue(grpcStStServerPattern.supports(serverSession));
-            assertTrue(grpcStStClientPattern.supports(clientSession));
+            assertTrue(pattern2DFA(serverSession).subsetOf(pattern2DFA(grpcStStServerPattern)));
+            assertTrue(pattern2DFA(clientSession).subsetOf(pattern2DFA(grpcStStClientPattern)));
         }
 
         @Test
@@ -213,8 +216,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
                     .filter(s -> s.peerA().equals("server")).toList().getFirst();
             var clientSession = recursivePingPong.sessions.stream()
                     .filter(s -> s.peerA().equals("client")).toList().getFirst();
-            assertFalse(grpcStStServerPattern.supports(clientSession));
-            assertFalse(grpcStStClientPattern.supports(serverSession));
+            assertFalse(pattern2DFA(clientSession).subsetOf(pattern2DFA(grpcStStServerPattern)));
+            assertFalse(pattern2DFA(serverSession).subsetOf(pattern2DFA(grpcStStClientPattern)));
         }
 
         @Test
@@ -233,8 +236,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
                                                             new Communication(Utils.Direction.SEND,
                                                                     new Communication(Utils.Direction.RECEIVE))))))));
             send2.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
-            assertTrue(send1.supports(send2));
-            assertFalse(send2.supports(send1));
+            assertTrue(pattern2DFA(send2).subsetOf(pattern2DFA(send1)));
+            assertFalse(pattern2DFA(send1).subsetOf(pattern2DFA(send2)));
         }
 
         @Test
@@ -252,8 +255,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
                                                     new Communication(Utils.Direction.RECEIVE,
                                                             new Communication(Utils.Direction.SEND,
                                                                     new Communication(Utils.Direction.SEND))))))));
-            assertFalse(send1.supports(send2));
-            assertFalse(send2.supports(send1));
+            assertFalse(pattern2DFA(send2).subsetOf(pattern2DFA(send1)));
+            assertFalse(pattern2DFA(send1).subsetOf(pattern2DFA(send2)));
         }
 
         @Test
@@ -282,7 +285,7 @@ public class PatternDetectionTest extends ProgramReaderTest{
             send21.addLeafCommunicationRoots(new ArrayList<>(List.of(send22)));
             send22.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv22)));
 
-            assertTrue(send11.supports(send21));
+            assertTrue(pattern2DFA(send21).subsetOf(pattern2DFA(send11)));
         }
 
         @Test
@@ -299,8 +302,8 @@ public class PatternDetectionTest extends ProgramReaderTest{
                                             new Communication(Utils.Direction.SEND,
                                                     new Communication(Utils.Direction.RECEIVE))))));
             send2.addLeafCommunicationRoots(new ArrayList<>(List.of(send2)));
-            assertTrue(send1.supports(send2));
-            assertFalse(send2.supports(send1));
+            assertTrue(pattern2DFA(send2).subsetOf(pattern2DFA(send1)));
+            assertFalse(pattern2DFA(send1).subsetOf(pattern2DFA(send2)));
         }
     }
 
