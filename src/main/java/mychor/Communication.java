@@ -116,6 +116,7 @@ public class Communication {
 
     @Override
     public boolean equals(Object o){
+        if(this == o) return true;
         if (!(o instanceof Communication comp)) return false;
         if(!(direction == comp.direction && Objects.equals(label, comp.label))) return false;
         //handling recursive branches
@@ -381,5 +382,55 @@ public class Communication {
             recursiveCallersTo.addAll(nextNode.getRecursiveCallersTo(comm));
         }
         return recursiveCallersTo;
+    }
+
+    public void removeInPlace(Communication dummy) {
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.removeInPlace(dummy);
+        }
+        var wasHere = nextCommunicationNodes.remove(dummy);
+        if(wasHere){
+            nextCommunicationNodes.addAll(dummy.nextCommunicationNodes);
+            nextCommunicationNodes.addAll(dummy.getNextCommunicationNodes());
+            recursiveCallees.addAll(dummy.getRecursiveCallees());
+        }
+
+        wasHere = recursiveCallees.remove(dummy);
+        if(wasHere){
+            recursiveCallees.remove(dummy);
+            recursiveCallees.addAll(dummy.getNextCommunicationNodes());
+            recursiveCallees.addAll(dummy.getRecursiveCallees());
+        }
+    }
+
+    public void replace2(Communication toReplace, Communication replacer){
+        var wasHere = nextCommunicationNodes.remove(toReplace);
+        if(wasHere){
+            recursiveCallees.add(replacer);
+        }
+        wasHere = recursiveCallees.remove(toReplace);
+        if(wasHere) recursiveCallees.add(replacer);
+
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.replace2(toReplace, replacer);
+        }
+    }
+
+    public void replace(Communication toReplace, Communication replacer) {
+        var wasHere = nextCommunicationNodes.remove(toReplace);
+        if(wasHere){
+            if(nodeIsAbove(replacer)){
+                recursiveCallees.add(replacer);
+            }else if(nodeIsBelow(replacer)){
+                System.out.println("probel");
+            }else{
+                nextCommunicationNodes.add(replacer);
+            }
+        }
+        wasHere = recursiveCallees.remove(toReplace);
+        if(wasHere) recursiveCallees.add(replacer);
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.replace(toReplace, replacer);
+        }
     }
 }

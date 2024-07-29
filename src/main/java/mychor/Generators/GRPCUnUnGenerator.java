@@ -12,21 +12,9 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
-public abstract class GRPCUnUnGenerator implements Generator{
-    String serviceName;
-    String protoName;
-    Session session;
-    boolean alreadySetup = false;
-    String packageName = "grpc";
-    static long generatorCounter = 0;
-    static ReentrantLock setupLock = new ReentrantLock();
-    static ReentrantLock messageLock = new ReentrantLock();
-    ArrayBlockingQueue<Long> counterQueue = new ArrayBlockingQueue<>(100);
-
+public abstract class GRPCUnUnGenerator extends GRPCGenerator {
     public GRPCUnUnGenerator(Session serviceSession) {
-        session = serviceSession;
-        protoName = "GrpcService";
-        serviceName = "GRPCService";
+        super(serviceSession);
     }
 
     @Override
@@ -38,19 +26,6 @@ public abstract class GRPCUnUnGenerator implements Generator{
 
     @Override
     public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
-        var proto = String.format("""
-                syntax = "proto3";
-                package grpc;
-                message Message {
-                  string msg = 1;
-                }
-                service %s {
-                  rpc Communicate(Message) returns (Message);
-                }""", serviceName);
-        Files.createDirectories(Paths.get(applicationPath,service, "src", "main", "proto"));
-        Files.write(Path.of(
-                        applicationPath,service, "src", "main", "proto",protoName+".proto"),
-                proto.getBytes());
-        return new ArrayList<>();
+        return super.generateClass(service, applicationPath, "rpc Communicate(Message) returns (Message);");
     }
 }

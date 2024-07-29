@@ -2,11 +2,13 @@ package mychor.automata;
 import dk.brics.automaton.Automaton;
 import dk.brics.automaton.State;
 import dk.brics.automaton.Transition;
+import mychor.Comm;
 import mychor.Communication;
 import mychor.Session;
 
 import mychor.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class PatternUtils {
@@ -24,13 +26,20 @@ public class PatternUtils {
     public static Automaton pattern2DFA(Session s){
         communicationStatesRepo = new HashMap<>();
         State startState = new State();
-        for (Communication communicationsRoot : s.communicationsRoots()) {
-            var state = traverseIt(communicationsRoot);
-            if(state.isAccept()) {
-                startState.setAccept(true);
-            }
-            for (Transition transition : state.getTransitions()) {
-                startState.addTransition(transition);
+        ArrayList<Communication> toDo = new ArrayList<>(s.communicationsRoots());
+        while (!toDo.isEmpty()) {
+            for (Communication communicationsRoot : s.communicationsRoots()) {
+                var state = traverseIt(communicationsRoot);
+                if(state == null){
+                    continue;
+                }
+                toDo.remove(communicationsRoot);
+                if(state.isAccept()) {
+                    startState.setAccept(true);
+                }
+                for (Transition transition : state.getTransitions()) {
+                    startState.addTransition(transition);
+                }
             }
         }
         var auto = new Automaton();
@@ -69,7 +78,11 @@ public class PatternUtils {
             if(allRecursiveCallsAreFinalStates){
                 s1.setAccept(true);
             }
-            s1.addTransition(new Transition(getCommunicationChar(c), communicationStatesRepo.get(recursiveCallee)));
+            if(communicationStatesRepo.containsKey(recursiveCallee)){
+                s1.addTransition(new Transition(getCommunicationChar(c), communicationStatesRepo.get(recursiveCallee)));
+            }else{
+                return null;
+            }
         }
         return s1;
     }
