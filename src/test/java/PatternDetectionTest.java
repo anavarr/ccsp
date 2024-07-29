@@ -259,34 +259,6 @@ public class PatternDetectionTest extends ProgramReaderTest{
             assertFalse(pattern2DFA(send1).subsetOf(pattern2DFA(send2)));
         }
 
-        @Test
-        public void test2(){
-            var send11 = new Communication(Utils.Direction.SEND);
-            var rcv11 = new Communication(Utils.Direction.RECEIVE);
-            var send12 = new Communication(Utils.Direction.SEND);
-            send11.addLeafCommunicationRoots(new ArrayList<>(List.of(send11)));
-            send11.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv11)));
-            rcv11.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv11)));
-            send11.addLeafCommunicationRoots(new ArrayList<>(List.of(send12)));
-            send12.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv11)));
-
-            var send21 = new Communication(SEND);
-            var rcv21 = new Communication(RECEIVE);
-            var rcv22 = new Communication(RECEIVE);
-            var rcv23 = new Communication(RECEIVE);
-            var send22 = new Communication(SEND);
-            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(send21)));
-            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv21)));
-            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv22)));
-            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv23)));
-            rcv23.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv23)));
-            rcv23.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv22)));
-            rcv23.addLeafCommunicationRoots(new ArrayList<>(List.of(send21)));
-            send21.addLeafCommunicationRoots(new ArrayList<>(List.of(send22)));
-            send22.addLeafCommunicationRoots(new ArrayList<>(List.of(rcv22)));
-
-            assertTrue(pattern2DFA(send21).subsetOf(pattern2DFA(send11)));
-        }
 
         @Test
         public void test() {

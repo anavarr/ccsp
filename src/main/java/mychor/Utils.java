@@ -8,7 +8,8 @@ public class Utils {
         RECEIVE,
         SELECT,
         BRANCH,
-        VOID
+        VOID,
+        DUMMY
     }
 
     public static String capitalize(String str){

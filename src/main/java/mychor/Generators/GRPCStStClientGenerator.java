@@ -5,10 +5,10 @@ import mychor.Session;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
-public class GRPCStStClientGenerator implements Generator {
+public class GRPCStStClientGenerator extends GRPCStStGenerator {
     public GRPCStStClientGenerator(Session serviceSession) {
+        super(serviceSession);
     }
 
     @Override
@@ -34,11 +34,6 @@ public class GRPCStStClientGenerator implements Generator {
     @Override
     public String generateVoid(Comm comm) {
         return "";
-    }
-
-    @Override
-    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
-        return new ArrayList<>();
     }
 
     @Override

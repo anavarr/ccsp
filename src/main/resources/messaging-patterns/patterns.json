@@ -202,7 +202,8 @@
           ]
         }
       },
-      "class": ""
+      "class": "",
+      "generator" : "GeneratorStStClient"
     },
     "server" : {
       "needsClass": true,
@@ -221,7 +222,8 @@
           ]
         }
       },
-      "class": ""
+      "class": "",
+      "generator" : "GeneratorStStServer"
     }
   }
 ]

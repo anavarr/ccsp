@@ -87,7 +87,7 @@ public class CodeGenerationTest extends ProgramReaderTest{
 
     @Test
     public void basicGRPC_st_unShouldCreateProtoFilesAndServerAndClient() throws IOException {
-        var ctx = testFile("recursive_request_response.sp").compilerCtx;
+        var ctx = testFile("server_request_one_response.sp").compilerCtx;
         var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_st_un_server","GRPC_st_un_client"));
         generator.generateCode();
         assertTrue(generator.necessaryFrameworks.containsAll(List.of(
@@ -101,7 +101,7 @@ public class CodeGenerationTest extends ProgramReaderTest{
 
     @Test
     public void basicGRPC_un_stShouldCreateProtoFilesAndServerAndClient() throws IOException {
-        var ctx = testFile("recursive_request_response.sp").compilerCtx;
+        var ctx = testFile("request_several_response.sp").compilerCtx;
         var generator = new SPCodeGeneratorB(ctx, path, name, List.of("GRPC_un_st_server","GRPC_un_st_client"));
         generator.generateCode();
         assertTrue(generator.necessaryFrameworks.containsAll(List.of(

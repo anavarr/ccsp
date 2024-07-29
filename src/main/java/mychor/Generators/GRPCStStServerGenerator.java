@@ -7,8 +7,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GRPCStStServerGenerator implements Generator {
+public class GRPCStStServerGenerator extends GRPCStStGenerator {
     public GRPCStStServerGenerator(Session serviceSession) {
+        super(serviceSession);
     }
 
     @Override
@@ -34,11 +35,6 @@ public class GRPCStStServerGenerator implements Generator {
     @Override
     public String generateVoid(Comm comm) {
         return "";
-    }
-
-    @Override
-    public ArrayList<String> generateClass(String service, String applicationPath) throws IOException {
-        return new ArrayList<>();
     }
 
     @Override

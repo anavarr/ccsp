@@ -4,7 +4,6 @@ import mychor.Comm;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 
 public interface Generator {
     String generateSend(Comm comm);

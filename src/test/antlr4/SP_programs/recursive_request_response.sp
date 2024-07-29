@@ -11,9 +11,13 @@ client [
 Server :
     client?req @?"";
     client!response @!"";
-    Call Server
+    If check(x)
+    Then Call Server
+    Else End
 
 Client :
     server! request@!"";
     server? response@?"";
-    Call Client
+    If check(x)
+    Then Call Client
+    Else End
