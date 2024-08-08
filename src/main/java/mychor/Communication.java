@@ -116,6 +116,7 @@ public class Communication {
 
     @Override
     public boolean equals(Object o){
+        if(this == o) return true;
         if (!(o instanceof Communication comp)) return false;
         if(!(direction == comp.direction && Objects.equals(label, comp.label))) return false;
         //handling recursive branches
@@ -140,8 +141,8 @@ public class Communication {
                 }
             }else{
                 visitedRecursiveBranches.put(this, 1);
-                if(!comp.recursiveCallees.contains(recursiveCallees.get(0))){
-                    return comp.nextCommunicationNodes.contains(recursiveCallees.get(0));
+                if(!comp.recursiveCallees.contains(recursiveCallees.getFirst())){
+                    return comp.nextCommunicationNodes.contains(recursiveCallees.getFirst());
                 }else{
                     return true;
                 }
@@ -168,6 +169,9 @@ public class Communication {
 
     public void resetVisitedRecursiveBranches(){
         visitedRecursiveBranches.clear();
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.resetVisitedRecursiveBranches();
+        }
     }
 
     public boolean isBranchingValid() {
@@ -180,7 +184,7 @@ public class Communication {
                 .allMatch(item -> item.direction == Utils.Direction.BRANCH);
         //else, branching is valid if all branches are the same
         var allSame = nextCommunicationNodes.stream()
-                .allMatch(item -> item.equals(nextCommunicationNodes.get(0)));
+                .allMatch(item -> item.equals(nextCommunicationNodes.getFirst()));
         if(!(allSelect || allBranch || allSame)) return false;
         return nextCommunicationNodes.stream().allMatch(Communication::isBranchingValid);
     }
@@ -278,33 +282,53 @@ public class Communication {
 
     public boolean supports(Communication targetNode) {
         if(direction == SEND && targetNode.direction != SEND  && targetNode.direction != SELECT) return false;
+        if(direction == SELECT && targetNode.direction != SEND  && targetNode.direction != SELECT) return false;
         if(direction == RECEIVE && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
+        if(direction == BRANCH && targetNode.direction != RECEIVE && targetNode.direction != BRANCH) return false;
         if(direction == VOID && targetNode.direction != VOID) return false;
-        boolean oneCompatiblePath;
         // If target node is in final state, we need to make sure the template can reach final state
         if(targetNode.isFinal() && !canBeFinal()) return false;
         // If template can only reach final state, need to make sure that node is final state
         if(isFinal()  && !targetNode.isFinal()) return false;
 
+
         for (Communication nextTargetCommunicationNode : targetNode.nextCommunicationNodes) {
-            oneCompatiblePath = false;
-            //try next nodes first
-            for (Communication nextCommunicationNode : nextCommunicationNodes) {
-                if(nextCommunicationNode.supports(nextTargetCommunicationNode)){
-                    oneCompatiblePath = true;
-                    break;
-                }
+            var supported = !nextCommunicationNodes.stream()
+                    .filter(node -> node.supports(nextTargetCommunicationNode)).toList().isEmpty();
+
+            if(!supported){
+                supported = !recursiveCallees.stream()
+                        .filter(node -> node.supports(nextTargetCommunicationNode)).toList().isEmpty();
             }
-            //then try recursive calls next nodes didn't give anything
-            if(!oneCompatiblePath){
+            if(!supported) return false;
+        }
+        for (Communication recursiveCallee : targetNode.recursiveCallees) {
+            var supported = !nextCommunicationNodes.stream()
+                    .filter(node -> node.supports(recursiveCallee)).toList().isEmpty();
+            if(!supported){
                 for (Communication recursiveCommunicationNode : recursiveCallees) {
-                    if(recursiveCommunicationNode.supports(nextTargetCommunicationNode)){
-                        oneCompatiblePath = true;
-                        break;
+                    if(visitedRecursiveBranches.containsKey(this)){
+                        var recursiveIndex = visitedRecursiveBranches.get(this);
+                        if(recursiveIndex < recursiveCallees.size()){
+                            visitedRecursiveBranches.put(this, recursiveIndex+1);
+                            if(recursiveCommunicationNode.supports(recursiveCallee)){
+                                supported = true;
+                                break;
+                            }
+                        }else{
+                            supported = true;
+                            break;
+                        }
+                    }else{
+                        visitedRecursiveBranches.put(this, 1);
+                        if(recursiveCommunicationNode.supports(recursiveCallee)){
+                            supported = true;
+                            break;
+                        }
                     }
                 }
             }
-            if(!oneCompatiblePath) return false;
+            if(!supported) return false;
         }
         return true;
     }
@@ -358,5 +382,55 @@ public class Communication {
             recursiveCallersTo.addAll(nextNode.getRecursiveCallersTo(comm));
         }
         return recursiveCallersTo;
+    }
+
+    public void removeInPlace(Communication dummy) {
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.removeInPlace(dummy);
+        }
+        var wasHere = nextCommunicationNodes.remove(dummy);
+        if(wasHere){
+            nextCommunicationNodes.addAll(dummy.nextCommunicationNodes);
+            nextCommunicationNodes.addAll(dummy.getNextCommunicationNodes());
+            recursiveCallees.addAll(dummy.getRecursiveCallees());
+        }
+
+        wasHere = recursiveCallees.remove(dummy);
+        if(wasHere){
+            recursiveCallees.remove(dummy);
+            recursiveCallees.addAll(dummy.getNextCommunicationNodes());
+            recursiveCallees.addAll(dummy.getRecursiveCallees());
+        }
+    }
+
+    public void replace2(Communication toReplace, Communication replacer){
+        var wasHere = nextCommunicationNodes.remove(toReplace);
+        if(wasHere){
+            recursiveCallees.add(replacer);
+        }
+        wasHere = recursiveCallees.remove(toReplace);
+        if(wasHere) recursiveCallees.add(replacer);
+
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.replace2(toReplace, replacer);
+        }
+    }
+
+    public void replace(Communication toReplace, Communication replacer) {
+        var wasHere = nextCommunicationNodes.remove(toReplace);
+        if(wasHere){
+            if(nodeIsAbove(replacer)){
+                recursiveCallees.add(replacer);
+            }else if(nodeIsBelow(replacer)){
+                System.out.println("probel");
+            }else{
+                nextCommunicationNodes.add(replacer);
+            }
+        }
+        wasHere = recursiveCallees.remove(toReplace);
+        if(wasHere) recursiveCallees.add(replacer);
+        for (Communication nextCommunicationNode : nextCommunicationNodes) {
+            nextCommunicationNode.replace(toReplace, replacer);
+        }
     }
 }

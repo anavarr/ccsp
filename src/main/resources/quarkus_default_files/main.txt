@@ -1,0 +1,21 @@
+import io.quarkus.runtime.Quarkus;
+import io.quarkus.runtime.QuarkusApplication;
+import io.quarkus.runtime.annotations.QuarkusMain;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServer;
+import io.vertx.ext.web.Router;
+import org.eclipse.microprofile.config.ConfigProvider;
+
+
+@QuarkusMain
+public class Main implements QuarkusApplication {
+
+    public static void main(String... args) {
+        Quarkus.run(Main.class, args);
+    }
+
+    @Override
+    public int run(String... args) {
+        return 0;
+    }
+}

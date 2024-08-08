@@ -9,6 +9,7 @@ import javax.sql.CommonDataSource;
 import java.util.ArrayList;
 import java.util.List;
 
+import static mychor.automata.PatternUtils.pattern2DFA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -646,10 +647,10 @@ public class SessionTest {
                                     new Communication(Utils.Direction.SEND))));
             Session sFalse = new Session("server", "client",
                     new Communication(Utils.Direction.RECEIVE));
-            assertTrue(longSession.supports(s1));
-            assertTrue(longSession.supports(s2));
-            assertTrue(longSession.supports(s3));
-            assertFalse(longSession.supports(sFalse));
+            assertTrue(pattern2DFA(s1).subsetOf(pattern2DFA(longSession)));
+            assertTrue(pattern2DFA(s2).subsetOf(pattern2DFA(longSession)));
+            assertTrue(pattern2DFA(s3).subsetOf(pattern2DFA(longSession)));
+            assertFalse(pattern2DFA(sFalse).subsetOf(pattern2DFA(longSession)));
         }
     }
 

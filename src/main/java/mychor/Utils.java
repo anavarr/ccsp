@@ -8,7 +8,15 @@ public class Utils {
         RECEIVE,
         SELECT,
         BRANCH,
-        VOID
+        VOID,
+        DUMMY
+    }
+
+    public static String capitalize(String str){
+        return str.substring(0,1).toUpperCase()+str.substring(1);
+    }
+    public static String minimize(String str){
+        return str.substring(0,1).toLowerCase()+str.substring(1);
     }
 
     static String ERROR_RECVAR_ADD(String key, String boundProcess, String newProcess, ParserRuleContext ctx){
@@ -21,7 +29,7 @@ public class Utils {
 
     static String ERROR_RECVAR_UNKNOWN(String vname, ParserRuleContext ctx){
         return ERROR_DEFAULT(String.format(
-                "No recursive variable with the name %s exists",
+                "No recursive variable with the serviceName %s exists",
                 vname
         ), ctx);
     }

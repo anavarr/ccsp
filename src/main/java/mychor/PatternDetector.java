@@ -1,13 +1,18 @@
 package mychor;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static mychor.automata.PatternUtils.pattern2DFA;
 
 public class PatternDetector {
 
@@ -15,22 +20,29 @@ public class PatternDetector {
 
     HashMap<String, Session> patterns = new HashMap<>();
 
+    List<String> patternTemplates;
 
-    public PatternDetector(){
-        var path = Path.of("src", "main", "messaging-patterns", "all_patterns.txt");
-        MessagePatternLexer spl = null;
+    public PatternDetector() {
+        var path = Path.of("src", "main","resources", "messaging-patterns", "patterns.json");
         try {
-            spl = new MessagePatternLexer(CharStreams.fromPath(path));
+            JsonNode parent= new ObjectMapper().readTree(Files.readString(path));
+            ArrayList<String> patternsString = new ArrayList<>();
+            MessagePatternLexer spl = null;
+            parent.elements().forEachRemaining(node -> {
+                patternsString.add(node.get("name").asText()+'"'+node.get("pattern").asText()+'"');
+            });
+            spl = new MessagePatternLexer(CharStreams.fromString(String.join("\n", patternsString)));
+            var spp = new MessagePatternParser(new CommonTokenStream(spl));
+            var mpm = new MessagePatternMaker();
+            spp.pattern().accept(mpm);
+            patterns = mpm.getSessionsMap();
+            for (Session session : patterns.values()) {
+                session.cleanVoid();
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        var spp = new MessagePatternParser(new CommonTokenStream(spl));
-        var mpm = new MessagePatternMaker();
-        spp.pattern().accept(mpm);
-        patterns = mpm.getSessionsMap();
-        for (Session session : patterns.values()) {
-            session.cleanVoid();
-        }
+
     }
 
     public PatternDetector(CompilerContext ctx){
@@ -38,8 +50,12 @@ public class PatternDetector {
         this.ctx = ctx;
     }
 
+    public Session getPattern(String name){
+        return patterns.get(name);
+    }
+
     public boolean testCompatibility(Session target, Session template){
-        return template.supports(target);
+        return pattern2DFA(target).subsetOf(pattern2DFA(template));
     }
 
     public HashMap<Session, List<String>> detectCompatibleFrameworks() {
