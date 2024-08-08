@@ -42,6 +42,6 @@ public class GRPCStUnClientGenerator extends GRPCStUnGenerator {
 
     @Override
     public ArrayList<String> generateMainImports() {
-        return null;
+        return new ArrayList<>();
     }
 }

@@ -3,7 +3,7 @@ package mychor.Generators;
 import mychor.Comm;
 import mychor.Session;
 
-public class GRPCUnStClientGenerator extends GRPCUnUnGenerator {
+public class GRPCUnStClientGenerator extends GRPCUnStGenerator {
     public GRPCUnStClientGenerator(Session serviceSession) {
         super(serviceSession);
     }
