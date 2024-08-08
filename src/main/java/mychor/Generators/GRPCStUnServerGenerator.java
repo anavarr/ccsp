@@ -3,7 +3,9 @@ package mychor.Generators;
 import mychor.Comm;
 import mychor.Session;
 
-public class GRPCStUnServerGenerator extends GRPCUnUnGenerator {
+import java.util.ArrayList;
+
+public class GRPCStUnServerGenerator extends GRPCStUnGenerator {
     public GRPCStUnServerGenerator(Session serviceSession) {
         super(serviceSession);
     }
@@ -36,5 +38,10 @@ public class GRPCStUnServerGenerator extends GRPCUnUnGenerator {
     @Override
     public String closeSession() {
         return "";
+    }
+
+    @Override
+    public ArrayList<String> generateMainImports() {
+        return new ArrayList<>();
     }
 }
