@@ -103,7 +103,6 @@ public record Session(String peerA, String peerB, ArrayList<Communication> commu
                 processCdt(ctx, cdt);
             }
             case End end -> {
-
             }
             case None none -> {
 

@@ -10,8 +10,12 @@ public class GenerationContext{
     public ArrayList<String> staticInit = new ArrayList<>();
     public HashMap<String, Generator> generators = new HashMap<>();
     public ArrayList<String> imports = new ArrayList<>();
+    public String lastVariable = null;
+    public String service;
 
     public GenerationContext(){}
+
+    public GenerationContext(String service){this.service = service;}
 
     public GenerationContext(GenerationContext gc){
         code.addAll(gc.code);
@@ -20,5 +24,6 @@ public class GenerationContext{
         generators.putAll(gc.generators);
         imports.addAll(gc.imports);
         staticInit.addAll(gc.staticInit);
+        service = gc.service;
     }
 }

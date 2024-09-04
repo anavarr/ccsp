@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static mychor.Generators.GenerationConfig.localizedFrameworkSettingList;
+import static mychor.Utils.Direction.VOID;
 import static mychor.Utils.minimize;
 
 public class SPCodeGeneratorB {
@@ -127,7 +128,7 @@ public class SPCodeGeneratorB {
         HashMap<Session, String> necessaryFrameworks = pickRandomCompatibleFramework(cf);
         this.necessaryFrameworks = new ArrayList<>(necessaryFrameworks.values());
         for (String service : ctx.behaviours.keySet()) {
-            generationCtx = new GenerationContext();
+            generationCtx = new GenerationContext(service);
             //serviceSessions filters sessions to keep only those where this service is the source
             var serviceSessions = necessaryFrameworks.keySet().stream()
                     .filter(se -> se.peerA().equals(service)).toList();
@@ -242,18 +243,27 @@ public class SPCodeGeneratorB {
                     generationCtx.code = new ArrayList<>();
                 }
                 if(!generationCtx.functions.containsKey(call.variableName) && !call.nextBehaviours.isEmpty()){
+                    if(generationCtx.lastVariable != null){
+                        generationCtx.functions.put(generationCtx.lastVariable, generationCtx.code);
+                    }
+                    generationCtx.lastVariable = vname;
                     generationCtx.code = new ArrayList<>();
                     unfoldBehaviour(call.nextBehaviours.get("unfold"));
-                    generationCtx.functions.put(vname, generationCtx.code);
+                    if(!generationCtx.functions.containsKey(vname)){
+                        generationCtx.functions.put(vname, generationCtx.code);
+                    }
                 }
             }
             case Comm comm -> {
                 generateCom(comm);
             }
             case End end -> {
-//                for (String s : generationCtx.sessionsFrameworks.keySet()) {
-//                    generationCtx.sessionsFrameworks.get(s).gen
-//                }
+                var destinations = ctx.sessions.stream().filter(s -> s.peerA().equals(generationCtx.service)).map(Session::peerB).toList();
+                for (String destination : destinations) {
+                    var comm = new Comm(generationCtx.service, destination, VOID, "");
+                    generationCtx.code.add(generationCtx.generators.get(destination).generateVoid(comm));
+                }
+
             }
             case None none -> {
             }
@@ -274,12 +284,16 @@ public class SPCodeGeneratorB {
             }
             case BRANCH -> {
                 generationCtx.code.add(generator.generateBranch(comm));
+                for (String s : comm.nextBehaviours.keySet()) {
+                    unfoldBehaviour(comm.nextBehaviours.get(s));
+                }
             }
             case SELECT -> {
                 generationCtx.code.add(generator.generateSelect(comm));
                 if(!comm.nextBehaviours.isEmpty()) unfoldBehaviour(comm.nextBehaviours.get(comm.labels.get(0)));
             }
             case VOID -> {
+                System.out.println("generating void");
                 generationCtx.code.add(generator.generateVoid(comm));
             }
             default -> {
