@@ -14,5 +14,7 @@ public interface Generator {
     ArrayList<String> generateClass(String service, String applicationPath) throws IOException;
     String closeSession();
 
-    ArrayList<String> generateMainImports();
+    default ArrayList<String> generateMainImports() {
+        return null;
+    }
 }
