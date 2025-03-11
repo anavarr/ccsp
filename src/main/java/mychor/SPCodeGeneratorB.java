@@ -283,10 +283,10 @@ public class SPCodeGeneratorB {
                 if(!comm.nextBehaviours.isEmpty()) unfoldBehaviour(comm.nextBehaviours.get(";"));
             }
             case BRANCH -> {
-                generationCtx.code.add(generator.generateBranch(comm));
                 for (String s : comm.nextBehaviours.keySet()) {
                     unfoldBehaviour(comm.nextBehaviours.get(s));
                 }
+                generationCtx.code.add(generator.generateBranch(comm));
             }
             case SELECT -> {
                 generationCtx.code.add(generator.generateSelect(comm));

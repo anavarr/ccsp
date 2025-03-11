@@ -1,0 +1,92 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Full project" type="JUnit" factoryName="JUnit">
+    <module name="ccsp" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="mychor.MessagePatternLexer" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.SPlexer" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.MessagePatternParser" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.SPparserRich" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.MessagePatternBaseVisitor" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.MessagePatternVisitor" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.SPparserRichBaseVisitor" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.SPparserRichVisitor" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.MessagePatternBaseListener" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.MessagePatternListener" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.SPparserRichBaseListener" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="mychor.SPparserRichListener" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+      <pattern>
+        <option name="PATTERN" value="Main" />
+        <option name="ENABLED" value="true" />
+        <option name="INCLUDE" value="false" />
+      </pattern>
+    </extension>
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="ALTERNATIVE_JRE_PATH" value="$USER_HOME$/.sdkman/candidates/java/21.0.2-open" />
+    <option name="MAIN_CLASS_NAME" value="" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="pattern" />
+    <patterns>
+      <pattern testClass="BehaviourTest" />
+      <pattern testClass="CommunicationTest" />
+      <pattern testClass="ExecutionsTest" />
+      <pattern testClass="MessagePatternParsingTest" />
+      <pattern testClass="PatternDetectionTest" />
+      <pattern testClass="ProceduresCallGraphTest" />
+      <pattern testClass="PropertiesTest" />
+      <pattern testClass="SessionTest" />
+      <pattern testClass="SPcheckerTest" />
+      <pattern testClass="StackFrameTest" />
+    </patterns>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

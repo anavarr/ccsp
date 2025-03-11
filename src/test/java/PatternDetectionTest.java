@@ -2,9 +2,11 @@ import mychor.Comm;
 import mychor.Communication;
 import mychor.PatternDetector;
 import mychor.Session;
+import mychor.TypeGraph;
 import mychor.Utils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.snt.autorex.Autorex;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import static mychor.Utils.Direction.RECEIVE;
 import static mychor.Utils.Direction.SEND;
 import static mychor.Utils.Direction.VOID;
 import static mychor.automata.PatternUtils.pattern2DFA;
+import static mychor.automata.PatternUtils.pattern2DFAalt;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -297,6 +300,20 @@ public class PatternDetectionTest extends ProgramReaderTest{
     @Test
     public void checkThreeBuyersCompatibilityList() throws IOException{
         checkProtocolCompatibilityList("Three_buyer_protocol.sp", threeBuyersCompatibilityList);
+    }
+
+    @Test
+    public void checkStuff() throws IOException {
+        var tester = testFile("inner_outer_recursion_test.sp").compilerCtx;
+        for (Session session : tester.sessions) {
+            System.out.println(pattern2DFAalt(session));
+            TypeGraph tg = pattern2DFAalt(session);
+            var rg = Autorex.getRegexFromAutomaton(tg);
+            for (Map.Entry<Character, String> characterStringEntry : tg.getLabelMapping().entrySet()) {
+                rg = rg.replace(characterStringEntry.getKey().toString(), " "+characterStringEntry.getValue()+" ");
+            }
+            System.out.println(rg);
+        }
     }
 
     @Test

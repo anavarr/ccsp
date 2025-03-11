@@ -21,7 +21,11 @@
             <artifactId>automaton</artifactId>
             <version>1.12-4</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.julianthome</groupId>
+            <artifactId>autorex</artifactId>
+            <version>1.0</version>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

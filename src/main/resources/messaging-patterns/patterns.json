@@ -28,7 +28,7 @@
     }
   },{
     "name" : "ReactiveStreams",
-    "pattern": "client -> server;\nserver -> client;\n( client -> server | server -> client )*",
+    "pattern": "client -> server;\nserver -> client;\n( client -> server; client -> server )*; (client -> server ; client -> server | client -> server ; client -> server)",
     "client": {
       "needsClass" : false,
       "pom" : {

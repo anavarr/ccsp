@@ -56,9 +56,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         generateCombinations(configurationsFlat, configurationsDeep,combi, 0, keys, key);
         return configurationsFlat;
     }
+
     public List<Map<String, Behaviour>> getExecutionPaths(){
         return extractCarthesiansBranches(compilerCtx.behaviours);
     }
+
     public ArrayList<Boolean> typeSafety(){
         // [x] for a selection to be safe, selection can only use a subset of the labels used in branching
         // [~] for a communication to be safe, the payload type of send must be a subtype of the payload type of recv
@@ -117,9 +119,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         return results;
     }
+
     public boolean sessionsBranchingAreValid(){
         return compilerCtx.sessions.stream().allMatch(Session::isBranchingValid);
     }
+
     public void displayComplementarySessions() {
         var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
         System.out.println("These sessions are complementary :");
@@ -140,6 +144,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             System.out.printf("\t%s <-> %s", nonComplementarySession.peerA(), nonComplementarySession.peerB());
         }
     }
+
     public ArrayList<Session> getNonComplementarySessions() {
         var nonComplementarySessions = new ArrayList<>(compilerCtx.sessions);
         for (Session session : compilerCtx.sessions) {
@@ -176,6 +181,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             System.out.println(compilerCtx.behaviours.get(s));
         }
     }
+
     // check that no process sends or receive a message to or from itself
     public boolean noSelfCom() {
         for (Session session : compilerCtx.sessions) {
@@ -185,11 +191,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         return true;
     }
+
     // check that all the processes mentioned are defined in the network
     public List<String> unknownProcesses(){
         return compilerCtx.sessions.stream().map(Session::peerB)
                 .filter(it -> !compilerCtx.processes.contains(it)).toList();
     }
+
     // check that all the recursive variables called in behaviours are defined
     public List<String> unknownVariables(){
         return compilerCtx.recvar2proc.keySet().stream()
@@ -231,6 +239,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         compilerCtx.sessions = Session.fromBehaviours(compilerCtx.behaviours);
         return errors;
     }
+
     @Override
     public List<String> visitNetwork(SPparserRich.NetworkContext ctx) {
         // 0 : first process serviceName
@@ -251,6 +260,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         compilerCtx.currentProcess = null;
         return errors;
     }
+
     @Override
     public List<String> visitCal(SPparserRich.CalContext ctx) {
         // 0 : Call
@@ -292,6 +302,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         errors.addAll(recDefs.get(varName).accept(this));
         return errors;
     }
+
     @Override
     public List<String> visitCdt(SPparserRich.CdtContext ctx) {
         // 0: 'If'
@@ -324,18 +335,22 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         addBehaviour(behaviour);
         return errors;
     }
+
     @Override
     public List<String> visitSnd(SPparserRich.SndContext ctx) {
         return visitComm(ctx, Utils.Direction.SEND, ctx.getChild(2).getText(), 7);
     }
+
     @Override
     public List<String> visitRcv(SPparserRich.RcvContext ctx) {
         return visitComm(ctx, Utils.Direction.RECEIVE, ctx.getChild(2).getText(), 7);
     }
+
     @Override
     public List<String> visitSel(SPparserRich.SelContext ctx) {
         return visitComm(ctx, Utils.Direction.SELECT, ctx.getChild(2).getText(), 7);
     }
+
     @Override
     public List<String> visitBra(SPparserRich.BraContext ctx) {
         // proc '&' '{' BLABEL ':' mBehaviour '}'  ('//'  '{' BLABEL ':' mBehaviour '}')+
@@ -383,11 +398,13 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         //now we check for loops
         return errors;
     }
+
     @Override
     public List<String> visitNon(SPparserRich.NonContext ctx) {
         addBehaviour(new None(compilerCtx.currentProcess));
         return new ArrayList<>();
     }
+
     @Override
     public List<String> visitSom(SPparserRich.SomContext ctx) {
         return ctx.getChild(2).accept(this);
@@ -404,6 +421,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         errors.addAll(ctx.getChild(continuationIndex).accept(this));
         return errors;
     }
+
     @Override
     public List<String> visitEnd(SPparserRich.EndContext ctx) {
         addBehaviour(new End(compilerCtx.currentProcess));
