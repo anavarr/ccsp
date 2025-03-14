@@ -109,7 +109,7 @@ public class LocalTypingInferenceTest {
 
 
         @Test
-        public void testRecursiveCallTypeExtraction(){
+        public void testSimpleCallTypeExtraction(){
             var localChor = new Call("p", "X");
             var extractedType = LocalType.extractLocalType(localChor);
             var callType = new RecurseCallType("X");
@@ -118,9 +118,9 @@ public class LocalTypingInferenceTest {
         @Test
         public void testRecursiveDefTypeExtraction(){
             var localChor = new Call("p","X");
-            localChor.addBehaviour(new End("p"));
+            localChor.addBehaviour(new Call("p", "X"));
             var extractedType = LocalType.extractLocalType(localChor);
-            var recDefType = new RecurseDefType("X", new EndType());
+            var recDefType = new RecurseDefType("X", new RecurseCallType("X"));
             assertEquals(extractedType, recDefType);
         }
     }

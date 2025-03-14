@@ -21,13 +21,19 @@ public abstract class LocalType {
     public static LocalType extractLocalType(Behaviour bev){
         return switch (bev){
             case Call call:
-                yield new RecurseCallType(call.getVariableName());
+                if(call.nextBehaviours.isEmpty()){
+                    // it is final : the procedure has already been called, this is a recursive call
+                    yield new RecurseCallType(call.getVariableName());
+                }else{
+                    yield new RecurseDefType(call.getVariableName(), extractLocalType(call.nextBehaviours.get("unfold")));
+                }
             case Cdt cdt:
                 //merge it
                 var branches = cdt.getBranches();
                 //two cases : first one is a selection, none is
-                if(branches.stream().filter(el -> el instanceof Comm & ((Comm)el).getDirection()
-                        .equals(Utils.Direction.SELECT)).count() < branches.size()){
+                var selectBranches = branches.stream()
+                        .filter(el -> el instanceof Comm comm & ((Comm)el).getDirection().equals(Utils.Direction.SELECT));
+                if(selectBranches.count() == branches.size()){
                     //all select
                     var st = new SelectType();
                     for (Behaviour branch : branches) {

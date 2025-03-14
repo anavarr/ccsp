@@ -20,4 +20,16 @@ public class SelectType extends LocalType {
     public void addLabel(String label, LocalType next){
         nextTypes.put(label, next);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof SelectType st)) return false;
+        // if they don't have the exact same labels
+        if(!(st.nextTypes.keySet().containsAll(this.nextTypes.keySet()) &
+                this.nextTypes.keySet().containsAll(st.nextTypes.keySet()))) return false;
+        for (String s : nextTypes.keySet()) {
+            if(!nextTypes.get(s).equals(st.nextTypes.get(s))) return false;
+        }
+        return true;
+    }
 }

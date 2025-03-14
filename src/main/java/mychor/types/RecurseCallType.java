@@ -8,4 +8,10 @@ public class RecurseCallType extends LocalType{
         this.name = name;
         this.nextTypes = new HashMap<>();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof RecurseCallType rct)) return false;
+        return this.name.equals(rct.name);
+    }
 }
