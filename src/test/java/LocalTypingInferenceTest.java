@@ -54,7 +54,7 @@ public class LocalTypingInferenceTest {
             assertEquals(extractedType, receiveType);
         }
         @Test
-        public void testSelectTypeExtraction(){
+        public void testSelectTypeExtraction1branch(){
             var localChor = new Comm("pr", "q", Utils.Direction.SELECT, "continue");
             localChor.addBehaviour(new End("p"));
             var extractedType = LocalType.extractLocalType(localChor);
@@ -64,7 +64,7 @@ public class LocalTypingInferenceTest {
             assertEquals(extractedType, selectType);
         }
         @Test
-        public void testBranchTypeExtraction(){
+        public void testBranchTypeExtraction1branch(){
             var localChor = new Comm("pr", "q", Utils.Direction.BRANCH, "continue");
             localChor.addBehaviour(new End("p"));
             var extractedType = LocalType.extractLocalType(localChor);
@@ -72,6 +72,39 @@ public class LocalTypingInferenceTest {
             nb.put("continue", new EndType());
             var branchType = new BranchType(nb);
             assertEquals(extractedType, branchType);
+        }
+        @Test
+        public void testBranchTypeExtraction2branches(){
+            var nb = new HashMap<String, Behaviour>();
+            nb.put("continue", new End("p"));
+            nb.put("quit", new End("p"));
+
+            var localChor = new Comm("pr", "q", nb);
+            localChor.addBehaviour(new End("p"));
+            var extractedType = LocalType.extractLocalType(localChor);
+            var nb1 = new HashMap<String, LocalType>();
+            nb1.put("continue", new EndType());
+            nb1.put("quit", new EndType());
+            var branchType = new BranchType(nb1);
+            assertEquals(extractedType, branchType);
+        }
+        @Test
+        public void testCdtAllSelectTypeExtraction(){
+            var localChorBranch1 = new Comm("pr", "q", Utils.Direction.SELECT, "continue");
+            localChorBranch1.addBehaviour(new End("p"));
+            var localChorBranch2 = new Comm("pr", "q", Utils.Direction.SELECT, "quit");
+            localChorBranch2.addBehaviour(new End("p"));
+            var nb = new HashMap<String, Behaviour>();
+            nb.put("then", localChorBranch1);
+            nb.put("else", localChorBranch2);
+            var cdt = new Cdt("p",nb,"check(x)");
+
+            var extractedType = LocalType.extractLocalType(cdt);
+            var map = new HashMap<String, LocalType>();
+            map.put("continue", new EndType());
+            map.put("quit", new EndType());
+            var selectType = new SelectType(map);
+            assertEquals(extractedType, selectType);
         }
 
 
