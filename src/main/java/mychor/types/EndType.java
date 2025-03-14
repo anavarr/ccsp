@@ -13,4 +13,9 @@ public class EndType extends LocalType{
     public boolean equals(Object obj) {
         return obj instanceof EndType;
     }
+
+    @Override
+    public String toString() {
+        return "end";
+    }
 }

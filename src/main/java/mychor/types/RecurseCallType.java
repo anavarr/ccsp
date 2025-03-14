@@ -14,4 +14,9 @@ public class RecurseCallType extends LocalType{
         if (!(obj instanceof RecurseCallType rct)) return false;
         return this.name.equals(rct.name);
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

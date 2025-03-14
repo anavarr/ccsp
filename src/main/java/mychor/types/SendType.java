@@ -12,4 +12,9 @@ public class SendType extends LocalType{
         if(!(obj instanceof SendType)) return false;
         return nextTypes.get(";").equals(((SendType) obj).nextTypes.get(";"));
     }
+
+    @Override
+    public String toString() {
+        return "!;"+nextTypes.get(";").toString();
+    }
 }

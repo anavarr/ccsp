@@ -10,4 +10,9 @@ public class ReceiveType extends LocalType{
         if(!(obj instanceof ReceiveType)) return false;
         return nextTypes.get(";").equals(((ReceiveType) obj).nextTypes.get(";"));
     }
+
+    @Override
+    public String toString() {
+        return "?;"+nextTypes.get(";").toString();
+    }
 }

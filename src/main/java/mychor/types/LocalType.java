@@ -8,6 +8,7 @@ import mychor.End;
 import mychor.None;
 import mychor.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public abstract class LocalType {
@@ -18,7 +19,7 @@ public abstract class LocalType {
 
     public HashMap<String, LocalType> nextTypes = new HashMap<>();
 
-    public static LocalType extractLocalType(Behaviour bev){
+    public static LocalType extractLocalType(Behaviour bev) {
         return switch (bev){
             case Call call:
                 if(call.nextBehaviours.isEmpty()){
@@ -43,9 +44,17 @@ public abstract class LocalType {
                     yield st;
                 }else{
                     //not all select, it is not great
-                    var types = branches.stream().map(LocalType::extractLocalType).toList();
-                    System.out.println(types);
-                    yield types.getFirst();
+                    LocalType lt;
+                    LocalType oldLocalType = extractLocalType(cdt.getBranches().getFirst());;
+                    for (Behaviour branch : branches) {
+                        lt = extractLocalType(branch);
+                        if(!oldLocalType.equals(lt)) {
+                            System.err.println("CAN'T type this system : " +
+                                    "branches in a condtional are not the same and they're not select.");
+                            yield null;
+                        }
+                    }
+                    yield oldLocalType;
                 }
             case Comm comm:
                 yield switch (comm.getDirection()){
@@ -53,13 +62,13 @@ public abstract class LocalType {
                     case SEND -> {
                         LocalType nextType;
                         if(comm.nextBehaviours.isEmpty()) nextType = new EndType();
-                        else nextType = extractLocalType(comm.getBranches().getFirst());
+                        else nextType = extractLocalType(comm.nextBehaviours.get(";"));
                         yield new SendType(nextType);
                     }
                     case RECEIVE -> {
                         LocalType nextType;
                         if(comm.getBranches().isEmpty()) nextType = new EndType();
-                        else nextType = extractLocalType(comm.getBranches().getFirst());
+                        else nextType = extractLocalType(comm.nextBehaviours.get(";"));
                         yield new ReceiveType(nextType);
                     }
                     case BRANCH -> {

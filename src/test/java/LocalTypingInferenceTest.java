@@ -16,11 +16,12 @@ import mychor.types.SendType;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class LocalTypingInferenceTest {
+public class LocalTypingInferenceTest extends ProgramReaderTest {
 
     @Nested
     public class SimpleTests{
@@ -29,6 +30,7 @@ public class LocalTypingInferenceTest {
             var localChor = new End("p");
             var extractedType = LocalType.extractLocalType(localChor);
             var endType = new EndType();
+            System.out.println(extractedType);
             assertEquals(extractedType, endType);
         }
         @Test
@@ -36,6 +38,7 @@ public class LocalTypingInferenceTest {
             var localChor = new None("p");
             var extractedType = LocalType.extractLocalType(localChor);
             var endType = new EndType();
+            System.out.println(extractedType);
             assertEquals(extractedType, endType);
         }
 
@@ -44,6 +47,7 @@ public class LocalTypingInferenceTest {
             var localChor = new Comm("p", "q", Utils.Direction.SEND, "");
             var extractedType = LocalType.extractLocalType(localChor);
             var sendType = new SendType(new EndType());
+            System.out.println(extractedType);
             assertEquals(extractedType, sendType);
         }
         @Test
@@ -51,6 +55,7 @@ public class LocalTypingInferenceTest {
             var localChor = new Comm("p", "q", Utils.Direction.RECEIVE, "");
             var extractedType = LocalType.extractLocalType(localChor);
             var receiveType = new ReceiveType(new EndType());
+            System.out.println(extractedType);
             assertEquals(extractedType, receiveType);
         }
         @Test
@@ -61,6 +66,7 @@ public class LocalTypingInferenceTest {
             var nb = new HashMap<String, LocalType>();
             nb.put("continue", new EndType());
             var selectType = new SelectType(nb);
+            System.out.println(extractedType);
             assertEquals(extractedType, selectType);
         }
         @Test
@@ -71,6 +77,7 @@ public class LocalTypingInferenceTest {
             var nb = new HashMap<String, LocalType>();
             nb.put("continue", new EndType());
             var branchType = new BranchType(nb);
+            System.out.println(extractedType);
             assertEquals(extractedType, branchType);
         }
         @Test
@@ -86,6 +93,7 @@ public class LocalTypingInferenceTest {
             nb1.put("continue", new EndType());
             nb1.put("quit", new EndType());
             var branchType = new BranchType(nb1);
+            System.out.println(extractedType);
             assertEquals(extractedType, branchType);
         }
         @Test
@@ -104,6 +112,7 @@ public class LocalTypingInferenceTest {
             map.put("continue", new EndType());
             map.put("quit", new EndType());
             var selectType = new SelectType(map);
+            System.out.println(extractedType);
             assertEquals(extractedType, selectType);
         }
 
@@ -113,6 +122,7 @@ public class LocalTypingInferenceTest {
             var localChor = new Call("p", "X");
             var extractedType = LocalType.extractLocalType(localChor);
             var callType = new RecurseCallType("X");
+            System.out.println(extractedType);
             assertEquals(extractedType, callType);
         }
         @Test
@@ -121,7 +131,24 @@ public class LocalTypingInferenceTest {
             localChor.addBehaviour(new Call("p", "X"));
             var extractedType = LocalType.extractLocalType(localChor);
             var recDefType = new RecurseDefType("X", new RecurseCallType("X"));
+            System.out.println(extractedType);
             assertEquals(extractedType, recDefType);
+        }
+    }
+
+    @Nested
+    public class ComplexTests{
+        @Test
+        public void differentBranchesConditional() throws IOException {
+            var bev = testFile("behavioursCombinations/branching_cdt_msg.sp").compilerCtx.behaviours.get("client");
+            var lt = LocalType.extractLocalType(bev);
+            System.out.println(lt);
+        }
+        @Test
+        public void sameBranchesConditional() throws IOException {
+            var bev = testFile("behavioursCombinations/branching_cdt_msg_symmetric.sp").compilerCtx.behaviours.get("client");
+            var lt = LocalType.extractLocalType(bev);
+            System.out.println(lt);
         }
     }
 }

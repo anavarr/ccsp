@@ -32,4 +32,20 @@ public class SelectType extends LocalType {
         }
         return true;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("+ {\n");
+        short counter = 1;
+        for (String s : nextTypes.keySet()) {
+            b.append("\t").append(s).append(" : ").append(nextTypes.get(s).toString());
+            if(counter < nextTypes.keySet().size()){
+                b.append(",\n");
+            }
+            counter ++;
+        }
+        b.append("\n}");
+        return b.toString();
+    }
 }
