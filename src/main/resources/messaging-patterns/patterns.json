@@ -58,6 +58,37 @@
       "generator" : ""
     }
   },{
+  "pattern": "client -> server[subscribe];\nserver -> client[onSubscribe];\n((client -> server[request] ; server -> client[onNext]; server -> client))*; (client -> server[onError] ; client -> server | client -> server[onComplete] ; client -> server)",
+  "name" : "LabelledReactiveStreams",
+  "client": {
+    "needsClass" : false,
+    "pom" : {
+      "dependencies": [
+        "<groupId>io.smallrye.reactive</groupId>\n<artifactId>mutiny</artifactId>\n<version>2.6.0</version>"
+      ],
+      "build": {
+        "extensions" : [],
+        "plugins" : []
+      }
+    },
+    "class": "",
+    "generator" : ""
+  },
+  "server": {
+    "needsClass" : false,
+    "pom" : {
+      "dependencies": [
+        "<groupId>io.smallrye.reactive</groupId>\n<artifactId>mutiny</artifactId>\n<version>2.6.0</version>"
+      ],
+      "build": {
+        "extensions" : [],
+        "plugins" : []
+      }
+    },
+    "class": "",
+    "generator" : ""
+  }
+},{
     "name" : "GRPC_un_un",
     "pattern": "(client -> server;\n  server -> client)*",
     "client" : {

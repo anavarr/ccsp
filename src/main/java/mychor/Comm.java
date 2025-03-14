@@ -10,6 +10,9 @@ public class Comm extends Behaviour {
     public List<String> labels = new ArrayList<>();
     String destination;
 
+    public Utils.Direction getDirection() {
+        return direction;
+    }
 
     public Comm(String pr, String dest, Utils.Direction direction, List<String> labels){
         super(pr);

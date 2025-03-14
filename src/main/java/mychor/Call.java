@@ -36,6 +36,10 @@ public class Call extends Behaviour{
         variableName = vn;
     }
 
+    public String getVariableName(){
+        return variableName;
+    }
+
     @Override
     public String toString() {
         var s = "Call "+variableName+"\n";
