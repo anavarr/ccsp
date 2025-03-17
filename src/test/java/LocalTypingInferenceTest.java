@@ -152,10 +152,27 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
         }
 
         @Test
-        public void doubleSelect() throws Exception {
+        public void doubleSelectGoodOrder() throws Exception {
             var bev = testFile("double_selection.sp").compilerCtx.behaviours.get("p");
             var lt = LocalType.extractLocalType(bev);
             System.out.println(lt);
+        }
+        @Test
+        public void doubleSelectWrongOrder() throws Exception {
+            var bev = testFile("double_selection_wrong_order.sp").compilerCtx.behaviours.get("p");
+            assertThrows(
+                    Exception.class,
+                    () -> LocalType.extractLocalType(bev)
+            );
+        }
+
+        @Test
+        public void selectDifferentDestinations() throws Exception{
+            var bev = testFile("cdt_select_different_destinations.sp").compilerCtx.behaviours.get("p");
+            assertThrows(
+                    Exception.class,
+                    () ->LocalType.extractLocalType(bev)
+            );
         }
     }
 }
