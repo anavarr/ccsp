@@ -14,6 +14,10 @@ public class Comm extends Behaviour {
         return direction;
     }
 
+    public String getDestination() {
+        return destination;
+    }
+
     public Comm(String pr, String dest, Utils.Direction direction, List<String> labels){
         super(pr);
         this.destination= dest;

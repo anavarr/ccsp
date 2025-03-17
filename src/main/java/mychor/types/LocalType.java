@@ -10,11 +10,10 @@ import mychor.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public abstract class LocalType {
-
     public LocalType(){
-
     }
 
     public HashMap<String, LocalType> nextTypes = new HashMap<>();
@@ -36,7 +35,13 @@ public abstract class LocalType {
                         .filter(el -> el instanceof Comm comm & ((Comm)el).getDirection().equals(Utils.Direction.SELECT));
                 if(selectBranches.count() == branches.size()){
                     //all select
-                    var st = new SelectType();
+                    // check that they all have same destination !!!
+                    var destinations = new HashSet<>(branches.stream().map(el -> ((Comm)el).getDestination()).toList());
+                    if(destinations.size() > 1) {
+                        System.err.println("Can't extract local type as all processes are not selected");
+                        yield null;
+                    }
+                    var st = new SelectType(((Comm)(branches.getFirst())).getDestination());
                     for (Behaviour branch : branches) {
                         var label = ((Comm) branch).labels.getFirst();
                         st.addLabel(label, extractLocalType(branch.nextBehaviours.get(label)));
@@ -63,27 +68,27 @@ public abstract class LocalType {
                         LocalType nextType;
                         if(comm.nextBehaviours.isEmpty()) nextType = new EndType();
                         else nextType = extractLocalType(comm.nextBehaviours.get(";"));
-                        yield new SendType(nextType);
+                        yield new SendType(comm.getDestination(), nextType);
                     }
                     case RECEIVE -> {
                         LocalType nextType;
                         if(comm.getBranches().isEmpty()) nextType = new EndType();
                         else nextType = extractLocalType(comm.nextBehaviours.get(";"));
-                        yield new ReceiveType(nextType);
+                        yield new ReceiveType(comm.getDestination(), nextType);
                     }
                     case BRANCH -> {
                         HashMap<String, LocalType> nextTypes = new HashMap<>();
                         for (String s : comm.nextBehaviours.keySet()) {
                             nextTypes.put(s, extractLocalType(comm.nextBehaviours.get(s)));
                         }
-                        yield new BranchType(nextTypes);
+                        yield new BranchType(comm.getDestination(), nextTypes);
                     }
                     case SELECT -> {
                         HashMap<String, LocalType> nextTypes = new HashMap<>();
                         for (String s : comm.nextBehaviours.keySet()) {
                             nextTypes.put(s, extractLocalType(comm.nextBehaviours.get(s)));
                         }
-                        yield new SelectType(nextTypes);
+                        yield new SelectType(comm.getDestination(), nextTypes);
                     }
                 };
             case None none:

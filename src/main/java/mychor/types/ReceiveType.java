@@ -1,13 +1,16 @@
 package mychor.types;
 
 public class ReceiveType extends LocalType{
-    public ReceiveType(LocalType next){
+    String destination;
+    public ReceiveType(String destination, LocalType next){
+        this.destination = destination;
         nextTypes.put(";", next);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(!(obj instanceof ReceiveType)) return false;
+        if(!(obj instanceof ReceiveType rt)) return false;
+        if(!this.destination.equals(rt.destination)) return false;
         return nextTypes.get(";").equals(((ReceiveType) obj).nextTypes.get(";"));
     }
 

@@ -3,7 +3,9 @@ package mychor.types;
 import java.util.HashMap;
 
 public class SendType extends LocalType{
-    public SendType(LocalType next){
+    String destination;
+    public SendType(String destination, LocalType next){
+        this.destination = destination;
         nextTypes.put(";", next);
     }
 

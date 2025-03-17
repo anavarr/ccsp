@@ -3,17 +3,21 @@ package mychor.types;
 import java.util.HashMap;
 
 public class SelectType extends LocalType {
-    public SelectType(HashMap<String, LocalType> branches){
+    String destination;
+
+    public SelectType(String destination, HashMap<String, LocalType> branches){
+        this.destination = destination;
         for (String s : branches.keySet()) {
             nextTypes.put(s, branches.get(s));
         }
     }
 
-    public SelectType(){
-
+    public SelectType(String destination){
+        this.destination = destination;
     }
 
-    public SelectType(String label, LocalType next){
+    public SelectType(String destination, String label, LocalType next){
+        this.destination = destination;
         nextTypes.put(label, next);
     }
 

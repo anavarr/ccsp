@@ -3,7 +3,9 @@ package mychor.types;
 import java.util.HashMap;
 
 public class BranchType extends LocalType{
-    public BranchType(HashMap<String, LocalType> branches){
+    String destination;
+    public BranchType(String destination, HashMap<String, LocalType> branches){
+        this.destination = destination;
         for (String s : branches.keySet()) {
             this.nextTypes.put(s, branches.get(s));
         }
