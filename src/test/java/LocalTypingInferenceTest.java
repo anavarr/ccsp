@@ -20,13 +20,14 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LocalTypingInferenceTest extends ProgramReaderTest {
 
     @Nested
     public class SimpleTests{
         @Test
-        public void testEndTypeExtraction(){
+        public void testEndTypeExtraction() throws Exception {
             var localChor = new End("p");
             var extractedType = LocalType.extractLocalType(localChor);
             var endType = new EndType();
@@ -34,7 +35,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(extractedType, endType);
         }
         @Test
-        public void testNoneTypeExtraction(){
+        public void testNoneTypeExtraction() throws Exception {
             var localChor = new None("p");
             var extractedType = LocalType.extractLocalType(localChor);
             var endType = new EndType();
@@ -43,7 +44,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
         }
 
         @Test
-        public void testSendTypeExtraction(){
+        public void testSendTypeExtraction() throws Exception {
             var localChor = new Comm("p", "q", Utils.Direction.SEND, "");
             var extractedType = LocalType.extractLocalType(localChor);
             var sendType = new SendType("q", new EndType());
@@ -51,7 +52,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(extractedType, sendType);
         }
         @Test
-        public void testReceiveTypeExtraction(){
+        public void testReceiveTypeExtraction() throws Exception {
             var localChor = new Comm("p", "q", Utils.Direction.RECEIVE, "");
             var extractedType = LocalType.extractLocalType(localChor);
             var receiveType = new ReceiveType("q", new EndType());
@@ -59,7 +60,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(extractedType, receiveType);
         }
         @Test
-        public void testSelectTypeExtraction1branch(){
+        public void testSelectTypeExtraction1branch() throws Exception {
             var localChor = new Comm("p", "q", Utils.Direction.SELECT, "continue");
             localChor.addBehaviour(new End("p"));
             var extractedType = LocalType.extractLocalType(localChor);
@@ -70,7 +71,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(extractedType, selectType);
         }
         @Test
-        public void testBranchTypeExtraction1branch(){
+        public void testBranchTypeExtraction1branch() throws Exception {
             var localChor = new Comm("p", "q", Utils.Direction.BRANCH, "continue");
             localChor.addBehaviour(new End("p"));
             var extractedType = LocalType.extractLocalType(localChor);
@@ -81,7 +82,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(extractedType, branchType);
         }
         @Test
-        public void testBranchTypeExtraction2branches(){
+        public void testBranchTypeExtraction2branches() throws Exception {
             var nb = new HashMap<String, Behaviour>();
             nb.put("continue", new End("p"));
             nb.put("quit", new End("p"));
@@ -97,7 +98,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(extractedType, branchType);
         }
         @Test
-        public void testCdtAllSelectTypeExtraction(){
+        public void testCdtAllSelectTypeExtraction() throws Exception {
             var localChorBranch1 = new Comm("p", "q", Utils.Direction.SELECT, "continue");
             localChorBranch1.addBehaviour(new End("p"));
             var localChorBranch2 = new Comm("p", "q", Utils.Direction.SELECT, "quit");
@@ -118,7 +119,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
 
 
         @Test
-        public void testSimpleCallTypeExtraction(){
+        public void testSimpleCallTypeExtraction() throws Exception {
             var localChor = new Call("p", "X");
             var extractedType = LocalType.extractLocalType(localChor);
             var callType = new RecurseCallType("X");
@@ -126,7 +127,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(extractedType, callType);
         }
         @Test
-        public void testRecursiveDefTypeExtraction(){
+        public void testRecursiveDefTypeExtraction() throws Exception {
             var localChor = new Call("p","X");
             localChor.addBehaviour(new Call("p", "X"));
             var extractedType = LocalType.extractLocalType(localChor);
@@ -141,18 +142,17 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
         @Test
         public void differentBranchesConditional() throws IOException {
             var bev = testFile("behavioursCombinations/branching_cdt_msg.sp").compilerCtx.behaviours.get("client");
-            var lt = LocalType.extractLocalType(bev);
-            System.out.println(lt);
+            assertThrows(Exception.class, () -> LocalType.extractLocalType(bev));
         }
         @Test
-        public void sameBranchesConditional() throws IOException {
+        public void sameBranchesConditional() throws Exception {
             var bev = testFile("behavioursCombinations/branching_cdt_msg_symmetric.sp").compilerCtx.behaviours.get("client");
             var lt = LocalType.extractLocalType(bev);
             System.out.println(lt);
         }
 
         @Test
-        public void doubleSelect() throws IOException {
+        public void doubleSelect() throws Exception {
             var bev = testFile("double_selection.sp").compilerCtx.behaviours.get("p");
             var lt = LocalType.extractLocalType(bev);
             System.out.println(lt);

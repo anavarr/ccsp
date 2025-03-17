@@ -18,7 +18,7 @@ public abstract class LocalType {
 
     public HashMap<String, LocalType> nextTypes = new HashMap<>();
 
-    public static LocalType extractLocalType(Behaviour bev) {
+    public static LocalType extractLocalType(Behaviour bev) throws Exception {
         return switch (bev){
             case Call call:
                 if(call.nextBehaviours.isEmpty()){
@@ -38,8 +38,7 @@ public abstract class LocalType {
                     // check that they all have same destination !!!
                     var destinations = new HashSet<>(branches.stream().map(el -> ((Comm)el).getDestination()).toList());
                     if(destinations.size() > 1) {
-                        System.err.println("Can't extract local type as all processes are not selected");
-                        yield null;
+                        throw new Exception("Can't extract local type as all processes are not selected");
                     }
                     var st = new SelectType(((Comm)(branches.getFirst())).getDestination());
                     for (Behaviour branch : branches) {
@@ -54,9 +53,7 @@ public abstract class LocalType {
                     for (Behaviour branch : branches) {
                         lt = extractLocalType(branch);
                         if(!oldLocalType.equals(lt)) {
-                            System.err.println("CAN'T type this system : " +
-                                    "branches in a condtional are not the same and they're not select.");
-                            yield null;
+                            throw new Exception("Can't extract local type as branches of conditional are not valid");
                         }
                     }
                     yield oldLocalType;
