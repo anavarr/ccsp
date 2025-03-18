@@ -1,9 +1,18 @@
 package mychor.types;
 
+import mychor.MessageQueues;
+import mychor.Utils;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
 
 public class SelectType extends LocalType {
     String destination;
+    private List<String> visitedLabels = new ArrayList<>();
+    private String visitingLabel = null;
+    private LocalType visitingBranch = null;
 
     public SelectType(String destination, HashMap<String, LocalType> branches){
         this.destination = destination;
@@ -14,11 +23,6 @@ public class SelectType extends LocalType {
 
     public SelectType(String destination){
         this.destination = destination;
-    }
-
-    public SelectType(String destination, String label, LocalType next){
-        this.destination = destination;
-        nextTypes.put(label, next);
     }
 
     public void addLabel(String label, LocalType next){
@@ -51,5 +55,31 @@ public class SelectType extends LocalType {
         }
         b.append("\n}");
         return b.toString();
+    }
+
+    @Override
+    public LocalType reduce(String pr, MessageQueues mqs) {
+        if(visitingLabel != null){
+            return updateVisitingBranch(pr, mqs);
+        }
+        for (String s : nextTypes.keySet()) {
+            if(!visitedLabels.contains(s)){
+                visitedLabels.add(s);
+                visitingLabel = s;
+                mqs.add(Utils.Direction.SELECT, pr, destination, s);
+                visitingBranch = nextTypes.get(s);
+                return updateVisitingBranch(pr, mqs);
+            }
+        }
+        throw new RuntimeException("The selection can't be reduced");
+    }
+
+    private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
+        visitingBranch = visitingBranch.reduce(pr, mqs);
+        if(visitingBranch.equals(new EndType())){
+            visitingLabel = null;
+            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
+        }
+        return this;
     }
 }

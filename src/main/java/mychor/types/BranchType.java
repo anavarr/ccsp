@@ -1,9 +1,19 @@
 package mychor.types;
 
+import mychor.MessageQueues;
+import mychor.Utils;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class BranchType extends LocalType{
     String destination;
+
+    private List<String> visitedLabels = new ArrayList<>();
+    private String visitingLabel = null;
+    private LocalType visitingBranch = null;
+
     public BranchType(String destination, HashMap<String, LocalType> branches){
         this.destination = destination;
         for (String s : branches.keySet()) {
@@ -21,6 +31,40 @@ public class BranchType extends LocalType{
             if(!nextTypes.get(s).equals(bt.nextTypes.get(s))) return false;
         }
         return true;
+    }
+
+    @Override
+    public LocalType reduce(String process, MessageQueues mqs) {
+        if(visitingLabel != null){
+            return updateVisitingBranch(process, mqs);
+        }
+        var msg = mqs.peek(destination, process);
+        // no label has been sent, we wait
+        if(msg == null) return this;
+        if(!msg.direction().equals(Utils.Direction.BRANCH)) throw new RuntimeException(
+                String.format("A label branching is expected at process %s," +
+                        " the queue contains a value, type is not valid", process)
+        );
+        // we received a label, we can proceed
+        // we might have received a label we don't support
+        if(!nextTypes.containsKey(msg.label())) throw new RuntimeException(
+                String.format("Process %s does not support label %s at that point of its execution, type is not valid",
+                        process, msg.label()));
+        // we received a label we do support
+        msg = mqs.poll(destination, process); //we remove it from the queue;
+        visitedLabels.add(msg.label());
+        visitingLabel = msg.label();
+        visitingBranch = nextTypes.get(msg.label());
+        return updateVisitingBranch(process, mqs);
+    }
+
+    private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
+        visitingBranch = visitingBranch.reduce(pr, mqs);
+        if(visitingBranch.equals(new EndType())){
+            visitingLabel = null;
+            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
+        }
+        return this;
     }
 
     @Override

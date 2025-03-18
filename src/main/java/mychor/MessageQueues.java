@@ -28,6 +28,15 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
             return null;
         }
     }
+    public Message peek(String source, String dest){
+        var key = getKey(source, dest);
+        var q = get(key);
+        if(q != null){
+            return q.peek();
+        }else{
+            return null;
+        }
+    }
 
     static String getKey(String src, String dest){
         return src +"-"+dest;

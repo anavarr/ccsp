@@ -1,6 +1,11 @@
 package mychor;
 
+import com.ibm.icu.impl.coll.Collation;
 import org.antlr.v4.runtime.ParserRuleContext;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class Utils {
     public enum Direction{
@@ -10,6 +15,16 @@ public class Utils {
         BRANCH,
         VOID,
         DUMMY
+    }
+
+    public static List<String> carthesianProduct(Collection<String> strs){
+        var rs = new ArrayList<String>();
+        for (String str : strs) {
+            for (String s : strs) {
+                if(!s.equals(str)) rs.add(str+"-"+s);
+            }
+        }
+        return rs;
     }
 
     public static String capitalize(String str){

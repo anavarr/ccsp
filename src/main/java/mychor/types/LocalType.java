@@ -5,6 +5,7 @@ import mychor.Call;
 import mychor.Cdt;
 import mychor.Comm;
 import mychor.End;
+import mychor.MessageQueues;
 import mychor.None;
 import mychor.Utils;
 
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public abstract class LocalType {
+
     public LocalType(){
     }
 
@@ -101,4 +103,6 @@ public abstract class LocalType {
     public boolean equals(Object obj) {
         return super.equals(obj);
     }
+
+    public abstract LocalType reduce(String process, MessageQueues mqs);
 }

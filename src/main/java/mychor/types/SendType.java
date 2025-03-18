@@ -1,5 +1,9 @@
 package mychor.types;
 
+import mychor.Message;
+import mychor.MessageQueues;
+import mychor.Utils;
+
 import java.util.HashMap;
 
 public class SendType extends LocalType{
@@ -18,5 +22,11 @@ public class SendType extends LocalType{
     @Override
     public String toString() {
         return "!;"+nextTypes.get(";").toString();
+    }
+
+    @Override
+    public LocalType reduce(String pr, MessageQueues mqs) {
+        mqs.add(Utils.Direction.SEND, pr, destination, null);
+        return nextTypes.get(";");
     }
 }

@@ -1,5 +1,6 @@
 package mychor;
 
+import mychor.types.LocalType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -74,6 +75,22 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             results.add(typeSafetyOnePath(path));
         }
         return results;
+    }
+
+    public Boolean typeSafetyLocalType(){
+        var localTypes = new HashMap<String, LocalType>();
+        compilerCtx.behaviours.forEach((pr, bev) -> {
+            try {
+                localTypes.put(pr, LocalType.extractLocalType(bev));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        MessageQueues mqs = new MessageQueues();
+        for (String s : localTypes.keySet()) {
+            localTypes.get(s).reduce(s, mqs);
+        }
+        return true;
     }
 
     private boolean typeSafetyOnePath(Map<String, Behaviour> path){

@@ -1,6 +1,7 @@
 package mychor.types;
 
 import mychor.End;
+import mychor.MessageQueues;
 
 import java.util.HashMap;
 
@@ -17,5 +18,10 @@ public class EndType extends LocalType{
     @Override
     public String toString() {
         return "end";
+    }
+
+    @Override
+    public LocalType reduce(String pr, MessageQueues mqs) {
+        return this;
     }
 }

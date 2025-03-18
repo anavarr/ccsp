@@ -1,5 +1,7 @@
 package mychor.types;
 
+import mychor.MessageQueues;
+
 import java.util.HashMap;
 
 public class RecurseCallType extends LocalType{
@@ -13,6 +15,11 @@ public class RecurseCallType extends LocalType{
     public boolean equals(Object obj) {
         if (!(obj instanceof RecurseCallType rct)) return false;
         return this.name.equals(rct.name);
+    }
+
+    @Override
+    public LocalType reduce(String process, MessageQueues mqs) {
+        return new EndType();
     }
 
     @Override
