@@ -105,4 +105,6 @@ public abstract class LocalType {
     }
 
     public abstract LocalType reduce(String process, MessageQueues mqs);
+
+    public abstract LocalType duplicate();
 }

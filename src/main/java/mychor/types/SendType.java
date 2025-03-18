@@ -29,4 +29,9 @@ public class SendType extends LocalType{
         mqs.add(Utils.Direction.SEND, pr, destination, null);
         return nextTypes.get(";");
     }
+
+    @Override
+    public LocalType duplicate() {
+        return new SendType(destination, nextTypes.get(";"));
+    }
 }

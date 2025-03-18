@@ -33,6 +33,11 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
+    public LocalType duplicate() {
+        return new ReceiveType(destination, nextTypes.get(";"));
+    }
+
+    @Override
     public String toString() {
         return "?;"+nextTypes.get(";").toString();
     }

@@ -24,4 +24,9 @@ public class EndType extends LocalType{
     public LocalType reduce(String pr, MessageQueues mqs) {
         return this;
     }
+
+    @Override
+    public LocalType duplicate() {
+        return new EndType();
+    }
 }

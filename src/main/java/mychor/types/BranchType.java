@@ -22,6 +22,15 @@ public class BranchType extends LocalType{
     }
 
     @Override
+    public LocalType duplicate() {
+        var s = new BranchType(destination, nextTypes);
+        s.visitingBranch = visitingBranch.duplicate();
+        s.visitedLabels.addAll(visitedLabels);
+        s.visitingLabel = visitingLabel;
+        return s;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if(!(obj instanceof BranchType bt)) return false;
         // if they don't have the exact same labels

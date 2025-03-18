@@ -23,7 +23,14 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
+    public LocalType duplicate() {
+        return new RecurseCallType(name);
+    }
+
+    @Override
     public String toString() {
         return name;
     }
+
+
 }

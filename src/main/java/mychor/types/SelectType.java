@@ -74,6 +74,15 @@ public class SelectType extends LocalType {
         throw new RuntimeException("The selection can't be reduced");
     }
 
+    @Override
+    public LocalType duplicate() {
+        var s = new SelectType(destination, nextTypes);
+        s.visitingBranch = visitingBranch.duplicate();
+        s.visitedLabels.addAll(visitedLabels);
+        s.visitingLabel = visitingLabel;
+        return s;
+    }
+
     private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
         visitingBranch = visitingBranch.reduce(pr, mqs);
         if(visitingBranch.equals(new EndType())){

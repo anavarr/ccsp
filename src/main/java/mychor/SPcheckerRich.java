@@ -19,6 +19,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public CompilerContext compilerCtx = new CompilerContext();
 
     HashMap<String,Behaviour> reduced = new HashMap<>();
+    HashMap<String,LocalType> reducedTypes = new HashMap<>();
 
     static private List<Map<String, Behaviour>> generateCombinations(List<Map<String, Behaviour>> configurationsFlat,
                                                                      Map<String, List<Behaviour>> configurationsDeep,
@@ -78,18 +79,33 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public Boolean typeSafetyLocalType(){
-        var localTypes = new HashMap<String, LocalType>();
-        compilerCtx.behaviours.forEach((pr, bev) -> {
+        reducedTypes = new HashMap<>();
+        for (String s : compilerCtx.behaviours.keySet()) {
             try {
-                localTypes.put(pr, LocalType.extractLocalType(bev));
+                reducedTypes.put(s, LocalType.extractLocalType(compilerCtx.behaviours.get(s)));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        });
-        MessageQueues mqs = new MessageQueues();
-        for (String s : localTypes.keySet()) {
-            localTypes.get(s).reduce(s, mqs);
         }
+        var qs = new MessageQueues();
+        var oldReduced = new HashMap<String,LocalType>();
+        var oldQs = qs.duplicate();
+        do{
+            oldReduced = new HashMap<>();
+            oldQs = qs.duplicate();
+            for (String s : reducedTypes.keySet()) {
+                oldReduced.put(s, reducedTypes.get(s).duplicate());
+            }
+            for (String s : reducedTypes.keySet()) {
+                try {
+                    var b = reducedTypes.get(s).reduce(s, qs);
+                    reducedTypes.put(s, b);
+                } catch(Exception e){
+                    System.err.println(e.getMessage());
+                    return false;
+                }
+            }
+        }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
         return true;
     }
 
