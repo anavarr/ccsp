@@ -84,6 +84,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             try {
                 reducedTypes.put(s, LocalType.extractLocalType(compilerCtx.behaviours.get(s)));
             } catch (Exception e) {
+                System.err.println("error while extracting type for process "+s);
                 throw new RuntimeException(e);
             }
         }
@@ -101,7 +102,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                     var b = reducedTypes.get(s).reduce(s, qs);
                     reducedTypes.put(s, b);
                 } catch(Exception e){
-                    System.err.println(e.getMessage());
+                    System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
                     return false;
                 }
             }

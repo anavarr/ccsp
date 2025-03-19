@@ -44,6 +44,7 @@ public class SelectType extends LocalType {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
+        b.append(destination);
         b.append("+ {\n");
         short counter = 1;
         for (String s : nextTypes.keySet()) {
@@ -77,7 +78,7 @@ public class SelectType extends LocalType {
     @Override
     public LocalType duplicate() {
         var s = new SelectType(destination, nextTypes);
-        s.visitingBranch = visitingBranch.duplicate();
+        if(visitingBranch != null) s.visitingBranch = visitingBranch.duplicate();
         s.visitedLabels.addAll(visitedLabels);
         s.visitingLabel = visitingLabel;
         return s;

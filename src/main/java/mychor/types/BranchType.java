@@ -24,7 +24,7 @@ public class BranchType extends LocalType{
     @Override
     public LocalType duplicate() {
         var s = new BranchType(destination, nextTypes);
-        s.visitingBranch = visitingBranch.duplicate();
+        if(visitingBranch != null) s.visitingBranch = visitingBranch.duplicate();
         s.visitedLabels.addAll(visitedLabels);
         s.visitingLabel = visitingLabel;
         return s;
@@ -50,7 +50,7 @@ public class BranchType extends LocalType{
         var msg = mqs.peek(destination, process);
         // no label has been sent, we wait
         if(msg == null) return this;
-        if(!msg.direction().equals(Utils.Direction.BRANCH)) throw new RuntimeException(
+        if(!msg.direction().equals(Utils.Direction.SELECT)) throw new RuntimeException(
                 String.format("A label branching is expected at process %s," +
                         " the queue contains a value, type is not valid", process)
         );
@@ -79,6 +79,7 @@ public class BranchType extends LocalType{
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
+        b.append(destination);
         b.append("& {\n");
         short counter = 1;
         for (String s : nextTypes.keySet()) {

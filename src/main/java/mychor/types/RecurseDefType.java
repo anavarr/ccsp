@@ -19,7 +19,7 @@ public class RecurseDefType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        return nextTypes.get(";").reduce(process, mqs);
+        return nextTypes.get("unfold").reduce(process, mqs);
     }
 
     @Override
