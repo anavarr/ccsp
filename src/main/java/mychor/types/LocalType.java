@@ -31,7 +31,9 @@ public abstract class LocalType {
                 }
             case Cdt cdt:
                 //merge it
-                var branches = cdt.getBranches();
+                var branches = new ArrayList<Behaviour>();
+                if(cdt.nextBehaviours.containsKey("then")) branches.add(cdt.nextBehaviours.get("then"));
+                if(cdt.nextBehaviours.containsKey("else")) branches.add(cdt.nextBehaviours.get("else"));
                 //two cases : first one is a selection, none is
                 var selectBranches = branches.stream()
                         .filter(el -> el instanceof Comm comm & ((Comm)el).getDirection().equals(Utils.Direction.SELECT));
@@ -51,7 +53,11 @@ public abstract class LocalType {
                 }else{
                     //not all select, it is not great
                     LocalType lt;
-                    LocalType oldLocalType = extractLocalType(cdt.getBranches().getFirst());;
+                    Behaviour beh;
+                    if(cdt.nextBehaviours.containsKey("then")) beh = cdt.nextBehaviours.get("then");
+                    else if(cdt.nextBehaviours.containsKey("then")) beh = cdt.nextBehaviours.get("else");
+                    else yield new EndType();
+                    LocalType oldLocalType = extractLocalType(beh);;
                     for (Behaviour branch : branches) {
                         lt = extractLocalType(branch);
                         if(!oldLocalType.equals(lt)) {
@@ -71,7 +77,7 @@ public abstract class LocalType {
                     }
                     case RECEIVE -> {
                         LocalType nextType;
-                        if(comm.getBranches().isEmpty()) nextType = new EndType();
+                        if(comm.nextBehaviours.isEmpty()) nextType = new EndType();
                         else nextType = extractLocalType(comm.nextBehaviours.get(";"));
                         yield new ReceiveType(comm.getDestination(), nextType);
                     }

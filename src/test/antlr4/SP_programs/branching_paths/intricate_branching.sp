@@ -32,6 +32,7 @@ Client :
                     server+"continue" @+"";
                     Call Client
                 Else
+                    server+"quit" @+"";
                     End
             )} //
             { "typeC": None }
