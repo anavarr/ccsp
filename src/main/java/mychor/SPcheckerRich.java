@@ -1,5 +1,6 @@
 package mychor;
 
+import mychor.types.EndType;
 import mychor.types.LocalType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -20,6 +21,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     HashMap<String,Behaviour> reduced = new HashMap<>();
     HashMap<String,LocalType> reducedTypes = new HashMap<>();
+    MessageQueues qs = new MessageQueues();
 
     static private List<Map<String, Behaviour>> generateCombinations(List<Map<String, Behaviour>> configurationsFlat,
                                                                      Map<String, List<Behaviour>> configurationsDeep,
@@ -88,10 +90,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 throw new RuntimeException(e);
             }
         }
-        var qs = new MessageQueues();
         var oldReduced = new HashMap<String,LocalType>();
         var oldQs = qs.duplicate();
-        do{
+        do{ // missed a turn
             oldReduced = new HashMap<>();
             oldQs = qs.duplicate();
             for (String s : reducedTypes.keySet()) {
@@ -135,6 +136,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
         }while(!oldReduced.equals(reduced) || !oldQs.equals(qs));
         return true;
+    }
+
+    public boolean deadlockFreedomLocalType(){
+        if(!typeSafetyLocalType()) return false;
+        var r = true;
+        for (String s : reducedTypes.keySet()) {
+            if(!reducedTypes.get(s).equals(new EndType())) return false;
+        }
+        return qs.areEmpty();
     }
 
     public List<Boolean> deadlockFreedom(){

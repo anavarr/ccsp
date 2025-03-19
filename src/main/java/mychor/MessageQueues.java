@@ -6,6 +6,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class MessageQueues extends HashMap<String, Queue<Message>>{
 
+    public int accessed = 0;
     static int DEFAULT_CAPACITY = 100;
     public MessageQueues(){
         super();
@@ -15,6 +16,7 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
         var key = getKey(source, dest);
         var msg = new Message(direction, label);
         if(!containsKey(key)){
+            accessed++;
             put(key, new ArrayBlockingQueue<>(DEFAULT_CAPACITY));
         }
         return get(key).add(msg);
@@ -23,7 +25,11 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
         var key = getKey(source, dest);
         var q = get(key);
         if(q != null){
-            return q.poll();
+            var m = q.poll();
+            if(m != null){
+                accessed ++;
+            }
+            return m;
         }else{
             return null;
         }
@@ -54,6 +60,7 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
             var q = new ArrayBlockingQueue<Message>(DEFAULT_CAPACITY);
             q.addAll(get(s));
             qs.put(s, q);
+            qs.accessed = accessed;
         }
         return qs;
     }
@@ -62,6 +69,6 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
         for (String s : keySet()) {
             if(!(get(s).containsAll(qs.get(s)) && qs.get(s).containsAll(get(s)))) return false;
         }
-        return true;
+        return accessed == qs.accessed;
     }
 }

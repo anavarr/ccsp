@@ -19,7 +19,7 @@ public class ReceiveType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        var msg = mqs.peek(destination, process);
+        var msg = mqs.poll(destination, process);
         // maybe the message didn't arrive yet
         if(msg == null) return this;
         // the sender sent a label it was not supposed to send beforehand
@@ -28,7 +28,6 @@ public class ReceiveType extends LocalType{
                         "A receive action is expected, the queue contains a labeled selection, type is not valid"
        );
         // we got the right message, this communication can reduce
-        msg = mqs.poll(destination, process);
         return nextTypes.get(";");
     }
 
@@ -39,6 +38,6 @@ public class ReceiveType extends LocalType{
 
     @Override
     public String toString() {
-        return "?;"+nextTypes.get(";").toString();
+        return destination+"?;"+nextTypes.get(";").toString();
     }
 }

@@ -47,7 +47,7 @@ public class BranchType extends LocalType{
         if(visitingLabel != null){
             return updateVisitingBranch(process, mqs);
         }
-        var msg = mqs.peek(destination, process);
+        var msg = mqs.poll(destination, process);
         // no label has been sent, we wait
         if(msg == null) return this;
         if(!msg.direction().equals(Utils.Direction.SELECT)) throw new RuntimeException(
@@ -60,7 +60,6 @@ public class BranchType extends LocalType{
                 String.format("Process %s does not support label %s at that point of its execution, type is not valid",
                         process, msg.label()));
         // we received a label we do support
-        msg = mqs.poll(destination, process); //we remove it from the queue;
         visitedLabels.add(msg.label());
         visitingLabel = msg.label();
         visitingBranch = nextTypes.get(msg.label());

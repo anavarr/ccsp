@@ -21,7 +21,7 @@ public class SendType extends LocalType{
 
     @Override
     public String toString() {
-        return "!;"+nextTypes.get(";").toString();
+        return destination+"!;"+nextTypes.get(";").toString();
     }
 
     @Override

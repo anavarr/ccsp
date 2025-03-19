@@ -96,6 +96,11 @@ public class PropertiesTest extends ProgramReaderTest{
             var spc = testFile("Three_buyer_protocol.sp");
             assertTrue(spc.typeSafetyLocalType());
         }
+        @Test
+        public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
+            var spc = testFile("Three_buyer_protocol.sp");
+            assertTrue(spc.deadlockFreedomLocalType());
+        }
     }
 
 

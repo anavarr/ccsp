@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -173,6 +174,19 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
                     Exception.class,
                     () ->LocalType.extractLocalType(bev)
             );
+        }
+
+        @Test
+        public void intricateBranchingTest() throws Exception{
+            var bevs = testFile("branching_paths/intricate_branching.sp").compilerCtx.behaviours;
+            bevs.forEach((process, bev) -> {
+                System.out.println(process);
+                assertDoesNotThrow(() -> {
+                    var lt = LocalType.extractLocalType(bev);
+                    System.out.println(lt);
+                });
+                System.out.println("\n");
+            });
         }
     }
 }
