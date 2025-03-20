@@ -1,0 +1,17 @@
+µ Client. server!;server?;server+ {
+	"label1" : server?;end,
+	"label2" : server?;server+ {
+        "post" : end,
+        "modify" : server& {
+            "typeA" : server?;server+ {
+                "refuse" : end,
+                "ack" : end
+            },
+	        "typeB" : server?;server+ {
+                "quit" : end,
+                "continue" : Client
+            },
+            "typeC" : end
+        }
+    }
+}

@@ -1,0 +1,8 @@
+store!;store?; µ Interrogation.
+    bob + {
+        "split" : bob & {
+            "yes": store + { "buy": end},
+            "no" : Interrogation
+        },
+        "cancel": store +  {"no": end}
+    }

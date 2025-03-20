@@ -1,0 +1,8 @@
+client & {
+    "password": client?; service+{
+        "auth": service!; end
+    },
+    "quit": service+{
+        "quit": end
+    }
+}

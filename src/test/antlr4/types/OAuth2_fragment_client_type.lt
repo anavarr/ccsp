@@ -1,0 +1,9 @@
+service &
+{
+    "login": authenticator+{
+        "password": authenticator!;end
+    },
+    "cancel": authenticator+{
+        "quit": end
+    }
+}

@@ -5,10 +5,10 @@ parser grammar LocalTypeParser;
 options { tokenVocab=LocalTypesLexer; }
 
 localtype : 'end' #EndType
-    | IDENTIFIER #CallType
+    | LABEL #CallType
     | IDENTIFIER '!' ';' localtype #SendType
     | IDENTIFIER '?' ';' localtype #ReceiveType
-    | IDENTIFIER '+' '{' '"'IDENTIFIER'"'':'localtype(',''"'IDENTIFIER'"'':'localtype)* '}'#SelectType
-    | IDENTIFIER '&''{' '"'IDENTIFIER'"'':'localtype(',''"'IDENTIFIER'"'':'localtype)* '}'#BranchType
-    | 'µ' IDENTIFIER'.'localtype #RecDef
+    | IDENTIFIER '+' '{' BLABEL ':'localtype(',' BLABEL ':'localtype)* '}'#SelectType
+    | IDENTIFIER '&''{' BLABEL ':'localtype(',' BLABEL ':'localtype)* '}'#BranchType
+    | 'µ' LABEL'.'localtype #RecDef
     ;

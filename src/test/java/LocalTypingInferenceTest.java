@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -43,7 +42,6 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             System.out.println(extractedType);
             assertEquals(extractedType, endType);
         }
-
         @Test
         public void testSendTypeExtraction() throws Exception {
             var localChor = new Comm("p", "q", Utils.Direction.SEND, "");
@@ -117,8 +115,6 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             System.out.println(extractedType);
             assertEquals(extractedType, selectType);
         }
-
-
         @Test
         public void testSimpleCallTypeExtraction() throws Exception {
             var localChor = new Call("p", "X");
@@ -151,7 +147,6 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             var lt = LocalType.extractLocalType(bev);
             System.out.println(lt);
         }
-
         @Test
         public void doubleSelectGoodOrder() throws Exception {
             var bev = testFile("double_selection.sp").compilerCtx.behaviours.get("p");
@@ -166,7 +161,6 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
                     () -> LocalType.extractLocalType(bev)
             );
         }
-
         @Test
         public void selectDifferentDestinations() throws Exception{
             var bev = testFile("cdt_select_different_destinations.sp").compilerCtx.behaviours.get("p");
@@ -175,18 +169,37 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
                     () ->LocalType.extractLocalType(bev)
             );
         }
-
         @Test
         public void intricateBranchingTest() throws Exception{
+            var lt_client = readType("local_types_client.lt");
+            var lt_server = readType("local_type_server.lt");
+            var lt_service = new RecurseDefType("Service", new EndType());
             var bevs = testFile("branching_paths/intricate_branching.sp").compilerCtx.behaviours;
-            bevs.forEach((process, bev) -> {
-                System.out.println(process);
-                assertDoesNotThrow(() -> {
-                    var lt = LocalType.extractLocalType(bev);
-                    System.out.println(lt);
-                });
-                System.out.println("\n");
-            });
+            assertEquals(lt_client, LocalType.extractLocalType(bevs.get("client")));
+            assertEquals(lt_server, LocalType.extractLocalType(bevs.get("server")));
+            assertEquals(lt_service, LocalType.extractLocalType(bevs.get("service")));
+        }
+
+        @Test
+        public void inferOAuth2_fragmentTypes() throws Exception{
+            var lt_authenticator = readType("OAuth2_fragment_authenticator_type.lt");
+            var lt_service = readType("OAuth2_fragment_service_type.lt");
+            var lt_client = readType("OAuth2_fragment_client_type.lt");
+            var bevs = testFile("OAuth2_fragment.sp").compilerCtx.behaviours;
+            assertEquals(lt_authenticator, LocalType.extractLocalType(bevs.get("authenticator")));
+            assertEquals(lt_client, LocalType.extractLocalType(bevs.get("client")));
+            assertEquals(lt_service, LocalType.extractLocalType(bevs.get("service")));
+        }
+
+        @Test
+        public void inferThreeBuyerTypes() throws Exception{
+            var lt_alice = readType("ThreeBuyer_alice.lt");
+            var lt_bob = readType("ThreeBuyer_bob.lt");
+            var lt_store = readType("ThreeBuyer_store.lt");
+            var bevs = testFile("Three_buyer_protocol.sp").compilerCtx.behaviours;
+            assertEquals(lt_alice, LocalType.extractLocalType(bevs.get("alice")));
+            assertEquals(lt_bob, LocalType.extractLocalType(bevs.get("bob")));
+            assertEquals(lt_store, LocalType.extractLocalType(bevs.get("store")));
         }
     }
 }

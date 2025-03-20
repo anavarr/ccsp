@@ -3,8 +3,11 @@ package mychor.types;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
 import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue", "this-escape"})
 public class LocalTypeParser extends Parser {
@@ -133,15 +136,12 @@ public class LocalTypeParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class BranchTypeContext extends LocaltypeContext {
-		public List<TerminalNode> IDENTIFIER() { return getTokens(LocalTypeParser.IDENTIFIER); }
-		public TerminalNode IDENTIFIER(int i) {
-			return getToken(LocalTypeParser.IDENTIFIER, i);
-		}
+		public TerminalNode IDENTIFIER() { return getToken(LocalTypeParser.IDENTIFIER, 0); }
 		public TerminalNode AND() { return getToken(LocalTypeParser.AND, 0); }
 		public TerminalNode CLPAR() { return getToken(LocalTypeParser.CLPAR, 0); }
-		public List<TerminalNode> QUOTES() { return getTokens(LocalTypeParser.QUOTES); }
-		public TerminalNode QUOTES(int i) {
-			return getToken(LocalTypeParser.QUOTES, i);
+		public List<TerminalNode> BLABEL() { return getTokens(LocalTypeParser.BLABEL); }
+		public TerminalNode BLABEL(int i) {
+			return getToken(LocalTypeParser.BLABEL, i);
 		}
 		public List<TerminalNode> DOUBLECOL() { return getTokens(LocalTypeParser.DOUBLECOL); }
 		public TerminalNode DOUBLECOL(int i) {
@@ -198,7 +198,7 @@ public class LocalTypeParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class CallTypeContext extends LocaltypeContext {
-		public TerminalNode IDENTIFIER() { return getToken(LocalTypeParser.IDENTIFIER, 0); }
+		public TerminalNode LABEL() { return getToken(LocalTypeParser.LABEL, 0); }
 		public CallTypeContext(LocaltypeContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
@@ -216,15 +216,12 @@ public class LocalTypeParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class SelectTypeContext extends LocaltypeContext {
-		public List<TerminalNode> IDENTIFIER() { return getTokens(LocalTypeParser.IDENTIFIER); }
-		public TerminalNode IDENTIFIER(int i) {
-			return getToken(LocalTypeParser.IDENTIFIER, i);
-		}
+		public TerminalNode IDENTIFIER() { return getToken(LocalTypeParser.IDENTIFIER, 0); }
 		public TerminalNode PLUS() { return getToken(LocalTypeParser.PLUS, 0); }
 		public TerminalNode CLPAR() { return getToken(LocalTypeParser.CLPAR, 0); }
-		public List<TerminalNode> QUOTES() { return getTokens(LocalTypeParser.QUOTES); }
-		public TerminalNode QUOTES(int i) {
-			return getToken(LocalTypeParser.QUOTES, i);
+		public List<TerminalNode> BLABEL() { return getTokens(LocalTypeParser.BLABEL); }
+		public TerminalNode BLABEL(int i) {
+			return getToken(LocalTypeParser.BLABEL, i);
 		}
 		public List<TerminalNode> DOUBLECOL() { return getTokens(LocalTypeParser.DOUBLECOL); }
 		public TerminalNode DOUBLECOL(int i) {
@@ -277,7 +274,7 @@ public class LocalTypeParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class RecDefContext extends LocaltypeContext {
 		public TerminalNode MU() { return getToken(LocalTypeParser.MU, 0); }
-		public TerminalNode IDENTIFIER() { return getToken(LocalTypeParser.IDENTIFIER, 0); }
+		public TerminalNode LABEL() { return getToken(LocalTypeParser.LABEL, 0); }
 		public TerminalNode DOT() { return getToken(LocalTypeParser.DOT, 0); }
 		public LocaltypeContext localtype() {
 			return getRuleContext(LocaltypeContext.class,0);
@@ -303,7 +300,7 @@ public class LocalTypeParser extends Parser {
 		enterRule(_localctx, 0, RULE_localtype);
 		int _la;
 		try {
-			setState(58);
+			setState(50);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,2,_ctx) ) {
 			case 1:
@@ -319,7 +316,7 @@ public class LocalTypeParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(3);
-				match(IDENTIFIER);
+				match(LABEL);
 				}
 				break;
 			case 3:
@@ -361,40 +358,32 @@ public class LocalTypeParser extends Parser {
 				setState(14);
 				match(CLPAR);
 				setState(15);
-				match(QUOTES);
+				match(BLABEL);
 				setState(16);
-				match(IDENTIFIER);
-				setState(17);
-				match(QUOTES);
-				setState(18);
 				match(DOUBLECOL);
-				setState(19);
+				setState(17);
 				localtype();
-				setState(28);
+				setState(24);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==COL) {
 					{
 					{
-					setState(20);
+					setState(18);
 					match(COL);
-					setState(21);
-					match(QUOTES);
-					setState(22);
-					match(IDENTIFIER);
-					setState(23);
-					match(QUOTES);
-					setState(24);
+					setState(19);
+					match(BLABEL);
+					setState(20);
 					match(DOUBLECOL);
-					setState(25);
+					setState(21);
 					localtype();
 					}
 					}
-					setState(30);
+					setState(26);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
-				setState(31);
+				setState(27);
 				match(CRPAR);
 				}
 				break;
@@ -402,47 +391,39 @@ public class LocalTypeParser extends Parser {
 				_localctx = new BranchTypeContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(33);
+				setState(29);
 				match(IDENTIFIER);
-				setState(34);
+				setState(30);
 				match(AND);
-				setState(35);
+				setState(31);
 				match(CLPAR);
-				setState(36);
-				match(QUOTES);
-				setState(37);
-				match(IDENTIFIER);
-				setState(38);
-				match(QUOTES);
-				setState(39);
+				setState(32);
+				match(BLABEL);
+				setState(33);
 				match(DOUBLECOL);
-				setState(40);
+				setState(34);
 				localtype();
-				setState(49);
+				setState(41);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==COL) {
 					{
 					{
-					setState(41);
+					setState(35);
 					match(COL);
-					setState(42);
-					match(QUOTES);
-					setState(43);
-					match(IDENTIFIER);
-					setState(44);
-					match(QUOTES);
-					setState(45);
+					setState(36);
+					match(BLABEL);
+					setState(37);
 					match(DOUBLECOL);
-					setState(46);
+					setState(38);
 					localtype();
 					}
 					}
-					setState(51);
+					setState(43);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
-				setState(52);
+				setState(44);
 				match(CRPAR);
 				}
 				break;
@@ -450,13 +431,13 @@ public class LocalTypeParser extends Parser {
 				_localctx = new RecDefContext(_localctx);
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(54);
+				setState(46);
 				match(MU);
-				setState(55);
-				match(IDENTIFIER);
-				setState(56);
+				setState(47);
+				match(LABEL);
+				setState(48);
 				match(DOT);
-				setState(57);
+				setState(49);
 				localtype();
 				}
 				break;
@@ -474,45 +455,41 @@ public class LocalTypeParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\"=\u0002\u0000\u0007\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0004\u0001\"5\u0002\u0000\u0007\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0005\u0000\u001b\b\u0000\n"+
-		"\u0000\f\u0000\u001e\t\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
-		"\u0000\u0005\u00000\b\u0000\n\u0000\f\u00003\t\u0000\u0001\u0000\u0001"+
-		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0003\u0000;\b"+
-		"\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000\u0000C\u0000:\u0001\u0000"+
-		"\u0000\u0000\u0002;\u0005\u0001\u0000\u0000\u0003;\u0005\u001e\u0000\u0000"+
-		"\u0004\u0005\u0005\u001e\u0000\u0000\u0005\u0006\u0005\u0006\u0000\u0000"+
-		"\u0006\u0007\u0005\b\u0000\u0000\u0007;\u0003\u0000\u0000\u0000\b\t\u0005"+
-		"\u001e\u0000\u0000\t\n\u0005\u0007\u0000\u0000\n\u000b\u0005\b\u0000\u0000"+
-		"\u000b;\u0003\u0000\u0000\u0000\f\r\u0005\u001e\u0000\u0000\r\u000e\u0005"+
-		"\u000b\u0000\u0000\u000e\u000f\u0005\u0013\u0000\u0000\u000f\u0010\u0005"+
-		"\t\u0000\u0000\u0010\u0011\u0005\u001e\u0000\u0000\u0011\u0012\u0005\t"+
-		"\u0000\u0000\u0012\u0013\u0005\u0004\u0000\u0000\u0013\u001c\u0003\u0000"+
-		"\u0000\u0000\u0014\u0015\u0005\u0003\u0000\u0000\u0015\u0016\u0005\t\u0000"+
-		"\u0000\u0016\u0017\u0005\u001e\u0000\u0000\u0017\u0018\u0005\t\u0000\u0000"+
-		"\u0018\u0019\u0005\u0004\u0000\u0000\u0019\u001b\u0003\u0000\u0000\u0000"+
-		"\u001a\u0014\u0001\u0000\u0000\u0000\u001b\u001e\u0001\u0000\u0000\u0000"+
-		"\u001c\u001a\u0001\u0000\u0000\u0000\u001c\u001d\u0001\u0000\u0000\u0000"+
-		"\u001d\u001f\u0001\u0000\u0000\u0000\u001e\u001c\u0001\u0000\u0000\u0000"+
-		"\u001f \u0005\u0014\u0000\u0000 ;\u0001\u0000\u0000\u0000!\"\u0005\u001e"+
-		"\u0000\u0000\"#\u0005\f\u0000\u0000#$\u0005\u0013\u0000\u0000$%\u0005"+
-		"\t\u0000\u0000%&\u0005\u001e\u0000\u0000&\'\u0005\t\u0000\u0000\'(\u0005"+
-		"\u0004\u0000\u0000(1\u0003\u0000\u0000\u0000)*\u0005\u0003\u0000\u0000"+
-		"*+\u0005\t\u0000\u0000+,\u0005\u001e\u0000\u0000,-\u0005\t\u0000\u0000"+
-		"-.\u0005\u0004\u0000\u0000.0\u0003\u0000\u0000\u0000/)\u0001\u0000\u0000"+
-		"\u000003\u0001\u0000\u0000\u00001/\u0001\u0000\u0000\u000012\u0001\u0000"+
-		"\u0000\u000024\u0001\u0000\u0000\u000031\u0001\u0000\u0000\u000045\u0005"+
-		"\u0014\u0000\u00005;\u0001\u0000\u0000\u000067\u0005\u0002\u0000\u0000"+
-		"78\u0005\u001e\u0000\u000089\u0005\n\u0000\u00009;\u0003\u0000\u0000\u0000"+
-		":\u0002\u0001\u0000\u0000\u0000:\u0003\u0001\u0000\u0000\u0000:\u0004"+
-		"\u0001\u0000\u0000\u0000:\b\u0001\u0000\u0000\u0000:\f\u0001\u0000\u0000"+
-		"\u0000:!\u0001\u0000\u0000\u0000:6\u0001\u0000\u0000\u0000;\u0001\u0001"+
-		"\u0000\u0000\u0000\u0003\u001c1:";
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0005"+
+		"\u0000\u0017\b\u0000\n\u0000\f\u0000\u001a\t\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0005\u0000(\b\u0000"+
+		"\n\u0000\f\u0000+\t\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
+		"\u0001\u0000\u0001\u0000\u0003\u00003\b\u0000\u0001\u0000\u0000\u0000"+
+		"\u0001\u0000\u0000\u0000;\u00002\u0001\u0000\u0000\u0000\u00023\u0005"+
+		"\u0001\u0000\u0000\u00033\u0005\u001d\u0000\u0000\u0004\u0005\u0005\u001e"+
+		"\u0000\u0000\u0005\u0006\u0005\u0006\u0000\u0000\u0006\u0007\u0005\b\u0000"+
+		"\u0000\u00073\u0003\u0000\u0000\u0000\b\t\u0005\u001e\u0000\u0000\t\n"+
+		"\u0005\u0007\u0000\u0000\n\u000b\u0005\b\u0000\u0000\u000b3\u0003\u0000"+
+		"\u0000\u0000\f\r\u0005\u001e\u0000\u0000\r\u000e\u0005\u000b\u0000\u0000"+
+		"\u000e\u000f\u0005\u0013\u0000\u0000\u000f\u0010\u0005\u001f\u0000\u0000"+
+		"\u0010\u0011\u0005\u0004\u0000\u0000\u0011\u0018\u0003\u0000\u0000\u0000"+
+		"\u0012\u0013\u0005\u0003\u0000\u0000\u0013\u0014\u0005\u001f\u0000\u0000"+
+		"\u0014\u0015\u0005\u0004\u0000\u0000\u0015\u0017\u0003\u0000\u0000\u0000"+
+		"\u0016\u0012\u0001\u0000\u0000\u0000\u0017\u001a\u0001\u0000\u0000\u0000"+
+		"\u0018\u0016\u0001\u0000\u0000\u0000\u0018\u0019\u0001\u0000\u0000\u0000"+
+		"\u0019\u001b\u0001\u0000\u0000\u0000\u001a\u0018\u0001\u0000\u0000\u0000"+
+		"\u001b\u001c\u0005\u0014\u0000\u0000\u001c3\u0001\u0000\u0000\u0000\u001d"+
+		"\u001e\u0005\u001e\u0000\u0000\u001e\u001f\u0005\f\u0000\u0000\u001f "+
+		"\u0005\u0013\u0000\u0000 !\u0005\u001f\u0000\u0000!\"\u0005\u0004\u0000"+
+		"\u0000\")\u0003\u0000\u0000\u0000#$\u0005\u0003\u0000\u0000$%\u0005\u001f"+
+		"\u0000\u0000%&\u0005\u0004\u0000\u0000&(\u0003\u0000\u0000\u0000\'#\u0001"+
+		"\u0000\u0000\u0000(+\u0001\u0000\u0000\u0000)\'\u0001\u0000\u0000\u0000"+
+		")*\u0001\u0000\u0000\u0000*,\u0001\u0000\u0000\u0000+)\u0001\u0000\u0000"+
+		"\u0000,-\u0005\u0014\u0000\u0000-3\u0001\u0000\u0000\u0000./\u0005\u0002"+
+		"\u0000\u0000/0\u0005\u001d\u0000\u000001\u0005\n\u0000\u000013\u0003\u0000"+
+		"\u0000\u00002\u0002\u0001\u0000\u0000\u00002\u0003\u0001\u0000\u0000\u0000"+
+		"2\u0004\u0001\u0000\u0000\u00002\b\u0001\u0000\u0000\u00002\f\u0001\u0000"+
+		"\u0000\u00002\u001d\u0001\u0000\u0000\u00002.\u0001\u0000\u0000\u0000"+
+		"3\u0001\u0001\u0000\u0000\u0000\u0003\u0018)2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

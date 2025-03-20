@@ -1,0 +1,10 @@
+µ Server. client?;service!;service& {
+	"post" : service?;client!;µ ServerContinuation. client& {
+	"label1" : client!;end,
+	"label2" : end
+},
+	"put" : service?;client!;µ ServerContinuation. client& {
+	"label1" : client!;end,
+	"label2" : end
+}
+}

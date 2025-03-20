@@ -1,4 +1,5 @@
 // Generated from /home/arnavarr/Documents/thesis/prog/antlr4/ccsp/src/main/antlr4/LocalTypesLexer.g4 by ANTLR 4.13.2
+package mychor.types;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

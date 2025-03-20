@@ -1,0 +1,7 @@
+µ Interrogation_Bob. alice & {
+    "split" : alice + {
+        "yes": end,
+        "no": Interrogation_Bob
+    },
+    "cancel": end
+}
