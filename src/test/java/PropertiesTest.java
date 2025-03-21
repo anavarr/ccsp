@@ -12,6 +12,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PropertiesTest extends ProgramReaderTest{
 
     @Test
+    public void knowledgeofChoiceOfAsymmetricConditionShouldReturnFalse() throws IOException{
+        var spc = testFile("branching_paths/asymmetric_branching.sp");
+        var knowledgeTable = spc.knowledgeOfChoice();
+        knowledgeTable.forEach((pr, type) -> {
+            System.out.println(pr+":"+type);
+        });
+    }
+
+    @Test
+    public void asymmetricCdtShouldBeTypeSafe() throws IOException {
+        var spc = testFile("branching_paths/asymmetric_branching.sp");
+        assertTrue(spc.typeSafetyLocalType());
+    }
+    @Test
+    public void asymmetricCdtShouldNotBeDeadlockFree() throws IOException {
+        var spc = testFile("branching_paths/asymmetric_branching.sp");
+        assertFalse(spc.deadlockFreedomLocalType());
+    }
+
+    @Test
+    public void test() throws IOException {
+        var spc = testFile("branching_paths/asymmetric_branching.sp");
+        var res = spc.deadlockFreedom();
+        System.out.println(res);
+    }
+
+    @Test
     public void OAuth2IsSafe() throws IOException {
         var spc = testFile("OAuth2_fragment.sp");
         assertFalse(spc.typeSafety().contains(false));

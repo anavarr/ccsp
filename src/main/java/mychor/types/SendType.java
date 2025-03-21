@@ -1,10 +1,9 @@
 package mychor.types;
 
-import mychor.Message;
 import mychor.MessageQueues;
 import mychor.Utils;
 
-import java.util.HashMap;
+import java.util.Collection;
 
 public class SendType extends LocalType{
     String destination;
@@ -33,5 +32,16 @@ public class SendType extends LocalType{
     @Override
     public LocalType duplicate() {
         return new SendType(destination, nextTypes.get(";"));
+    }
+
+    @Override
+    protected LocalType extractParticipation(String process) {
+        if(destination.equals(process)) return new SendType(destination, nextTypes.get(";").extractParticipation(process));
+        return nextTypes.get(";").extractParticipation(process);
+    }
+
+    @Override
+    public Boolean knowlegdgeOfChoice(Collection<String> processes) {
+        return nextTypes.get(";").knowlegdgeOfChoice(processes);
     }
 }

@@ -10,6 +10,7 @@ import mychor.None;
 import mychor.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -36,7 +37,12 @@ public abstract class LocalType {
                 if(cdt.nextBehaviours.containsKey("else")) branches.add(cdt.nextBehaviours.get("else"));
                 //two cases : first one is a selection, none is
                 var selectBranches = branches.stream()
-                        .filter(el -> el instanceof Comm comm & ((Comm)el).getDirection().equals(Utils.Direction.SELECT));
+                        .filter(el -> {
+                            if(el instanceof Comm comm){
+                                return comm.getDirection().equals(Utils.Direction.SELECT);
+                            }
+                            return false;
+                        });
                 if(selectBranches.count() == branches.size()){
                     //all select
                     // check that they all have same destination !!!
@@ -113,4 +119,8 @@ public abstract class LocalType {
     public abstract LocalType reduce(String process, MessageQueues mqs);
 
     public abstract LocalType duplicate();
+
+    protected abstract LocalType extractParticipation(String process);
+
+    public abstract Boolean knowlegdgeOfChoice(Collection<String> processes);
 }

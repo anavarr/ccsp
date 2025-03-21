@@ -80,6 +80,23 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return results;
     }
 
+    public HashMap<String, Boolean> knowledgeOfChoice(){
+        var result = new HashMap<String, Boolean>();
+        reducedTypes = new HashMap<>();
+        for (String s : compilerCtx.behaviours.keySet()) {
+            try {
+                reducedTypes.put(s, LocalType.extractLocalType(compilerCtx.behaviours.get(s)));
+            } catch (Exception e) {
+                System.err.println("error while extracting type for process "+s);
+                throw new RuntimeException(e);
+            }
+        }
+        reducedTypes.forEach((pr, lt) -> {
+            result.put(pr, lt.knowlegdgeOfChoice(reducedTypes.keySet()));
+        });
+        return result;
+    }
+
     public Boolean typeSafetyLocalType(){
         reducedTypes = new HashMap<>();
         for (String s : compilerCtx.behaviours.keySet()) {

@@ -4,6 +4,7 @@ import mychor.MessageQueues;
 import mychor.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -73,6 +74,30 @@ public class BranchType extends LocalType{
             if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
         }
         return this;
+    }
+
+    @Override
+    protected LocalType extractParticipation(String process) {
+        var branches = new ArrayList<LocalType>();
+        nextTypes.forEach((pr, type) -> {
+            branches.add(type.extractParticipation(process));
+        });
+        var allSame = branches.stream().noneMatch(el -> !el.equals(branches.getFirst()));
+        if(allSame) return branches.getFirst();
+        else throw new RuntimeException("execution branches don't match");
+    }
+
+    @Override
+    public Boolean knowlegdgeOfChoice(Collection<String> processes) {
+        var branches = new ArrayList<LocalType>();
+        for (String process : processes) {
+            try{
+                branches.add(extractParticipation(process));
+            }catch (Exception e){
+                return false;
+            }
+        }
+        return branches.stream().noneMatch(el -> !el.equals(branches.getFirst()));
     }
 
     @Override

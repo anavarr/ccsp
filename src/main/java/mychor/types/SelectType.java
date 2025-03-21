@@ -4,6 +4,7 @@ import mychor.MessageQueues;
 import mychor.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -82,6 +83,38 @@ public class SelectType extends LocalType {
         s.visitedLabels.addAll(visitedLabels);
         s.visitingLabel = visitingLabel;
         return s;
+    }
+
+    @Override
+    public Boolean knowlegdgeOfChoice(Collection<String> processes) {
+        HashMap<String, LocalType> branches = new HashMap<>();
+        for (String s : nextTypes.keySet()) {
+            for (String process : processes) {
+                try{
+                    if(branches.containsKey(process)) {
+                        var lt = branches.get(s).extractParticipation(process);
+                        return branches.get(process).equals(lt);
+                    }else{
+                        branches.put(process, nextTypes.get(s).extractParticipation(process));
+                    }
+                }catch(Exception e){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected LocalType extractParticipation(String process) {
+        if(destination.equals(process)) return new SelectType(destination);
+        var branches = new ArrayList<LocalType>();
+        nextTypes.forEach((pr, type) -> {
+            branches.add(type.extractParticipation(process));
+        });
+        var allSame = branches.stream().noneMatch(el -> !el.equals(branches.getFirst()));
+        if(allSame) return branches.getFirst();
+        else throw new RuntimeException("execution branches don't match");
     }
 
     private LocalType updateVisitingBranch(String pr, MessageQueues mqs){

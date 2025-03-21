@@ -2,7 +2,7 @@ package mychor.types;
 
 import mychor.MessageQueues;
 
-import java.util.HashMap;
+import java.util.Collection;
 
 public class RecurseDefType extends LocalType{
     String varName;
@@ -25,6 +25,16 @@ public class RecurseDefType extends LocalType{
     @Override
     public LocalType duplicate() {
         return new RecurseDefType(varName, nextTypes.get("unfold"));
+    }
+
+    @Override
+    protected LocalType extractParticipation(String process) {
+        return nextTypes.get("unfold").extractParticipation(process);
+    }
+
+    @Override
+    public Boolean knowlegdgeOfChoice(Collection<String> processes) {
+        return nextTypes.get("unfold").knowlegdgeOfChoice(processes);
     }
 
     @Override

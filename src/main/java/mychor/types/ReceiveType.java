@@ -3,6 +3,8 @@ package mychor.types;
 import mychor.MessageQueues;
 import mychor.Utils;
 
+import java.util.Collection;
+
 public class ReceiveType extends LocalType{
     String destination;
     public ReceiveType(String destination, LocalType next){
@@ -34,6 +36,17 @@ public class ReceiveType extends LocalType{
     @Override
     public LocalType duplicate() {
         return new ReceiveType(destination, nextTypes.get(";"));
+    }
+
+    @Override
+    protected LocalType extractParticipation(String process) {
+        if(destination.equals(process)) return new ReceiveType(destination, nextTypes.get(";").extractParticipation(process));
+        return nextTypes.get(";").extractParticipation(process);
+    }
+
+    @Override
+    public Boolean knowlegdgeOfChoice(Collection<String> processes) {
+        return nextTypes.get(";").knowlegdgeOfChoice(processes);
     }
 
     @Override

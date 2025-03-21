@@ -2,6 +2,7 @@ package mychor.types;
 
 import mychor.MessageQueues;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public class RecurseCallType extends LocalType{
@@ -25,6 +26,16 @@ public class RecurseCallType extends LocalType{
     @Override
     public LocalType duplicate() {
         return new RecurseCallType(name);
+    }
+
+    @Override
+    protected LocalType extractParticipation(String process) {
+        return new RecurseCallType(this.name);
+    }
+
+    @Override
+    public Boolean knowlegdgeOfChoice(Collection<String> processes) {
+        return true;
     }
 
     @Override

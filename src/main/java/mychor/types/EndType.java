@@ -1,8 +1,8 @@
 package mychor.types;
 
-import mychor.End;
 import mychor.MessageQueues;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public class EndType extends LocalType{
@@ -28,5 +28,15 @@ public class EndType extends LocalType{
     @Override
     public LocalType duplicate() {
         return new EndType();
+    }
+
+    @Override
+    protected LocalType extractParticipation(String process) {
+        return new EndType();
+    }
+
+    @Override
+    public Boolean knowlegdgeOfChoice(Collection<String> processes) {
+        return true;
     }
 }

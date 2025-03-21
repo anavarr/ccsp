@@ -21,6 +21,7 @@ import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LocalTypingInferenceTest extends ProgramReaderTest {
 
@@ -137,6 +138,16 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
     @Nested
     public class ComplexTests{
         @Test
+        public void emptyConditionalShouldReturnEndType() throws IOException{
+            var bev = testFile("empty_cdt.sp").compilerCtx.behaviours;
+            try {
+                assertEquals(new RecurseDefType("Client", new EndType()),
+                        LocalType.extractLocalType(bev.get("client")) );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        @Test
         public void differentBranchesConditional() throws IOException {
             var bev = testFile("behavioursCombinations/branching_cdt_msg.sp").compilerCtx.behaviours.get("client");
             assertThrows(Exception.class, () -> LocalType.extractLocalType(bev));
@@ -200,6 +211,14 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(lt_alice, LocalType.extractLocalType(bevs.get("alice")));
             assertEquals(lt_bob, LocalType.extractLocalType(bevs.get("bob")));
             assertEquals(lt_store, LocalType.extractLocalType(bevs.get("store")));
+        }
+
+        @Test
+        public void asymmetricConditionalShouldBeTypable() throws Exception{
+            var bevs = testFile("branching_paths/asymmetric_branching.sp").compilerCtx.behaviours;
+            assertEquals(LocalType.extractLocalType(bevs.get("client")), readType("asymmetric_cdt_client.lt"));
+            assertEquals(LocalType.extractLocalType(bevs.get("server")), readType("asymmetric_cdt_server.lt"));
+            assertEquals(LocalType.extractLocalType(bevs.get("service")), readType("asymmetric_cdt_service.lt"));
         }
     }
 }
