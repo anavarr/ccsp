@@ -1,4 +1,4 @@
 µ Client. server+ {
-	"quit" : end,
-	"continue" : service!;end
+	"quit" : Client,
+	"continue" : service!;Client
 }

@@ -20,15 +20,17 @@ public abstract class LocalType {
     }
 
     public HashMap<String, LocalType> nextTypes = new HashMap<>();
-
+    private static HashMap<String, LocalType> recursionDef = new HashMap<String, LocalType>();
     public static LocalType extractLocalType(Behaviour bev) throws Exception {
         return switch (bev){
             case Call call:
                 if(call.nextBehaviours.isEmpty()){
                     // it is final : the procedure has already been called, this is a recursive call
-                    yield new RecurseCallType(call.getVariableName());
+                    yield new RecurseCallType(call.getVariableName(), recursionDef.get(call.getVariableName()));
                 }else{
-                    yield new RecurseDefType(call.getVariableName(), extractLocalType(call.nextBehaviours.get("unfold")));
+                    var lt = new RecurseDefType(call.getVariableName(), extractLocalType(call.nextBehaviours.get("unfold")));
+                    recursionDef.put(call.getVariableName(), lt);
+                    yield lt;
                 }
             case Cdt cdt:
                 //merge it

@@ -130,5 +130,17 @@ public class PropertiesTest extends ProgramReaderTest{
         }
     }
 
+    @Test
+    public void nReceiveVSArbitrarySendShouldDeadlock() throws IOException {
+        var spc = testFile("recursion/asymmetric_deadlock.sp");
+        assertFalse(spc.deadlockFreedomLocalType());
+    }
+
+    @Test
+    public void asymmetricRecursionShouldDeadlock() throws IOException {
+        var spc = testFile("recursion/asymmetric_recursion.sp");
+        assertFalse(spc.deadlockFreedomLocalType());
+    }
+
 
 }

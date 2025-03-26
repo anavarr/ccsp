@@ -7,9 +7,12 @@ import java.util.HashMap;
 
 public class RecurseCallType extends LocalType{
     String name;
-    public RecurseCallType(String name){
+    LocalType origin;
+    public RecurseCallType(String name, LocalType origin){
         this.name = name;
         this.nextTypes = new HashMap<>();
+        this.origin = origin;
+        this.nextTypes.put("unfold", origin);
     }
 
     @Override
@@ -25,12 +28,12 @@ public class RecurseCallType extends LocalType{
 
     @Override
     public LocalType duplicate() {
-        return new RecurseCallType(name);
+        return new RecurseCallType(name, this.origin);
     }
 
     @Override
     protected LocalType extractParticipation(String process) {
-        return new RecurseCallType(this.name);
+        return new RecurseCallType(this.name, this.origin);
     }
 
     @Override

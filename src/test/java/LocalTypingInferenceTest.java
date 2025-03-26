@@ -120,7 +120,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
         public void testSimpleCallTypeExtraction() throws Exception {
             var localChor = new Call("p", "X");
             var extractedType = LocalType.extractLocalType(localChor);
-            var callType = new RecurseCallType("X");
+            var callType = new RecurseCallType("X",null);
             System.out.println(extractedType);
             assertEquals(extractedType, callType);
         }
@@ -129,7 +129,7 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             var localChor = new Call("p","X");
             localChor.addBehaviour(new Call("p", "X"));
             var extractedType = LocalType.extractLocalType(localChor);
-            var recDefType = new RecurseDefType("X", new RecurseCallType("X"));
+            var recDefType = new RecurseDefType("X", new RecurseCallType("X", null));
             System.out.println(extractedType);
             assertEquals(extractedType, recDefType);
         }
@@ -216,7 +216,9 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
         @Test
         public void asymmetricConditionalShouldBeTypable() throws Exception{
             var bevs = testFile("branching_paths/asymmetric_branching.sp").compilerCtx.behaviours;
-            assertEquals(LocalType.extractLocalType(bevs.get("client")), readType("asymmetric_cdt_client.lt"));
+            var extractedClientType = LocalType.extractLocalType(bevs.get("client"));
+            var clientType = readType("asymmetric_cdt_client.lt");
+            assertEquals(clientType, extractedClientType);
             assertEquals(LocalType.extractLocalType(bevs.get("server")), readType("asymmetric_cdt_server.lt"));
             assertEquals(LocalType.extractLocalType(bevs.get("service")), readType("asymmetric_cdt_service.lt"));
         }

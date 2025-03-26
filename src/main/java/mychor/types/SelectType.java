@@ -102,6 +102,9 @@ public class SelectType extends LocalType {
                 }
             }
         }
+        for (String s : nextTypes.keySet()) {
+            if(nextTypes.get(s).knowlegdgeOfChoice(processes)) return false;
+        }
         return true;
     }
 

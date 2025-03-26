@@ -7,6 +7,9 @@ import java.util.HashMap;
 
 public class LocalTypeWriter extends LocalTypeParserBaseVisitor<LocalType>{
 
+
+    private static HashMap<String, LocalType> recursionDef = new HashMap<String, LocalType>();
+
     @Override
     public LocalType visitEndType(LocalTypeParser.EndTypeContext ctx) {
         return new EndType();
@@ -14,7 +17,7 @@ public class LocalTypeWriter extends LocalTypeParserBaseVisitor<LocalType>{
 
     @Override
     public LocalType visitCallType(LocalTypeParser.CallTypeContext ctx) {
-        return new RecurseCallType(ctx.getText());
+        return new RecurseCallType(ctx.getText(), recursionDef.get(ctx.getText()));
     }
 
     @Override
@@ -23,7 +26,9 @@ public class LocalTypeWriter extends LocalTypeParserBaseVisitor<LocalType>{
         // IDENTIFIER 1
         // '.' 2
         // localtype 3
-        return new RecurseDefType(ctx.getChild(1).getText(), ctx.getChild(3).accept(this));
+        var lt = new RecurseDefType(ctx.getChild(1).getText(), ctx.getChild(3).accept(this));
+        recursionDef.put(ctx.getChild(1).getText(), lt);
+        return lt;
     }
 
     @Override
