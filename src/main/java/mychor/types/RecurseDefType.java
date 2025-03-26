@@ -10,6 +10,13 @@ public class RecurseDefType extends LocalType{
         this.varName = varName;
         nextTypes.put("unfold", continuation);
     }
+    public RecurseDefType(String varName){
+        this.varName = varName;
+    }
+
+    public void addUnfolding(LocalType continuation){
+        nextTypes.put("unfold", continuation);
+    }
 
     @Override
     public boolean equals(Object obj) {

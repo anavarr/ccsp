@@ -28,8 +28,9 @@ public abstract class LocalType {
                     // it is final : the procedure has already been called, this is a recursive call
                     yield new RecurseCallType(call.getVariableName(), recursionDef.get(call.getVariableName()));
                 }else{
-                    var lt = new RecurseDefType(call.getVariableName(), extractLocalType(call.nextBehaviours.get("unfold")));
+                    var lt = new RecurseDefType(call.getVariableName());
                     recursionDef.put(call.getVariableName(), lt);
+                    lt.addUnfolding(extractLocalType(call.nextBehaviours.get("unfold")));
                     yield lt;
                 }
             case Cdt cdt:
