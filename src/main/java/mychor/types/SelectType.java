@@ -79,7 +79,14 @@ public class SelectType extends LocalType {
     @Override
     public LocalType duplicate() {
         var s = new SelectType(destination, nextTypes);
-        if(visitingBranch != null) s.visitingBranch = visitingBranch.duplicate();
+        s.nextTypes.replaceAll((k, v) -> s.nextTypes.get(k).duplicate());
+        if(visitingBranch != null) {
+            if(visitingBranch.equals(this)){
+                s.visitingBranch = new SelectType(destination, nextTypes);
+            }else{
+                s.visitingBranch = visitingBranch.duplicate();
+            }
+        }
         s.visitedLabels.addAll(visitedLabels);
         s.visitingLabel = visitingLabel;
         return s;
@@ -106,6 +113,13 @@ public class SelectType extends LocalType {
             if(nextTypes.get(s).knowlegdgeOfChoice(processes)) return false;
         }
         return true;
+    }
+
+    @Override
+    protected LocalType duplicateReset() {
+        var st = new SelectType(destination, nextTypes);
+        st.nextTypes.replaceAll((k, v) -> st.nextTypes.get(k).duplicate());
+        return st;
     }
 
     @Override

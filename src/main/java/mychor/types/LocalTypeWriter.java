@@ -17,7 +17,7 @@ public class LocalTypeWriter extends LocalTypeParserBaseVisitor<LocalType>{
 
     @Override
     public LocalType visitCallType(LocalTypeParser.CallTypeContext ctx) {
-        return new RecurseCallType(ctx.getText(), recursionDef.get(ctx.getText()));
+        return new RecurseCallType(ctx.getText(), (RecurseDefType) recursionDef.get(ctx.getText()));
     }
 
     @Override

@@ -50,6 +50,11 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
+    protected LocalType duplicateReset() {
+        return new ReceiveType(destination, nextTypes.get(";").duplicateReset());
+    }
+
+    @Override
     public String toString() {
         return destination+"?;"+nextTypes.get(";").toString();
     }

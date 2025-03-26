@@ -39,4 +39,9 @@ public class EndType extends LocalType{
     public Boolean knowlegdgeOfChoice(Collection<String> processes) {
         return true;
     }
+
+    @Override
+    protected LocalType duplicateReset() {
+        return new EndType();
+    }
 }

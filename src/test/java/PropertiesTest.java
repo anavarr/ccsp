@@ -141,6 +141,4 @@ public class PropertiesTest extends ProgramReaderTest{
         var spc = testFile("recursion/asymmetric_recursion.sp");
         assertFalse(spc.deadlockFreedomLocalType());
     }
-
-
 }

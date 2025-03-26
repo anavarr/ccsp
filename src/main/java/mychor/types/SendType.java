@@ -44,4 +44,9 @@ public class SendType extends LocalType{
     public Boolean knowlegdgeOfChoice(Collection<String> processes) {
         return nextTypes.get(";").knowlegdgeOfChoice(processes);
     }
+
+    @Override
+    protected LocalType duplicateReset() {
+        return new ReceiveType(destination, nextTypes.get(";").duplicateReset());
+    }
 }

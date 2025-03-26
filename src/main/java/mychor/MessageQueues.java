@@ -7,7 +7,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class MessageQueues extends HashMap<String, Queue<Message>>{
 
     public int accessed = 0;
-    static int DEFAULT_CAPACITY = 100;
+    static int DEFAULT_CAPACITY = 10000;
     public MessageQueues(){
         super();
     }

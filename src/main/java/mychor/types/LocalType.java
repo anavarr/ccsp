@@ -26,7 +26,7 @@ public abstract class LocalType {
             case Call call:
                 if(call.nextBehaviours.isEmpty()){
                     // it is final : the procedure has already been called, this is a recursive call
-                    yield new RecurseCallType(call.getVariableName(), recursionDef.get(call.getVariableName()));
+                    yield new RecurseCallType(call.getVariableName(), (RecurseDefType) recursionDef.get(call.getVariableName()));
                 }else{
                     var lt = new RecurseDefType(call.getVariableName());
                     recursionDef.put(call.getVariableName(), lt);
@@ -126,4 +126,6 @@ public abstract class LocalType {
     protected abstract LocalType extractParticipation(String process);
 
     public abstract Boolean knowlegdgeOfChoice(Collection<String> processes);
+
+    protected abstract LocalType duplicateReset();
 }

@@ -45,9 +45,18 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
+    protected LocalType duplicateReset() {
+        return this;
+    }
+
+    @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append("µ ").append(varName).append(".").append(" ").append(nextTypes.get("unfold").toString());
         return b.toString();
+    }
+
+    public LocalType reduceReset(String process, MessageQueues mqs) {
+        return nextTypes.get("unfold").duplicateReset().reduce(process, mqs);
     }
 }

@@ -7,10 +7,10 @@ import java.util.HashMap;
 
 public class RecurseCallType extends LocalType{
     String name;
-    LocalType origin;
+    RecurseDefType origin;
     int visited;
-    int toVisit = 10;
-    public RecurseCallType(String name, LocalType origin){
+    int toVisit = 50;
+    public RecurseCallType(String name, RecurseDefType origin){
         this.name = name;
         this.nextTypes = new HashMap<>();
         this.origin = origin;
@@ -26,24 +26,31 @@ public class RecurseCallType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        visited++;
-        if(visited < toVisit) return origin.reduce(process, mqs);
+        this.visited++;
+        if(visited < toVisit) return origin.reduceReset(process, mqs);
         return new EndType();
     }
 
     @Override
     public LocalType duplicate() {
-        return new RecurseCallType(name, this.origin);
+        return this;
     }
 
     @Override
     protected LocalType extractParticipation(String process) {
-        return new RecurseCallType(this.name, this.origin);
+        var rct = new RecurseCallType(this.name, this.origin);
+        rct.visited = this.visited;
+        return rct;
     }
 
     @Override
     public Boolean knowlegdgeOfChoice(Collection<String> processes) {
         return true;
+    }
+
+    @Override
+    protected LocalType duplicateReset() {
+        return this;
     }
 
     @Override

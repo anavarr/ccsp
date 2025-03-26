@@ -25,7 +25,16 @@ public class BranchType extends LocalType{
     @Override
     public LocalType duplicate() {
         var s = new BranchType(destination, nextTypes);
-        if(visitingBranch != null) s.visitingBranch = visitingBranch.duplicate();
+        s.nextTypes.replaceAll((k, v) -> s.nextTypes.get(k).duplicate());
+        if(visitingBranch != null) {
+            if(visitingBranch.equals(this)){
+                s.visitingBranch = new BranchType(destination, nextTypes);
+            }else if (visitingBranch instanceof SelectType set){
+                s.visitingBranch = new SelectType(set.destination, set.nextTypes);
+            }else{
+                s.visitingBranch = visitingBranch.duplicate();
+            }
+        }
         s.visitedLabels.addAll(visitedLabels);
         s.visitingLabel = visitingLabel;
         return s;
@@ -76,6 +85,8 @@ public class BranchType extends LocalType{
         return this;
     }
 
+
+
     @Override
     protected LocalType extractParticipation(String process) {
         var branches = new ArrayList<LocalType>();
@@ -102,6 +113,13 @@ public class BranchType extends LocalType{
             if(!nextTypes.get(s).knowlegdgeOfChoice(processes)) return false;
         }
         return true;
+    }
+
+    @Override
+    protected LocalType duplicateReset() {
+        var st = new BranchType(destination, nextTypes);
+        st.nextTypes.replaceAll((k, v) -> st.nextTypes.get(k).duplicate());
+        return st;
     }
 
     @Override
