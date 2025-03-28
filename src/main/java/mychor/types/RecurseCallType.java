@@ -9,7 +9,7 @@ public class RecurseCallType extends LocalType{
     String name;
     RecurseDefType origin;
     int visited;
-    int toVisit = 50;
+    int toVisit = 10;
     public RecurseCallType(String name, RecurseDefType origin){
         this.name = name;
         this.nextTypes = new HashMap<>();
@@ -27,7 +27,11 @@ public class RecurseCallType extends LocalType{
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
         this.visited++;
-        if(visited < toVisit) return origin.reduceReset(process, mqs);
+        if(visited%2 == 0) return this;
+        if(visited < toVisit) {
+            origin.reduceReset(process, mqs);
+            return this;
+        }
         return new EndType();
     }
 

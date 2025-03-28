@@ -157,7 +157,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     public boolean deadlockFreedomLocalType(){
         if(!typeSafetyLocalType()) return false;
-        var r = true;
+        System.out.println(reducedTypes);
+        System.out.println(qs);
         for (String s : reducedTypes.keySet()) {
             if(!reducedTypes.get(s).equals(new EndType())) return false;
         }

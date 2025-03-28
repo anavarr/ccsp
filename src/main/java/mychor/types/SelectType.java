@@ -7,19 +7,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class SelectType extends LocalType {
     String destination;
     private List<String> visitedLabels = new ArrayList<>();
+    private ArrayList<String> finishedBranches = new ArrayList<>();
     private String visitingLabel = null;
     private LocalType visitingBranch = null;
+    private HashMap<String, Integer> visitStats = new HashMap<>();
 
     public SelectType(String destination, HashMap<String, LocalType> branches){
         this.destination = destination;
         for (String s : branches.keySet()) {
             nextTypes.put(s, branches.get(s));
+            visitStats.put(s, 0);
         }
+
     }
 
     public SelectType(String destination){
@@ -28,6 +33,7 @@ public class SelectType extends LocalType {
 
     public void addLabel(String label, LocalType next){
         nextTypes.put(label, next);
+        visitStats.put(label, 0);
     }
 
     @Override
@@ -64,16 +70,23 @@ public class SelectType extends LocalType {
         if(visitingLabel != null){
             return updateVisitingBranch(pr, mqs);
         }
-        for (String s : nextTypes.keySet()) {
-            if(!visitedLabels.contains(s)){
-                visitedLabels.add(s);
-                visitingLabel = s;
-                mqs.add(Utils.Direction.SELECT, pr, destination, s);
-                visitingBranch = nextTypes.get(s);
-                return updateVisitingBranch(pr, mqs);
-            }
+        var label = getLeastVisitedLabel();
+        if(label == null) return new EndType();
+        visitedLabels.add(label);
+        visitStats.put(label, visitStats.get(label)+1);
+        visitingLabel = label;
+        mqs.add(Utils.Direction.SELECT, pr, destination, label);
+        visitingBranch = nextTypes.get(label);
+        return updateVisitingBranch(pr, mqs);
+    }
+
+    private String getLeastVisitedLabel() {
+        if(visitStats.isEmpty()) return null;
+        var smallestValue = visitStats.entrySet().stream().findAny().get();
+        for (Map.Entry<String, Integer> stringIntegerEntry : visitStats.entrySet()) {
+            if(stringIntegerEntry.getValue() < smallestValue.getValue()) smallestValue = stringIntegerEntry;
         }
-        throw new RuntimeException("The selection can't be reduced");
+        return smallestValue.getKey();
     }
 
     @Override
@@ -89,6 +102,7 @@ public class SelectType extends LocalType {
         }
         s.visitedLabels.addAll(visitedLabels);
         s.visitingLabel = visitingLabel;
+        s.visitStats = visitStats;
         return s;
     }
 
@@ -118,8 +132,14 @@ public class SelectType extends LocalType {
     @Override
     protected LocalType duplicateReset() {
         var st = new SelectType(destination, nextTypes);
-        st.nextTypes.replaceAll((k, v) -> st.nextTypes.get(k).duplicate());
-        return st;
+        visitedLabels.remove(st.visitingLabel);
+        visitingLabel = null;
+        return this;
+    }
+
+    private void removeBranch(String s) {
+        nextTypes.remove(s);
+        visitStats.remove(s);
     }
 
     @Override
@@ -137,6 +157,8 @@ public class SelectType extends LocalType {
     private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
         visitingBranch = visitingBranch.reduce(pr, mqs);
         if(visitingBranch.equals(new EndType())){
+            finishedBranches.add(visitingLabel);
+            visitStats.remove(visitingLabel);
             visitingLabel = null;
             if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
         }

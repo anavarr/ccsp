@@ -12,6 +12,7 @@ public class BranchType extends LocalType{
     String destination;
 
     private List<String> visitedLabels = new ArrayList<>();
+    private ArrayList<String> finishedBranches = new ArrayList<>();
     private String visitingLabel = null;
     private LocalType visitingBranch = null;
 
@@ -79,6 +80,7 @@ public class BranchType extends LocalType{
     private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
         visitingBranch = visitingBranch.reduce(pr, mqs);
         if(visitingBranch.equals(new EndType())){
+            finishedBranches.add(visitingLabel);
             visitingLabel = null;
             if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
         }
@@ -117,9 +119,13 @@ public class BranchType extends LocalType{
 
     @Override
     protected LocalType duplicateReset() {
-        var st = new BranchType(destination, nextTypes);
-        st.nextTypes.replaceAll((k, v) -> st.nextTypes.get(k).duplicate());
-        return st;
+        this.visitedLabels.remove(this.visitingLabel);
+        this.visitingLabel = null;
+        return this;
+    }
+
+    private void removeBranch(String s) {
+        nextTypes.remove(s);
     }
 
     @Override
