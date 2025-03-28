@@ -10,6 +10,7 @@ client [
         End
     Else
         server+"abort" @+"";
+        server!data @!"";
         End
 ]
 

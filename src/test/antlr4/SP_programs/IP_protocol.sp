@@ -7,11 +7,14 @@ X_IP:
         client+"left" @+"";
         server+"left" @+"";
         client!token @!"";
-        Call Y_IP
+        End
     Else
         client+"right" @+"";
         server+"right" @+"";
         Call X_IP
+
+Y_IP:
+    End
 
 X_Client:
     ip!req @!"";
@@ -20,7 +23,7 @@ X_Client:
             Some(
                 ip?x @?"";
                 server!x @!"";
-                Call Y_Client
+                End
             )
         }
         //
@@ -30,12 +33,14 @@ X_Client:
             )
         }
 
+Y_Client: End
+
 X_Server:
     ip &
         { "left":
             Some(
                 client?x @? "";
-                Call Y_Server
+                End
             )
         }
         //
@@ -44,3 +49,5 @@ X_Server:
                 Call X_Server
             )
         }
+
+Y_Server: End

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -221,6 +222,20 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             assertEquals(clientType, extractedClientType);
             assertEquals(LocalType.extractLocalType(bevs.get("server")), readType("asymmetric_cdt_server.lt"));
             assertEquals(LocalType.extractLocalType(bevs.get("service")), readType("asymmetric_cdt_service.lt"));
+        }
+
+        @Test
+        public void testIntricateBranchingComb7() throws Exception{
+            var bevs = testFile("branching_paths/intricate_branching_comb_7.sp").compilerCtx.behaviours;
+            assertDoesNotThrow(() -> LocalType.extractLocalType(bevs.get("client")));
+            assertDoesNotThrow(() -> LocalType.extractLocalType(bevs.get("server")));
+            assertDoesNotThrow(() -> LocalType.extractLocalType(bevs.get("service")));
+        }
+
+        @Test
+        public void nestedRecursionShouldBeInferable() throws Exception{
+            var bevs = testFile("inner_outer_recursion_test.sp").compilerCtx.behaviours;
+            assertDoesNotThrow(() -> LocalType.extractLocalType(bevs.get("p")));
         }
     }
 }

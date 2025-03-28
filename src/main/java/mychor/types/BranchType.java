@@ -121,6 +121,9 @@ public class BranchType extends LocalType{
     protected LocalType duplicateReset() {
         this.visitedLabels.remove(this.visitingLabel);
         this.visitingLabel = null;
+        for (String s : nextTypes.keySet()) {
+            nextTypes.get(s).duplicateReset();
+        }
         return this;
     }
 

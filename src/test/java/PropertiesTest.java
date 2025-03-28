@@ -141,4 +141,16 @@ public class PropertiesTest extends ProgramReaderTest{
         var spc = testFile("recursion/asymmetric_recursion.sp");
         assertFalse(spc.deadlockFreedomLocalType());
     }
+
+    @Test
+    public void testComplementaryComplexSessionShouldBeDeadLockFree() throws IOException {
+        var spc = testFile("complementaryComplexSession.sp");
+        assertTrue(spc.deadlockFreedomLocalType());
+    }
+
+    @Test
+    public void IPProtocolShouldBeDeadlockFree() throws IOException{
+        var spc = testFile("IP_protocol.sp");
+        assertTrue(spc.deadlockFreedomLocalType());
+    }
 }

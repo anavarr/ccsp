@@ -47,6 +47,7 @@ public class SendType extends LocalType{
 
     @Override
     protected LocalType duplicateReset() {
-        return new ReceiveType(destination, nextTypes.get(";").duplicateReset());
+        nextTypes.get(";").duplicateReset();
+        return this;
     }
 }

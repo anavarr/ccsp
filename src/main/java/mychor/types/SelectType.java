@@ -131,8 +131,8 @@ public class SelectType extends LocalType {
 
     @Override
     protected LocalType duplicateReset() {
-        var st = new SelectType(destination, nextTypes);
-        visitedLabels.remove(st.visitingLabel);
+        visitedLabels.remove(visitingLabel);
+        nextTypes.forEach((key, value) -> value.duplicateReset());
         visitingLabel = null;
         return this;
     }

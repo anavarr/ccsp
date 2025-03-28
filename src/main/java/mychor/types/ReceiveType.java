@@ -27,7 +27,8 @@ public class ReceiveType extends LocalType{
         // the sender sent a label it was not supposed to send beforehand
         // it is not valid
         if(!msg.direction().equals(Utils.Direction.SEND)) throw new RuntimeException(
-                        "A receive action is expected, the queue contains a labeled selection, type is not valid"
+                        "A receive action is expected, the queue "+process+"-"+destination+
+                                " contains a labeled selection, type is not valid"
        );
         // we got the right message, this communication can reduce
         return nextTypes.get(";");
@@ -51,7 +52,8 @@ public class ReceiveType extends LocalType{
 
     @Override
     protected LocalType duplicateReset() {
-        return new ReceiveType(destination, nextTypes.get(";").duplicateReset());
+        nextTypes.get(";").duplicateReset();
+        return this;
     }
 
     @Override
