@@ -1,5 +1,6 @@
 package mychor;
 
+import mychor.types.BranchType;
 import mychor.types.EndType;
 import mychor.types.LocalType;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -119,6 +120,22 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 try {
                     var b = reducedTypes.get(s).reduce(s, qs);
                     reducedTypes.put(s, b);
+                    if(reducedTypes.get(s).equals(oldReduced.get(s))){
+                        // this one didn't progress
+                        if(reducedTypes.get(s) instanceof BranchType bt){
+                            //this one is a branch
+                            if(reducedTypes.get(bt.getDestination()).equals(new EndType())){
+                                //the complementary selector is ended
+                                for (String string : bt.nextTypes.keySet()) {
+                                    if(bt.nextTypes.get(string).equals(new EndType()) && bt.visted(string)){
+                                        //at least one path has been visited and completed, we all good
+                                        reducedTypes.put(s, new EndType());
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 } catch(Exception e){
                     System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
                     return false;

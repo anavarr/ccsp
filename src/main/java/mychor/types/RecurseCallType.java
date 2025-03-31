@@ -8,14 +8,11 @@ import java.util.HashMap;
 public class RecurseCallType extends LocalType{
     String name;
     RecurseDefType origin;
-    int visited;
-    int toVisit = 26;
     public RecurseCallType(String name, RecurseDefType origin){
         this.name = name;
         this.nextTypes = new HashMap<>();
         this.origin = origin;
         this.nextTypes.put("unfold", origin);
-        this.visited = 0;
     }
 
     @Override
@@ -26,14 +23,9 @@ public class RecurseCallType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        this.visited++;
-        if(visited%2 == 0) return this;
-        if(visited < toVisit) {
-            var node = origin.reduceReset(process, mqs);
-            if(node.equals(new EndType())) return new EndType();
-            return this;
-        }
-        return new EndType();
+        var node = origin.reduceReset(process, mqs);
+        if(node.equals(new EndType())) return new EndType();
+        return this;
     }
 
     @Override
@@ -44,7 +36,6 @@ public class RecurseCallType extends LocalType{
     @Override
     protected LocalType extractParticipation(String process) {
         var rct = new RecurseCallType(this.name, this.origin);
-        rct.visited = this.visited;
         return rct;
     }
 

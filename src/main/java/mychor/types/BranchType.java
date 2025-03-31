@@ -23,6 +23,10 @@ public class BranchType extends LocalType{
         }
     }
 
+    public String getDestination(){
+        return destination;
+    }
+
     @Override
     public LocalType duplicate() {
         var s = new BranchType(destination, nextTypes);
@@ -146,5 +150,9 @@ public class BranchType extends LocalType{
         }
         b.append("\n}");
         return b.toString();
+    }
+
+    public boolean visted(String label) {
+        return visitedLabels.contains(label);
     }
 }

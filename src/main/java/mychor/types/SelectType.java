@@ -70,6 +70,9 @@ public class SelectType extends LocalType {
         if(visitingLabel != null){
             return updateVisitingBranch(pr, mqs);
         }
+        var done = visitStats.keySet().stream().allMatch(la -> visitStats.get(la) > 10);
+        if(done) return new EndType();
+
         var label = getLeastVisitedLabel();
         if(label == null) return new EndType();
         visitedLabels.add(label);
