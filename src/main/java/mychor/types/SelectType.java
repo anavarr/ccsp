@@ -133,9 +133,9 @@ public class SelectType extends LocalType {
     }
 
     @Override
-    protected LocalType duplicateReset() {
+    protected LocalType softReset() {
         visitedLabels.remove(visitingLabel);
-        nextTypes.forEach((key, value) -> value.duplicateReset());
+        nextTypes.forEach((key, value) -> value.softReset());
         visitingLabel = null;
         return this;
     }

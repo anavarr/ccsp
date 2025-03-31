@@ -170,4 +170,10 @@ public class PropertiesTest extends ProgramReaderTest{
         var spc = testFile("recurse_vs_static_end_first.sp");
         assertFalse(spc.deadlockFreedomLocalType());
     }
+
+    @Test
+    public void largeCombinatoryShouldNotImpactTraversal() throws IOException {
+        var spc = testFile("too_many_selections_can_lead_to_uncomplete_unraveling.sp");
+        spc.deadlockFreedomLocalType();
+    }
 }

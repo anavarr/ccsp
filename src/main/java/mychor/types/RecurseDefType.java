@@ -45,7 +45,7 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
-    protected LocalType duplicateReset() {
+    protected LocalType softReset() {
         return this;
     }
 
@@ -57,6 +57,6 @@ public class RecurseDefType extends LocalType{
     }
 
     public LocalType reduceReset(String process, MessageQueues mqs) {
-        return nextTypes.get("unfold").duplicateReset().reduce(process, mqs);
+        return nextTypes.get("unfold").softReset().reduce(process, mqs);
     }
 }

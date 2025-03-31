@@ -122,11 +122,11 @@ public class BranchType extends LocalType{
     }
 
     @Override
-    protected LocalType duplicateReset() {
+    protected LocalType softReset() {
         this.visitedLabels.remove(this.visitingLabel);
         this.visitingLabel = null;
         for (String s : nextTypes.keySet()) {
-            nextTypes.get(s).duplicateReset();
+            nextTypes.get(s).softReset();
         }
         return this;
     }

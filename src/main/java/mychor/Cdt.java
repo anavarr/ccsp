@@ -99,4 +99,23 @@ public class Cdt extends Behaviour {
         }
         return branches;
     }
+
+    public List<Behaviour> getImmediateBranches(){
+        List<Behaviour> branches = new ArrayList<>();
+        if(nextBehaviours.containsKey("then")) {
+            if (nextBehaviours.get("then") instanceof Cdt cdt1) {
+                branches.addAll(cdt1.getImmediateBranches());
+            } else {
+                branches.add(nextBehaviours.get("then"));
+            }
+        }
+        if(nextBehaviours.containsKey("else")) {
+            if (nextBehaviours.get("else") instanceof Cdt cdt1) {
+                branches.addAll(cdt1.getImmediateBranches());
+            } else {
+                branches.add(nextBehaviours.get("else"));
+            }
+        }
+        return branches;
+    }
 }

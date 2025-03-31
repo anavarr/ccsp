@@ -41,7 +41,7 @@ public class EndType extends LocalType{
     }
 
     @Override
-    protected LocalType duplicateReset() {
+    protected LocalType softReset() {
         return new EndType();
     }
 }

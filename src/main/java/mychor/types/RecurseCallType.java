@@ -8,6 +8,7 @@ import java.util.HashMap;
 public class RecurseCallType extends LocalType{
     String name;
     RecurseDefType origin;
+    LocalType previousInterruption;
     public RecurseCallType(String name, RecurseDefType origin){
         this.name = name;
         this.nextTypes = new HashMap<>();
@@ -45,7 +46,7 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
-    protected LocalType duplicateReset() {
+    protected LocalType softReset() {
         return this;
     }
 

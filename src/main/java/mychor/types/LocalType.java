@@ -35,9 +35,8 @@ public abstract class LocalType {
                 }
             case Cdt cdt:
                 //merge it
-                var branches = new ArrayList<Behaviour>();
-                if(cdt.nextBehaviours.containsKey("then")) branches.add(cdt.nextBehaviours.get("then"));
-                if(cdt.nextBehaviours.containsKey("else")) branches.add(cdt.nextBehaviours.get("else"));
+                var branches = cdt.getImmediateBranches();
+                if(branches.isEmpty()) yield new EndType();
                 //two cases : first one is a selection, none is
                 var selectBranches = branches.stream()
                         .filter(el -> {
@@ -62,11 +61,7 @@ public abstract class LocalType {
                 }else{
                     //not all select, it is not great
                     LocalType lt;
-                    Behaviour beh;
-                    if(cdt.nextBehaviours.containsKey("then")) beh = cdt.nextBehaviours.get("then");
-                    else if(cdt.nextBehaviours.containsKey("then")) beh = cdt.nextBehaviours.get("else");
-                    else yield new EndType();
-                    LocalType oldLocalType = extractLocalType(beh);;
+                    LocalType oldLocalType = extractLocalType(branches.getFirst());
                     for (Behaviour branch : branches) {
                         lt = extractLocalType(branch);
                         if(!oldLocalType.equals(lt)) {
@@ -127,5 +122,5 @@ public abstract class LocalType {
 
     public abstract Boolean knowlegdgeOfChoice(Collection<String> processes);
 
-    protected abstract LocalType duplicateReset();
+    protected abstract LocalType softReset();
 }

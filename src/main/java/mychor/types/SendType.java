@@ -46,8 +46,8 @@ public class SendType extends LocalType{
     }
 
     @Override
-    protected LocalType duplicateReset() {
-        nextTypes.get(";").duplicateReset();
+    protected LocalType softReset() {
+        nextTypes.get(";").softReset();
         return this;
     }
 }

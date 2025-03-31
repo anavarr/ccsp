@@ -237,5 +237,11 @@ public class LocalTypingInferenceTest extends ProgramReaderTest {
             var bevs = testFile("inner_outer_recursion_test.sp").compilerCtx.behaviours;
             assertDoesNotThrow(() -> LocalType.extractLocalType(bevs.get("p")));
         }
+
+        @Test
+        public void deeplyNestedConditionalShoudBeInferable() throws Exception{
+            var bevs = testFile("too_many_selections_can_lead_to_uncomplete_unraveling.sp").compilerCtx.behaviours;
+            assertDoesNotThrow(() -> LocalType.extractLocalType(bevs.get("client")));
+        }
     }
 }
