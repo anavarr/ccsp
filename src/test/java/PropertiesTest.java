@@ -153,4 +153,10 @@ public class PropertiesTest extends ProgramReaderTest{
         var spc = testFile("IP_protocol.sp");
         assertTrue(spc.deadlockFreedomLocalType());
     }
+
+    @Test
+    public void recurseVSStaticShouldBeDeadLockFree() throws IOException{
+        var spc = testFile("recurse_vs_static.sp");
+        assertTrue(spc.deadlockFreedomLocalType());
+    }
 }
