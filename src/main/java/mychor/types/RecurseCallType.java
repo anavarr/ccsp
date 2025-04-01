@@ -8,7 +8,6 @@ import java.util.HashMap;
 public class RecurseCallType extends LocalType{
     String name;
     RecurseDefType origin;
-    LocalType previousInterruption;
     public RecurseCallType(String name, RecurseDefType origin){
         this.name = name;
         this.nextTypes = new HashMap<>();
@@ -24,12 +23,8 @@ public class RecurseCallType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        var node = origin.reduceReset(process, mqs);
-        if(node.equals(new EndType())) return new EndType();
-        if(!(node.getLeaf(this) instanceof RecurseCallType ||
-                node.getLeaf(this) instanceof SelectType)) return node.getLeaf(this);
-        previousInterruption = node;
-        return this;
+        origin.softReset();
+        return origin;
     }
 
     @Override
@@ -58,8 +53,4 @@ public class RecurseCallType extends LocalType{
         return name;
     }
 
-    @Override
-    protected LocalType getLeaf(RecurseCallType source) {
-        return this;
-    }
 }

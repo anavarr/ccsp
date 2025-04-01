@@ -83,6 +83,9 @@ public class BranchType extends LocalType{
 
     private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
         visitingBranch = visitingBranch.reduce(pr, mqs);
+        if(visitingBranch instanceof RecurseDefType){
+            visitingLabel = null;
+        }
         if(visitingBranch.equals(new EndType())){
             finishedBranches.add(visitingLabel);
             visitingLabel = null;
@@ -156,9 +159,4 @@ public class BranchType extends LocalType{
         return visitedLabels.contains(label);
     }
 
-    @Override
-    protected LocalType getLeaf(RecurseCallType source) {
-        if(visitingBranch != null) return visitingBranch.getLeaf(source);
-        return this;
-    }
 }

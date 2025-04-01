@@ -124,5 +124,4 @@ public abstract class LocalType {
 
     protected abstract LocalType softReset();
 
-    protected abstract LocalType getLeaf(RecurseCallType source);
 }

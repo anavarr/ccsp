@@ -176,4 +176,10 @@ public class PropertiesTest extends ProgramReaderTest{
         var spc = testFile("too_many_selections_can_lead_to_uncomplete_unraveling.sp");
         spc.deadlockFreedomLocalType();
     }
+
+    @Test
+    public void nestedRecursiveCallsShouldBeAbleToResumeSuspension() throws IOException {
+        var spc = testFile("small_nested_select_resumption.sp");
+        spc.deadlockFreedomLocalType();
+    }
 }

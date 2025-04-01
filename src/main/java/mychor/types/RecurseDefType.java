@@ -59,9 +59,4 @@ public class RecurseDefType extends LocalType{
     public LocalType reduceReset(String process, MessageQueues mqs) {
         return nextTypes.get("unfold").softReset().reduce(process, mqs);
     }
-
-    @Override
-    protected LocalType getLeaf(RecurseCallType source) {
-        return nextTypes.get("unfold").getLeaf(source);
-    }
 }

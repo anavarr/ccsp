@@ -136,7 +136,6 @@ public class SelectType extends LocalType {
     protected LocalType softReset() {
         visitedLabels.remove(visitingLabel);
         nextTypes.forEach((key, value) -> value.softReset());
-        visitingLabel = null;
         return this;
     }
 
@@ -159,19 +158,15 @@ public class SelectType extends LocalType {
 
     private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
         visitingBranch = visitingBranch.reduce(pr, mqs);
+        if(visitingBranch instanceof RecurseDefType){
+            visitingLabel = null;
+            return visitingBranch;
+        }
         if(visitingBranch.equals(new EndType())){
             finishedBranches.add(visitingLabel);
             visitStats.remove(visitingLabel);
             visitingLabel = null;
             if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
-        }
-        return this;
-    }
-
-    @Override
-    protected LocalType getLeaf(RecurseCallType source) {
-        if(visitingBranch != null){
-            return visitingBranch.getLeaf(source);
         }
         return this;
     }

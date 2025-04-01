@@ -45,8 +45,4 @@ public class EndType extends LocalType{
         return new EndType();
     }
 
-    @Override
-    protected LocalType getLeaf(RecurseCallType source) {
-        return this;
-    }
 }

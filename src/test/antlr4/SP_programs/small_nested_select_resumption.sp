@@ -7,7 +7,7 @@ Client:
             server!data @!"";
             If testValid() Then
                 server+"1choice1" @+"";
-                Call Client;
+                Call Client
             Else
                 server+"1choice2" @+"";
                 Call Client

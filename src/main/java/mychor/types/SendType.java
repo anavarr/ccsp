@@ -51,8 +51,4 @@ public class SendType extends LocalType{
         return this;
     }
 
-    @Override
-    protected LocalType getLeaf(RecurseCallType source) {
-        return this;
-    }
 }
