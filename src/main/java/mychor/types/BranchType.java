@@ -85,6 +85,7 @@ public class BranchType extends LocalType{
         visitingBranch = visitingBranch.reduce(pr, mqs);
         if(visitingBranch instanceof RecurseDefType){
             visitingLabel = null;
+            return visitingBranch;
         }
         if(visitingBranch.equals(new EndType())){
             finishedBranches.add(visitingLabel);

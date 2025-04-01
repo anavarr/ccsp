@@ -3,6 +3,7 @@ package mychor;
 import mychor.types.BranchType;
 import mychor.types.EndType;
 import mychor.types.LocalType;
+import mychor.types.RecurseDefType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -119,6 +120,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             for (String s : reducedTypes.keySet()) {
                 try {
                     var b = reducedTypes.get(s).reduce(s, qs);
+                    if(b instanceof RecurseDefType rdt){
+                        b = rdt.nextTypes.get("unfold");
+                    }
                     reducedTypes.put(s, b);
                     if(reducedTypes.get(s).equals(oldReduced.get(s))){
                         // this one didn't progress

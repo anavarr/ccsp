@@ -4,10 +4,10 @@ Client:
     If isValid() Then
         server+"continue" @+"";
         server!data @!"";
-        End
+        Call Client
     Else
         server+"quit" @+"";
-        Call Client
+        End
 
 Server:
     client&{

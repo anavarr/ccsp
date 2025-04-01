@@ -46,6 +46,7 @@ public class RecurseDefType extends LocalType{
 
     @Override
     protected LocalType softReset() {
+        nextTypes.get("unfold").softReset();
         return this;
     }
 
