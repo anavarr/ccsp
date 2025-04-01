@@ -44,4 +44,9 @@ public class EndType extends LocalType{
     protected LocalType softReset() {
         return new EndType();
     }
+
+    @Override
+    protected LocalType getLeaf(RecurseCallType source) {
+        return this;
+    }
 }

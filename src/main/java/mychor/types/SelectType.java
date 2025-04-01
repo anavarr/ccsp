@@ -167,4 +167,12 @@ public class SelectType extends LocalType {
         }
         return this;
     }
+
+    @Override
+    protected LocalType getLeaf(RecurseCallType source) {
+        if(visitingBranch != null){
+            return visitingBranch.getLeaf(source);
+        }
+        return this;
+    }
 }

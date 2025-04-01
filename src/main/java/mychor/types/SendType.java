@@ -50,4 +50,9 @@ public class SendType extends LocalType{
         nextTypes.get(";").softReset();
         return this;
     }
+
+    @Override
+    protected LocalType getLeaf(RecurseCallType source) {
+        return this;
+    }
 }

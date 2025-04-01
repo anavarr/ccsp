@@ -155,4 +155,10 @@ public class BranchType extends LocalType{
     public boolean visted(String label) {
         return visitedLabels.contains(label);
     }
+
+    @Override
+    protected LocalType getLeaf(RecurseCallType source) {
+        if(visitingBranch != null) return visitingBranch.getLeaf(source);
+        return this;
+    }
 }

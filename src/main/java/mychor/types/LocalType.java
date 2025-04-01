@@ -123,4 +123,6 @@ public abstract class LocalType {
     public abstract Boolean knowlegdgeOfChoice(Collection<String> processes);
 
     protected abstract LocalType softReset();
+
+    protected abstract LocalType getLeaf(RecurseCallType source);
 }

@@ -26,6 +26,9 @@ public class RecurseCallType extends LocalType{
     public LocalType reduce(String process, MessageQueues mqs) {
         var node = origin.reduceReset(process, mqs);
         if(node.equals(new EndType())) return new EndType();
+        if(!(node.getLeaf(this) instanceof RecurseCallType ||
+                node.getLeaf(this) instanceof SelectType)) return node.getLeaf(this);
+        previousInterruption = node;
         return this;
     }
 
@@ -55,5 +58,8 @@ public class RecurseCallType extends LocalType{
         return name;
     }
 
-
+    @Override
+    protected LocalType getLeaf(RecurseCallType source) {
+        return this;
+    }
 }

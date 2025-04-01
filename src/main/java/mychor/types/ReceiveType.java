@@ -60,4 +60,9 @@ public class ReceiveType extends LocalType{
     public String toString() {
         return destination+"?;"+nextTypes.get(";").toString();
     }
+
+    @Override
+    protected LocalType getLeaf(RecurseCallType source) {
+        return this;
+    }
 }

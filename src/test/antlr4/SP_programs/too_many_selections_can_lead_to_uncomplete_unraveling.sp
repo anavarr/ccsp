@@ -4,7 +4,7 @@ Client:
     If testValid() Then
         If testValid() Then
             server+"choice1" @+"";
-            server?data @?"";
+            server!data @!"";
             If testValid() Then
                 server+"1choice1" @+"";
                 If testValid() Then
