@@ -67,7 +67,7 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
     public boolean equals(MessageQueues qs){
         if(!(keySet().containsAll(qs.keySet()) &&qs.keySet().containsAll(keySet()))) return false;
         for (String s : keySet()) {
-            if(!(get(s).containsAll(qs.get(s)) && qs.get(s).containsAll(get(s)))) return false;
+            if(qs.get(s).size() != this.get(s).size() || !(get(s).containsAll(qs.get(s)) && qs.get(s).containsAll(get(s)))) return false;
         }
         return accessed == qs.accessed;
     }
