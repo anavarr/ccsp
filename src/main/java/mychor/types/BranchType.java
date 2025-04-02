@@ -118,7 +118,7 @@ public class BranchType extends LocalType{
                 return false;
             }
         }
-        if(branches.stream().noneMatch(el -> !el.equals(branches.getFirst()))) return false;
+        if(branches.stream().anyMatch(el -> !el.equals(branches.getFirst()))) return false;
         for (String s : nextTypes.keySet()) {
             if(!nextTypes.get(s).knowlegdgeOfChoice(processes)) return false;
         }

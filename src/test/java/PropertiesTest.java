@@ -1,3 +1,5 @@
+import mychor.Message;
+import mychor.Utils;
 import mychor.types.LocalType;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -11,66 +13,62 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PropertiesTest extends ProgramReaderTest{
 
-    @Test
-    public void knowledgeofChoiceOfAsymmetricConditionShouldReturnFalse() throws IOException{
-        var spc = testFile("branching_paths/asymmetric_branching.sp");
-        var knowledgeTable = spc.knowledgeOfChoice();
-        knowledgeTable.forEach((pr, type) -> {
-            System.out.println(pr+":"+type);
-        });
-    }
+    @Nested
+    public class OldTechniqueTest{
+        @Test
+        public void asymmetricCdtShouldBeTypeSafe() throws IOException {
+            var spc = testFile("branching_paths/asymmetric_branching.sp");
+            assertTrue(spc.typeSafetyLocalType());
+        }
+        @Test
+        public void asymmetricCdtShouldNotBeDeadlockFree() throws IOException {
+            var spc = testFile("branching_paths/asymmetric_branching.sp");
+            assertFalse(spc.deadlockFreedomLocalType());
+        }
 
-    @Test
-    public void asymmetricCdtShouldBeTypeSafe() throws IOException {
-        var spc = testFile("branching_paths/asymmetric_branching.sp");
-        assertTrue(spc.typeSafetyLocalType());
-    }
-    @Test
-    public void asymmetricCdtShouldNotBeDeadlockFree() throws IOException {
-        var spc = testFile("branching_paths/asymmetric_branching.sp");
-        assertFalse(spc.deadlockFreedomLocalType());
-    }
+        @Test
+        public void OAuth2IsSafe() throws IOException {
+            var spc = testFile("OAuth2_fragment.sp");
+            assertFalse(spc.typeSafety().contains(false));
+        }
+        @Test
+        public void OAuth2NonSafeIsNotSafe() throws IOException {
+            var spc = testFile("OAuth2_fragment_nonsafe.sp");
+            var tsResults = spc.typeSafety();
+            assertEquals(tsResults.size(), 1);
+            assertTrue(tsResults.contains(false));
+        }
+        @Test
+        public void OAuth2DeadlockFreeAsync() throws IOException {
+            var spc = testFile("OAuth2_fragment_async.sp");
+            assertFalse(spc.deadlockFreedom().contains(false));
+        }
 
-    @Test
-    public void test() throws IOException {
-        var spc = testFile("branching_paths/asymmetric_branching.sp");
-        var res = spc.deadlockFreedom();
-        System.out.println(res);
-    }
+        @Test
+        public void ThreeBuyerProtoolIsSafe() throws IOException {
+            var spc = testFile("Three_buyer_protocol.sp");
+            assertFalse(spc.typeSafety().contains(false));
+        }
 
-    @Test
-    public void OAuth2IsSafe() throws IOException {
-        var spc = testFile("OAuth2_fragment.sp");
-        assertFalse(spc.typeSafety().contains(false));
-    }
-    @Test
-    public void OAuth2NonSafeIsNotSafe() throws IOException {
-        var spc = testFile("OAuth2_fragment_nonsafe.sp");
-        var tsResults = spc.typeSafety();
-        assertEquals(tsResults.size(), 1);
-        assertTrue(tsResults.contains(false));
-    }
-    @Test
-    public void OAuth2DeadlockFreeAsync() throws IOException {
-        var spc = testFile("OAuth2_fragment_async.sp");
-        assertFalse(spc.deadlockFreedom().contains(false));
-    }
+        @Test
+        public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
+            var spc = testFile("Three_buyer_protocol.sp");
+            assertFalse(spc.deadlockFreedom().contains(false));
+        }
 
-    @Test
-    public void ThreeBuyerProtoolIsSafe() throws IOException {
-        var spc = testFile("Three_buyer_protocol.sp");
-        assertFalse(spc.typeSafety().contains(false));
-    }
-
-    @Test
-    public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
-        var spc = testFile("Three_buyer_protocol.sp");
-        assertFalse(spc.deadlockFreedom().contains(false));
     }
 
     // Local Types
     @Nested
     public class LocalTypeTests{
+        @Test
+        public void knowledgeofChoiceOfAsymmetricConditionShouldReturnFalse() throws IOException{
+            var spc = testFile("branching_paths/asymmetric_branching.sp");
+            var knowledgeTable = spc.knowledgeOfChoice();
+            assertTrue(knowledgeTable.get("server"));
+            assertFalse(knowledgeTable.get("client"));
+            assertTrue(knowledgeTable.get("service"));
+        }
 
         @Test
         public void OAuth2LocalTypeExists() throws IOException {
@@ -128,58 +126,71 @@ public class PropertiesTest extends ProgramReaderTest{
             var spc = testFile("Three_buyer_protocol.sp");
             assertTrue(spc.deadlockFreedomLocalType());
         }
+
+
+        @Test
+        public void nReceiveVSArbitrarySendShouldDeadlock() throws IOException {
+            var spc = testFile("recursion/asymmetric_deadlock.sp");
+            assertFalse(spc.deadlockFreedomLocalType());
+        }
+
+        @Test
+        public void asymmetricRecursionShouldDeadlock() throws IOException {
+            var spc = testFile("recursion/asymmetric_recursion.sp");
+            assertFalse(spc.deadlockFreedomLocalType());
+        }
+
+        @Test
+        public void testComplementaryComplexSessionShouldBeDeadLockFree() throws IOException {
+            var spc = testFile("complementaryComplexSession.sp");
+            assertTrue(spc.deadlockFreedomLocalType());
+        }
+
+        @Test
+        public void IPProtocolShouldBeDeadlockFree() throws IOException{
+            var spc = testFile("IP_protocol.sp");
+            assertTrue(spc.deadlockFreedomLocalType());
+        }
+
+        @Test
+        public void recurseVSStaticShouldBeDeadLockFree() throws IOException{
+            var spc = testFile("recurse_vs_static.sp");
+            assertTrue(spc.deadlockFreedomLocalType());
+        }
+
+        @Test
+        public void recursionSelectionSecondShouldBeDeadlockFree() throws IOException {
+            var spc = testFile("recursion/recursion_selection_second.sp");
+            assertTrue(spc.deadlockFreedomLocalType());
+        }
+
+        @Test
+        public void programSelectingEndFirstShouldBeDeadlocked() throws IOException {
+            var spc = testFile("recurse_vs_static_end_first.sp");
+            assertFalse(spc.deadlockFreedomLocalType());
+        }
+
+        @Test
+        public void largeCombinatoryShouldNotImpactTraversal() throws IOException {
+            var spc = testFile("too_many_selections_can_lead_to_uncomplete_unraveling.sp");
+            spc.deadlockFreedomLocalType();
+        }
+
+        @Test
+        public void nestedRecursiveCallsShouldBeAbleToResumeSuspension() throws IOException {
+            var spc = testFile("small_nested_select_resumption.sp");
+
+            spc.deadlockFreedomLocalType();
+            var qs = spc.getQs();
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"choice1\"")));
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SEND, null)));
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"1choice2\"")));
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"choice2\"")));
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"2choice1\"")));
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"2choice2\"")));
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"end\"")));
+            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"1choice1\"")));
+        }
     }
 
-    @Test
-    public void nReceiveVSArbitrarySendShouldDeadlock() throws IOException {
-        var spc = testFile("recursion/asymmetric_deadlock.sp");
-        assertFalse(spc.deadlockFreedomLocalType());
-    }
-
-    @Test
-    public void asymmetricRecursionShouldDeadlock() throws IOException {
-        var spc = testFile("recursion/asymmetric_recursion.sp");
-        assertFalse(spc.deadlockFreedomLocalType());
-    }
-
-    @Test
-    public void testComplementaryComplexSessionShouldBeDeadLockFree() throws IOException {
-        var spc = testFile("complementaryComplexSession.sp");
-        assertTrue(spc.deadlockFreedomLocalType());
-    }
-
-    public void IPProtocolShouldBeDeadlockFree() throws IOException{
-        var spc = testFile("IP_protocol.sp");
-        assertTrue(spc.deadlockFreedomLocalType());
-    }
-
-    @Test
-    public void recurseVSStaticShouldBeDeadLockFree() throws IOException{
-        var spc = testFile("recurse_vs_static.sp");
-        assertTrue(spc.deadlockFreedomLocalType());
-    }
-
-    @Test
-    public void recursionSelectionSecondShouldBeDeadlockFree() throws IOException {
-        var spc = testFile("recursion/recursion_selection_second.sp");
-        assertTrue(spc.deadlockFreedomLocalType());
-    }
-
-    @Test
-    public void programSelectingEndFirstShouldBeDeadlocked() throws IOException {
-        var spc = testFile("recurse_vs_static_end_first.sp");
-        assertFalse(spc.deadlockFreedomLocalType());
-    }
-
-    @Test
-    public void largeCombinatoryShouldNotImpactTraversal() throws IOException {
-        var spc = testFile("too_many_selections_can_lead_to_uncomplete_unraveling.sp");
-        spc.deadlockFreedomLocalType();
-    }
-
-    @Test
-    public void nestedRecursiveCallsShouldBeAbleToResumeSuspension() throws IOException {
-        var spc = testFile("small_nested_select_resumption.sp");
-        spc.deadlockFreedomLocalType();
-    }
 }

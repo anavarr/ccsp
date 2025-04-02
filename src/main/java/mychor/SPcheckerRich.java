@@ -25,6 +25,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     HashMap<String,LocalType> reducedTypes = new HashMap<>();
     MessageQueues qs = new MessageQueues();
 
+    public MessageQueues getQs(){
+        return qs;
+    }
+
     static private List<Map<String, Behaviour>> generateCombinations(List<Map<String, Behaviour>> configurationsFlat,
                                                                      Map<String, List<Behaviour>> configurationsDeep,
                                                                      Map<String, Behaviour> combination,
