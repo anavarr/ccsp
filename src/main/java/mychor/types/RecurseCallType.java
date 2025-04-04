@@ -28,6 +28,11 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
+    public boolean visitedAllPaths() {
+        return true;
+    }
+
+    @Override
     public LocalType duplicate() {
         return this;
     }

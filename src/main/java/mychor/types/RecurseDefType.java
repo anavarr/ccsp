@@ -6,6 +6,17 @@ import java.util.Collection;
 
 public class RecurseDefType extends LocalType{
     String varName;
+    int visited;
+    LocalType visiting = null;
+    @Override
+    public boolean visitedAllPaths() {
+        return nextTypes.get("unfold").visitedAllPaths();
+    }
+
+    public int getVisited(){
+        return visited;
+    }
+
     public RecurseDefType(String varName, LocalType continuation){
         this.varName = varName;
         nextTypes.put("unfold", continuation);
@@ -26,7 +37,16 @@ public class RecurseDefType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        return nextTypes.get("unfold").reduce(process, mqs);
+        if(visiting != null) {
+            var tmp = visiting.reduce(process, mqs);
+            if(tmp != this) visiting = tmp;
+        }
+        else{
+            visited ++;
+            visiting = nextTypes.get("unfold").reduce(process, mqs);
+            if(visiting == this) visiting = null;
+        }
+        return this;
     }
 
     @Override

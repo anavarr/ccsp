@@ -13,6 +13,11 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
+    public boolean visitedAllPaths() {
+        return nextTypes.get(";").visitedAllPaths();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if(!(obj instanceof ReceiveType rt)) return false;
         if(!this.destination.equals(rt.destination)) return false;
@@ -61,4 +66,7 @@ public class ReceiveType extends LocalType{
         return destination+"?;"+nextTypes.get(";").toString();
     }
 
+    public String getDestination() {
+        return destination;
+    }
 }

@@ -126,6 +126,14 @@ public class BranchType extends LocalType{
     }
 
     @Override
+    public boolean visitedAllPaths() {
+        for (String s : nextTypes.keySet()) {
+            if(!nextTypes.get(s).visitedAllPaths()) return false;
+        }
+        return true;
+    }
+
+    @Override
     protected LocalType softReset() {
         this.visitedLabels.remove(this.visitingLabel);
         this.visitingLabel = null;

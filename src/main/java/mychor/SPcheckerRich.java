@@ -3,6 +3,7 @@ package mychor;
 import mychor.types.BranchType;
 import mychor.types.EndType;
 import mychor.types.LocalType;
+import mychor.types.ReceiveType;
 import mychor.types.RecurseDefType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -123,33 +124,68 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             for (String s : reducedTypes.keySet()) {
                 try {
-                    var b = reducedTypes.get(s).reduce(s, qs);
-                    if(b instanceof RecurseDefType rdt){
-                        b = rdt.nextTypes.get("unfold");
+                    var mustReduceProcess = processMustBeReduced(s);
+                    if(mustReduceProcess){
+                        var b = reducedTypes.get(s).reduce(s, qs);
+//                        if(b instanceof RecurseDefType rdt){
+//                            b = rdt.nextTypes.get("unfold");
+//                        }
+                        reducedTypes.put(s, b);
                     }
-                    reducedTypes.put(s, b);
-                    if(reducedTypes.get(s).equals(oldReduced.get(s))){
-                        // this one didn't progress
-                        if(reducedTypes.get(s) instanceof BranchType bt){
-                            //this one is a branch
-                            if(reducedTypes.get(bt.getDestination()).equals(new EndType())){
-                                //the complementary selector is ended
-                                for (String string : bt.nextTypes.keySet()) {
-                                    if(bt.nextTypes.get(string).equals(new EndType()) && bt.visted(string)){
-                                        //at least one path has been visited and completed, we all good
-                                        reducedTypes.put(s, new EndType());
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
+//                    if(reducedTypes.get(s).equals(oldReduced.get(s))){
+//                        // this one didn't progress
+//                        if(reducedTypes.get(s) instanceof BranchType bt){
+//                            //this one is a branch
+//                            if(reducedTypes.get(bt.getDestination()).equals(new EndType())){
+//                                //the complementary selector is ended
+//                                for (String string : bt.nextTypes.keySet()) {
+//                                    if(bt.nextTypes.get(string).equals(new EndType()) && bt.visted(string)){
+//                                        //at least one path has been visited and completed, we all good
+//                                        reducedTypes.put(s, new EndType());
+//                                        break;
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
                 } catch(Exception e){
                     System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
                     return false;
                 }
             }
         }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
+        for (String s : reducedTypes.keySet()) {
+            if(!processMustBeReduced(s) || reducedTypes.get(s).equals(new EndType())){
+                reducedTypes.put(s, new EndType());
+            }
+        }
+        return true;
+    }
+
+    private boolean processMustBeReduced(String s){
+        // we must not reduce it if:
+        // - every path has been traversed
+        // - it is an already traversed recurseDefType
+        // - no message for s is in the queue
+        // - no process is waiting for an output of s
+        if(reducedTypes.get(s) instanceof RecurseDefType rdt
+                && rdt.getVisited() > 0
+                && rdt.visitedAllPaths()){
+            //no message is to be received
+            if(!qs.messagesMustBeProcessed(s)){
+                for (String string : reducedTypes.keySet().stream().filter(el -> !el.equals(s)).toList()) {
+                    var plt = reducedTypes.get(string);
+                    if(plt instanceof ReceiveType rt && rt.getDestination().equals(s)){
+                        //a process is waiting for a msg from s
+                        return true;
+                    }else if(plt instanceof BranchType bt && bt.getDestination().equals(s)){
+                        //a process is waiting for a selection from s
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
         return true;
     }
 

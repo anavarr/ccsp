@@ -30,6 +30,11 @@ public class SendType extends LocalType{
     }
 
     @Override
+    public boolean visitedAllPaths() {
+        return nextTypes.get(";").visitedAllPaths();
+    }
+
+    @Override
     public LocalType duplicate() {
         return new SendType(destination, nextTypes.get(";"));
     }

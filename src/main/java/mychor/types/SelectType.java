@@ -49,6 +49,15 @@ public class SelectType extends LocalType {
     }
 
     @Override
+    public boolean visitedAllPaths() {
+        if(visitStats.values().stream().anyMatch(el -> el == 0)) return false;
+        for (String s : nextTypes.keySet()) {
+            if(!nextTypes.get(s).visitedAllPaths()) return false;
+        }
+        return true;
+    }
+
+    @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append(destination);
@@ -70,8 +79,6 @@ public class SelectType extends LocalType {
         if(visitingLabel != null){
             return updateVisitingBranch(pr, mqs);
         }
-        var done = visitStats.keySet().stream().allMatch(la -> visitStats.get(la) > 100);
-        if(done) return new EndType();
 
         var label = getLeastVisitedLabel();
         if(label == null) return new EndType();

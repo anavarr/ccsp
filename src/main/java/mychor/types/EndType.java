@@ -45,4 +45,8 @@ public class EndType extends LocalType{
         return new EndType();
     }
 
+    @Override
+    public boolean visitedAllPaths() {
+        return true;
+    }
 }

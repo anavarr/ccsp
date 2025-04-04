@@ -7,9 +7,17 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class MessageQueues extends HashMap<String, Queue<Message>>{
 
     public int accessed = 0;
-    static int DEFAULT_CAPACITY = 10000;
+    static int DEFAULT_CAPACITY = 1000;
     public MessageQueues(){
         super();
+    }
+
+    public boolean messagesMustBeProcessed(String process){
+        var processQs = keySet().stream().filter(el -> el.contains("-"+process)).toList();
+        for (String processQ : processQs) {
+            if(!get(processQ).isEmpty()) return true;
+        }
+        return false;
     }
 
     public boolean add(Utils.Direction direction, String source, String dest, String label){
