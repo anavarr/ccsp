@@ -3,7 +3,9 @@ package mychor.types;
 import mychor.MessageQueues;
 import mychor.Utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class SendType extends LocalType{
     String destination;
@@ -27,6 +29,14 @@ public class SendType extends LocalType{
     public LocalType reduce(String pr, MessageQueues mqs) {
         mqs.add(Utils.Direction.SEND, pr, destination, null);
         return nextTypes.get(";");
+    }
+
+    @Override
+    public List<String> getInvolvedProcesses() {
+        ArrayList<String> l = new ArrayList<>();
+        l.add(destination);
+        l.addAll(nextTypes.get(";").getInvolvedProcesses());
+        return l;
     }
 
     @Override

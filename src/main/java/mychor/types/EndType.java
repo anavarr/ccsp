@@ -4,6 +4,7 @@ import mychor.MessageQueues;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class EndType extends LocalType{
     public EndType(){
@@ -23,6 +24,11 @@ public class EndType extends LocalType{
     @Override
     public LocalType reduce(String pr, MessageQueues mqs) {
         return this;
+    }
+
+    @Override
+    public List<String> getInvolvedProcesses() {
+        return List.of();
     }
 
     @Override

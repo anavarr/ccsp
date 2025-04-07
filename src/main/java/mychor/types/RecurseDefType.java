@@ -3,11 +3,18 @@ package mychor.types;
 import mychor.MessageQueues;
 
 import java.util.Collection;
+import java.util.List;
 
 public class RecurseDefType extends LocalType{
     String varName;
     int visited;
+    public boolean endState = false;
     LocalType visiting = null;
+
+    public List<String> getInvolvedProcesses(){
+        return nextTypes.get("unfold").getInvolvedProcesses();
+    }
+
     @Override
     public boolean visitedAllPaths() {
         return nextTypes.get("unfold").visitedAllPaths();
@@ -38,13 +45,16 @@ public class RecurseDefType extends LocalType{
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
         if(visiting != null) {
-            var tmp = visiting.reduce(process, mqs);
-            if(tmp != this) visiting = tmp;
+            visiting = visiting.reduce(process, mqs);
         }
         else{
             visited ++;
             visiting = nextTypes.get("unfold").reduce(process, mqs);
-            if(visiting == this) visiting = null;
+        }
+        if(visiting == this) visiting = null;
+        if(visiting instanceof EndType) {
+            endState = true;
+            visiting = null;
         }
         return this;
     }

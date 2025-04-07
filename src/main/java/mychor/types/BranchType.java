@@ -90,12 +90,20 @@ public class BranchType extends LocalType{
         if(visitingBranch.equals(new EndType())){
             finishedBranches.add(visitingLabel);
             visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
+            return visitingBranch;
         }
         return this;
     }
 
-
+    @Override
+    public List<String> getInvolvedProcesses() {
+        ArrayList<String> l = new ArrayList<>();
+        l.add(destination);
+        for (String s : nextTypes.keySet()) {
+            l.addAll(nextTypes.get(s).getInvolvedProcesses());
+        }
+        return l;
+    }
 
     @Override
     protected LocalType extractParticipation(String process) {

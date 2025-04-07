@@ -171,10 +171,19 @@ public class SelectType extends LocalType {
         }
         if(visitingBranch.equals(new EndType())){
             finishedBranches.add(visitingLabel);
-            visitStats.remove(visitingLabel);
             visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
+            return new EndType();
         }
         return this;
+    }
+
+    @Override
+    public List<String> getInvolvedProcesses() {
+        var l = new ArrayList<String>();
+        l.add(destination);
+        for (String s : nextTypes.keySet()) {
+            l.addAll(nextTypes.get(s).getInvolvedProcesses());
+        }
+        return l;
     }
 }

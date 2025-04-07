@@ -3,7 +3,9 @@ package mychor.types;
 import mychor.MessageQueues;
 import mychor.Utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class ReceiveType extends LocalType{
     String destination;
@@ -37,6 +39,14 @@ public class ReceiveType extends LocalType{
        );
         // we got the right message, this communication can reduce
         return nextTypes.get(";");
+    }
+
+    @Override
+    public List<String> getInvolvedProcesses() {
+        ArrayList<String> l = new ArrayList<>();
+        l.add(destination);
+        l.addAll(nextTypes.get(";").getInvolvedProcesses());
+        return l;
     }
 
     @Override

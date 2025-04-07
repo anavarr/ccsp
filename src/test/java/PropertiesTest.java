@@ -130,6 +130,7 @@ public class PropertiesTest extends ProgramReaderTest{
 
         @Test
         public void nReceiveVSArbitrarySendShouldDeadlock() throws IOException {
+            //it should Queue max out ?
             var spc = testFile("recursion/asymmetric_deadlock.sp");
             assertFalse(spc.deadlockFreedomLocalType());
         }

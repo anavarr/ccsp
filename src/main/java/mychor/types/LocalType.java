@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 public abstract class LocalType {
 
@@ -113,6 +114,9 @@ public abstract class LocalType {
     public boolean equals(Object obj) {
         return super.equals(obj);
     }
+
+    public abstract List<String> getInvolvedProcesses();
+
 
     public abstract LocalType reduce(String process, MessageQueues mqs);
 

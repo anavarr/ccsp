@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -127,27 +128,29 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                     var mustReduceProcess = processMustBeReduced(s);
                     if(mustReduceProcess){
                         var b = reducedTypes.get(s).reduce(s, qs);
-//                        if(b instanceof RecurseDefType rdt){
-//                            b = rdt.nextTypes.get("unfold");
-//                        }
                         reducedTypes.put(s, b);
+                        if(b instanceof RecurseDefType && ((RecurseDefType) b).endState){
+                            var involvedProcesses = new HashSet<>(b.getInvolvedProcesses());
+                            while(reducedTypes.keySet().stream()
+                                    .anyMatch(el ->
+                                            involvedProcesses.contains(el) &&
+                                                    (!(reducedTypes.get(el) instanceof EndType ||
+                                                            reducedTypes.get(el) instanceof RecurseDefType rdt && rdt.endState)))){
+                                for (String involvedProcess : involvedProcesses) {
+                                    var t = reducedTypes.get(involvedProcess).reduce(involvedProcess, qs);
+                                    reducedTypes.put(involvedProcess, t);
+                                }
+                            }
+                            ((RecurseDefType) b).endState = false;
+                            for (String involvedProcess : involvedProcesses) {
+                                if(reducedTypes.get(involvedProcess) instanceof RecurseDefType rdt){
+                                    rdt.endState = false;
+                                    reducedTypes.put(involvedProcess, rdt);
+                                }
+                            }
+                            reducedTypes.put(s,b);
+                        }
                     }
-//                    if(reducedTypes.get(s).equals(oldReduced.get(s))){
-//                        // this one didn't progress
-//                        if(reducedTypes.get(s) instanceof BranchType bt){
-//                            //this one is a branch
-//                            if(reducedTypes.get(bt.getDestination()).equals(new EndType())){
-//                                //the complementary selector is ended
-//                                for (String string : bt.nextTypes.keySet()) {
-//                                    if(bt.nextTypes.get(string).equals(new EndType()) && bt.visted(string)){
-//                                        //at least one path has been visited and completed, we all good
-//                                        reducedTypes.put(s, new EndType());
-//                                        break;
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
                 } catch(Exception e){
                     System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
                     return false;

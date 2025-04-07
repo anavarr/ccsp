@@ -4,6 +4,7 @@ import mychor.MessageQueues;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class RecurseCallType extends LocalType{
     String name;
@@ -25,6 +26,11 @@ public class RecurseCallType extends LocalType{
     public LocalType reduce(String process, MessageQueues mqs) {
         origin.softReset();
         return origin;
+    }
+
+    @Override
+    public List<String> getInvolvedProcesses() {
+        return List.of();
     }
 
     @Override
