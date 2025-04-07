@@ -32,6 +32,11 @@ public class SendType extends LocalType{
     }
 
     @Override
+    protected LocalType getLeaf() {
+        return this.nextTypes.get(";").getLeaf();
+    }
+
+    @Override
     public List<String> getInvolvedProcesses() {
         ArrayList<String> l = new ArrayList<>();
         l.add(destination);

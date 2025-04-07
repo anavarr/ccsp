@@ -163,16 +163,21 @@ public class SelectType extends LocalType {
         else throw new RuntimeException("execution branches don't match");
     }
 
+    @Override
+    protected LocalType getLeaf() {
+        if(visitingBranch != null && visitingLabel == null) return visitingBranch;
+        else if(visitingBranch != null) return visitingBranch.getLeaf();
+        else return this;
+    }
+
     private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
         visitingBranch = visitingBranch.reduce(pr, mqs);
         if(visitingBranch instanceof RecurseDefType){
             visitingLabel = null;
-            return visitingBranch;
         }
         if(visitingBranch.equals(new EndType())){
             finishedBranches.add(visitingLabel);
             visitingLabel = null;
-            return new EndType();
         }
         return this;
     }

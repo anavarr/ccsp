@@ -32,6 +32,11 @@ public class EndType extends LocalType{
     }
 
     @Override
+    protected LocalType getLeaf() {
+        return this;
+    }
+
+    @Override
     public LocalType duplicate() {
         return new EndType();
     }

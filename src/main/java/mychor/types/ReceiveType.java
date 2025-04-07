@@ -50,6 +50,11 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
+    protected LocalType getLeaf() {
+        return nextTypes.get(";").getLeaf();
+    }
+
+    @Override
     public LocalType duplicate() {
         return new ReceiveType(destination, nextTypes.get(";"));
     }

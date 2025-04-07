@@ -23,6 +23,11 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
+    protected LocalType getLeaf() {
+        return origin.getLeaf();
+    }
+
+    @Override
     public LocalType reduce(String process, MessageQueues mqs) {
         origin.softReset();
         return origin;

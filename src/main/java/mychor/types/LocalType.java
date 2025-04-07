@@ -129,4 +129,6 @@ public abstract class LocalType {
     protected abstract LocalType softReset();
 
     public abstract boolean visitedAllPaths();
+
+    protected abstract LocalType getLeaf();
 }

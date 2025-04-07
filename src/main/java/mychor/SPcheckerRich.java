@@ -129,27 +129,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                     if(mustReduceProcess){
                         var b = reducedTypes.get(s).reduce(s, qs);
                         reducedTypes.put(s, b);
-                        if(b instanceof RecurseDefType && ((RecurseDefType) b).endState){
-                            var involvedProcesses = new HashSet<>(b.getInvolvedProcesses());
-                            while(reducedTypes.keySet().stream()
-                                    .anyMatch(el ->
-                                            involvedProcesses.contains(el) &&
-                                                    (!(reducedTypes.get(el) instanceof EndType ||
-                                                            reducedTypes.get(el) instanceof RecurseDefType rdt && rdt.endState)))){
-                                for (String involvedProcess : involvedProcesses) {
-                                    var t = reducedTypes.get(involvedProcess).reduce(involvedProcess, qs);
-                                    reducedTypes.put(involvedProcess, t);
-                                }
-                            }
-                            ((RecurseDefType) b).endState = false;
-                            for (String involvedProcess : involvedProcesses) {
-                                if(reducedTypes.get(involvedProcess) instanceof RecurseDefType rdt){
-                                    rdt.endState = false;
-                                    reducedTypes.put(involvedProcess, rdt);
-                                }
-                            }
-                            reducedTypes.put(s,b);
-                        }
                     }
                 } catch(Exception e){
                     System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
@@ -171,22 +150,42 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // - it is an already traversed recurseDefType
         // - no message for s is in the queue
         // - no process is waiting for an output of s
-        if(reducedTypes.get(s) instanceof RecurseDefType rdt
-                && rdt.getVisited() > 0
-                && rdt.visitedAllPaths()){
-            //no message is to be received
-            if(!qs.messagesMustBeProcessed(s)){
-                for (String string : reducedTypes.keySet().stream().filter(el -> !el.equals(s)).toList()) {
-                    var plt = reducedTypes.get(string);
-                    if(plt instanceof ReceiveType rt && rt.getDestination().equals(s)){
-                        //a process is waiting for a msg from s
-                        return true;
-                    }else if(plt instanceof BranchType bt && bt.getDestination().equals(s)){
-                        //a process is waiting for a selection from s
-                        return true;
+        if(reducedTypes.get(s) instanceof RecurseDefType rdt){
+            if(rdt.endState){
+                var processes = new HashSet<String>(rdt.getInvolvedProcesses());
+                for (String process : processes) {
+                    if (!(reducedTypes.get(process) instanceof RecurseDefType rdt2 && rdt2.endState) &&
+                            !(reducedTypes.get(process) instanceof EndType)){
+                        return false;
                     }
                 }
-                return false;
+                rdt.endState = false;
+                for (String process : processes) {
+                    if(reducedTypes.get(process) instanceof RecurseDefType rdt2){
+                        rdt2.endState = false;
+                        reducedTypes.put(process, rdt2);
+                    }
+                }
+            }
+            // it's been fully visited at least once
+            if(rdt.getVisited() > 0 && rdt.visitedAllPaths()) {
+                //no message is to be received
+                if (!qs.messagesMustBeProcessed(s)) {
+                    for (String string : reducedTypes.keySet().stream().filter(el -> !el.equals(s)).toList()) {
+                        var plt = reducedTypes.get(string);
+                        if (plt instanceof ReceiveType rt && rt.getDestination().equals(s)) {
+                            //a process is waiting for a msg from s
+                            return true;
+                        } else if (plt instanceof BranchType bt && bt.getDestination().equals(s)) {
+                            //a process is waiting for a selection from s
+                            return true;
+                        }
+                        var involvedProcess = rdt.getInvolvedProcesses();
+                        if (involvedProcess.stream().map(el -> reducedTypes.get(el)).allMatch(el -> el instanceof EndType))
+                            return true;
+                    }
+                    return false;
+                }
             }
         }
         return true;

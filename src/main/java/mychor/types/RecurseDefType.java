@@ -43,6 +43,11 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
+    protected LocalType getLeaf() {
+        return nextTypes.get("unfold").getLeaf();
+    }
+
+    @Override
     public LocalType reduce(String process, MessageQueues mqs) {
         if(visiting != null) {
             visiting = visiting.reduce(process, mqs);
@@ -51,8 +56,9 @@ public class RecurseDefType extends LocalType{
             visited ++;
             visiting = nextTypes.get("unfold").reduce(process, mqs);
         }
-        if(visiting == this) visiting = null;
-        if(visiting instanceof EndType) {
+        var leaf = nextTypes.get("unfold").getLeaf();
+        if(leaf == this) visiting = null;
+        if(leaf instanceof EndType) {
             endState = true;
             visiting = null;
         }
