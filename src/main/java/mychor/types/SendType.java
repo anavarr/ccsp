@@ -13,6 +13,16 @@ public class SendType extends LocalType{
     }
 
     @Override
+    public LocalType reduceOnce(String process, MessageQueues mqs) {
+        return reduce(process,mqs);
+    }
+
+    @Override
+    public LocalType reduceNoRec(String process, MessageQueues mqs) {
+        return reduce(process, mqs);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if(!(obj instanceof SendType)) return false;
         return nextTypes.get(";").equals(((SendType) obj).nextTypes.get(";"));
@@ -27,6 +37,11 @@ public class SendType extends LocalType{
     public LocalType reduce(String pr, MessageQueues mqs) {
         mqs.add(Utils.Direction.SEND, pr, destination, null);
         return nextTypes.get(";");
+    }
+
+    @Override
+    public void hardReset() {
+        nextTypes.get(";").hardReset();
     }
 
     @Override

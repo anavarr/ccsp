@@ -125,4 +125,10 @@ public abstract class LocalType {
     protected abstract LocalType softReset();
 
     public abstract boolean visitedAllPaths();
+
+    public abstract void hardReset();
+
+    public abstract LocalType reduceOnce(String process, MessageQueues mqs);
+
+    public abstract LocalType reduceNoRec(String process, MessageQueues mqs);
 }

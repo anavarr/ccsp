@@ -13,50 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PropertiesTest extends ProgramReaderTest{
 
-//    @Nested
-//    public class OldTechniqueTest{
-//        @Test
-//        public void asymmetricCdtShouldBeTypeSafe() throws IOException {
-//            var spc = testFile("branching_paths/asymmetric_branching.sp");
-//            assertTrue(spc.typeSafetyLocalType());
-//        }
-//        @Test
-//        public void asymmetricCdtShouldNotBeDeadlockFree() throws IOException {
-//            var spc = testFile("branching_paths/asymmetric_branching.sp");
-//            assertFalse(spc.deadlockFreedomLocalType());
-//        }
-//
-//        @Test
-//        public void OAuth2IsSafe() throws IOException {
-//            var spc = testFile("OAuth2_fragment.sp");
-//            assertFalse(spc.typeSafety().contains(false));
-//        }
-//        @Test
-//        public void OAuth2NonSafeIsNotSafe() throws IOException {
-//            var spc = testFile("OAuth2_fragment_nonsafe.sp");
-//            var tsResults = spc.typeSafety();
-//            assertEquals(tsResults.size(), 1);
-//            assertTrue(tsResults.contains(false));
-//        }
-//        @Test
-//        public void OAuth2DeadlockFreeAsync() throws IOException {
-//            var spc = testFile("OAuth2_fragment_async.sp");
-//            assertFalse(spc.deadlockFreedom().contains(false));
-//        }
-//
-//        @Test
-//        public void ThreeBuyerProtoolIsSafe() throws IOException {
-//            var spc = testFile("Three_buyer_protocol.sp");
-//            assertFalse(spc.typeSafety().contains(false));
-//        }
-//
-//        @Test
-//        public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
-//            var spc = testFile("Three_buyer_protocol.sp");
-//            assertFalse(spc.deadlockFreedom().contains(false));
-//        }
-//
-//    }
 
     // Local Types
     @Nested
@@ -103,6 +59,7 @@ public class PropertiesTest extends ProgramReaderTest{
                 assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
             });
         }
+
         @Test
         public void OAuth2AsyncIsTypeSafe() throws IOException {
             var spc = testFile("OAuth2_fragment_async.sp");
@@ -177,6 +134,12 @@ public class PropertiesTest extends ProgramReaderTest{
         }
 
         @Test
+        public void starvingBranchShouldGiveMeAnError() throws IOException{
+            var spc = testFile("recursion/starving_one_branch.sp");
+            spc.deadlockFreedomLocalType();
+        }
+
+        @Test
         public void nestedRecursiveCallsShouldBeAbleToResumeSuspension() throws IOException {
             var spc = testFile("small_nested_select_resumption.sp");
 
@@ -190,6 +153,12 @@ public class PropertiesTest extends ProgramReaderTest{
             assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"2choice2\"")));
             assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"end\"")));
             assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"1choice1\"")));
+        }
+
+        @Test
+        public void doubleSendVSSimpleReceiveShouldBeDeadlockFree() throws IOException{
+            var spc = testFile("recursion/2_vs_1.sp");
+            assertTrue(spc.deadlockFreedomLocalType());
         }
     }
 

@@ -36,10 +36,25 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
+    public LocalType reduceOnce(String process, MessageQueues mqs) {
+        return nextTypes.get("unfold").reduceOnce(process, mqs);
+    }
+
+    @Override
+    public LocalType reduceNoRec(String process, MessageQueues mqs) {
+        return nextTypes.get("unfold").reduceNoRec(process, mqs);
+    }
+
+    @Override
     public LocalType reduce(String process, MessageQueues mqs) {
+        if(visited > 1000) {
+            return this;
+        }
         if(visiting != null) {
+            if(visiting instanceof EndType) return visiting;
             var tmp = visiting.reduce(process, mqs);
             if(tmp != this) visiting = tmp;
+            else visiting = null;
         }
         else{
             visited ++;
@@ -65,8 +80,14 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
+    public void hardReset() {
+        this.visited = 0;
+        nextTypes.get("unfold").hardReset();
+    }
+
+    @Override
     protected LocalType softReset() {
-        nextTypes.get("unfold").softReset();
+        nextTypes.get("unfold").hardReset();
         return this;
     }
 

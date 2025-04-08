@@ -79,4 +79,12 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
         }
         return accessed == qs.accessed;
     }
+
+    public void reset() {
+        for (String s : keySet()) {
+            while(!get(s).isEmpty()){
+                get(s).remove();
+            }
+        }
+    }
 }

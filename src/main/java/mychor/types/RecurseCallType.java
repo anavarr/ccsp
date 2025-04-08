@@ -21,10 +21,24 @@ public class RecurseCallType extends LocalType{
         return this.name.equals(rct.name);
     }
 
+    public RecurseDefType getOrigin() {
+        return origin;
+    }
+
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
         origin.softReset();
         return origin;
+    }
+
+    @Override
+    public LocalType reduceOnce(String process, MessageQueues mqs) {
+        return this;
+    }
+
+    @Override
+    public LocalType reduceNoRec(String process, MessageQueues mqs) {
+        return new EndType();
     }
 
     @Override
@@ -41,6 +55,11 @@ public class RecurseCallType extends LocalType{
     protected LocalType extractParticipation(String process) {
         var rct = new RecurseCallType(this.name, this.origin);
         return rct;
+    }
+
+    @Override
+    public void hardReset() {
+
     }
 
     @Override

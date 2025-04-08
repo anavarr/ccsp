@@ -4,6 +4,7 @@ import mychor.types.BranchType;
 import mychor.types.EndType;
 import mychor.types.LocalType;
 import mychor.types.ReceiveType;
+import mychor.types.RecurseCallType;
 import mychor.types.RecurseDefType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -104,6 +105,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return result;
     }
 
+    public List<String> hasDeadBranches(){
+        var l = new ArrayList<String>();
+        return l;
+    }
+
     public Boolean typeSafetyLocalType(){
         reducedTypes = new HashMap<>();
         for (String s : compilerCtx.behaviours.keySet()) {
@@ -124,41 +130,77 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             for (String s : reducedTypes.keySet()) {
                 try {
-                    var mustReduceProcess = processMustBeReduced(s);
-                    if(mustReduceProcess){
-                        var b = reducedTypes.get(s).reduce(s, qs);
-//                        if(b instanceof RecurseDefType rdt){
-//                            b = rdt.nextTypes.get("unfold");
-//                        }
-                        reducedTypes.put(s, b);
-                    }
-//                    if(reducedTypes.get(s).equals(oldReduced.get(s))){
-//                        // this one didn't progress
-//                        if(reducedTypes.get(s) instanceof BranchType bt){
-//                            //this one is a branch
-//                            if(reducedTypes.get(bt.getDestination()).equals(new EndType())){
-//                                //the complementary selector is ended
-//                                for (String string : bt.nextTypes.keySet()) {
-//                                    if(bt.nextTypes.get(string).equals(new EndType()) && bt.visted(string)){
-//                                        //at least one path has been visited and completed, we all good
-//                                        reducedTypes.put(s, new EndType());
-//                                        break;
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
+                    var b = reducedTypes.get(s).reduceNoRec(s, qs);
+                    if(b instanceof RecurseCallType) b = new EndType();
+                    reducedTypes.put(s, b);
                 } catch(Exception e){
                     System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
                     return false;
                 }
             }
         }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
-        for (String s : reducedTypes.keySet()) {
-            if(!processMustBeReduced(s) || reducedTypes.get(s).equals(new EndType())){
-                reducedTypes.put(s, new EndType());
+        return true;
+    }
+
+    public Boolean deadlockFreedomPreliminary(){
+        reducedTypes = new HashMap<>();
+        for (String s : compilerCtx.behaviours.keySet()) {
+            try {
+                reducedTypes.put(s, LocalType.extractLocalType(compilerCtx.behaviours.get(s)));
+            } catch (Exception e) {
+                System.err.println("error while extracting type for process "+s);
+                throw new RuntimeException(e);
             }
         }
+        var oldReduced = new HashMap<String,LocalType>();
+        var oldQs = qs.duplicate();
+        do{ // missed a turn
+            oldReduced = new HashMap<>();
+            oldQs = qs.duplicate();
+            for (String s : reducedTypes.keySet()) {
+                oldReduced.put(s, reducedTypes.get(s).duplicate());
+            }
+            for (String s : reducedTypes.keySet()) {
+                try {
+                    var b = reducedTypes.get(s).reduce(s, qs);
+                    reducedTypes.put(s, b);
+                } catch(Exception e){
+                    System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
+                    return false;
+                }
+            }
+        }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
+        qs.reset();
+        for (String s : reducedTypes.keySet()) {
+            reducedTypes.get(s).hardReset();
+        }
+        do { // missed a turn
+            oldReduced = new HashMap<>();
+            oldQs = qs.duplicate();
+            for (String s : reducedTypes.keySet()) {
+                oldReduced.put(s, reducedTypes.get(s).duplicate());
+            }
+            for (String s : reducedTypes.keySet()) {
+                var mustReduceProcess = processMustBeReduced(s);
+                if (mustReduceProcess) {
+                    try {
+                        if(reducedTypes.get(s) instanceof RecurseCallType rct){
+                            reducedTypes.put(s, rct.getOrigin());
+                        }
+                        var b = reducedTypes.get(s).reduceOnce(s, qs);
+                        reducedTypes.put(s, b);
+                        var allDone = reducedTypes.keySet().stream()
+                                .map(el -> reducedTypes.get(el))
+                                .allMatch(el -> el.visitedAllPaths() &&
+                                        (el instanceof  RecurseCallType || el instanceof EndType));
+                        if(allDone) return true;
+                    } catch(Exception e){
+                        System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
+                        return false;
+                    }
+                }
+            }
+        }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
         return true;
     }
 
@@ -218,10 +260,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     public boolean deadlockFreedomLocalType(){
         if(!typeSafetyLocalType()) return false;
+        if(!deadlockFreedomPreliminary()) return false;
         System.out.println(reducedTypes);
         System.out.println(qs);
         for (String s : reducedTypes.keySet()) {
-            if(!reducedTypes.get(s).equals(new EndType())) return false;
+            if(!(reducedTypes.get(s) instanceof  EndType || reducedTypes.get(s) instanceof RecurseCallType)) return false;
         }
         return qs.areEmpty();
     }
