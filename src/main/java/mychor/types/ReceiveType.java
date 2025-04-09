@@ -40,21 +40,6 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
-    public LocalType reduceOnce(String process, MessageQueues mqs) {
-        return reduce(process, mqs);
-    }
-
-    @Override
-    public LocalType reduceNoRec(String process, MessageQueues mqs) {
-        return reduce(process, mqs);
-    }
-
-    @Override
-    public void hardReset() {
-        nextTypes.get(";").hardReset();
-    }
-
-    @Override
     public LocalType duplicate() {
         return new ReceiveType(destination, nextTypes.get(";"));
     }
@@ -68,12 +53,6 @@ public class ReceiveType extends LocalType{
     @Override
     public Boolean knowlegdgeOfChoice(Collection<String> processes) {
         return nextTypes.get(";").knowlegdgeOfChoice(processes);
-    }
-
-    @Override
-    protected LocalType softReset() {
-        nextTypes.get(";").softReset();
-        return this;
     }
 
     @Override

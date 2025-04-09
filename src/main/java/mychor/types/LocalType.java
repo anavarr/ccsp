@@ -122,13 +122,7 @@ public abstract class LocalType {
 
     public abstract Boolean knowlegdgeOfChoice(Collection<String> processes);
 
-    protected abstract LocalType softReset();
-
     public abstract boolean visitedAllPaths();
 
-    public abstract void hardReset();
 
-    public abstract LocalType reduceOnce(String process, MessageQueues mqs);
-
-    public abstract LocalType reduceNoRec(String process, MessageQueues mqs);
 }

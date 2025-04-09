@@ -27,18 +27,7 @@ public class RecurseCallType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        origin.softReset();
         return origin;
-    }
-
-    @Override
-    public LocalType reduceOnce(String process, MessageQueues mqs) {
-        return this;
-    }
-
-    @Override
-    public LocalType reduceNoRec(String process, MessageQueues mqs) {
-        return new EndType();
     }
 
     @Override
@@ -58,18 +47,8 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
-    public void hardReset() {
-
-    }
-
-    @Override
     public Boolean knowlegdgeOfChoice(Collection<String> processes) {
         return true;
-    }
-
-    @Override
-    protected LocalType softReset() {
-        return this;
     }
 
     @Override

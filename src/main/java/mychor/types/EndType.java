@@ -26,21 +26,6 @@ public class EndType extends LocalType{
     }
 
     @Override
-    public LocalType reduceOnce(String process, MessageQueues mqs) {
-        return this;
-    }
-
-    @Override
-    public LocalType reduceNoRec(String process, MessageQueues mqs) {
-        return this;
-    }
-
-    @Override
-    public void hardReset() {
-
-    }
-
-    @Override
     public LocalType duplicate() {
         return new EndType();
     }
@@ -53,11 +38,6 @@ public class EndType extends LocalType{
     @Override
     public Boolean knowlegdgeOfChoice(Collection<String> processes) {
         return true;
-    }
-
-    @Override
-    protected LocalType softReset() {
-        return new EndType();
     }
 
     @Override

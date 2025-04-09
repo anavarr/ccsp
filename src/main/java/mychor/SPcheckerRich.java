@@ -8,7 +8,9 @@ import mychor.types.RecurseCallType;
 import mychor.types.RecurseDefType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,98 +112,55 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return l;
     }
 
-    public Boolean typeSafetyLocalType(){
+    public void reduceNetwork(){
+        HashMap<String, List<String>> possibleLabels = new HashMap<>();
+        HashMap<String, List<String>> possibleStates = new HashMap<>();
+        HashMap<String, List<String>> visitedLabels = new HashMap<>();
+        ArrayList<Collection<LocalType>> history = new ArrayList<>();
         reducedTypes = new HashMap<>();
+        HashMap<String,LocalType> initialTypes = new HashMap<>();
+        ArrayList<LocalType> initialStates= new ArrayList<>();
         for (String s : compilerCtx.behaviours.keySet()) {
             try {
-                reducedTypes.put(s, LocalType.extractLocalType(compilerCtx.behaviours.get(s)));
+                var type = LocalType.extractLocalType(compilerCtx.behaviours.get(s));
+                initialStates.add(type);
+                reducedTypes.put(s, type);
+                initialTypes.put(s, type);
             } catch (Exception e) {
                 System.err.println("error while extracting type for process "+s);
                 throw new RuntimeException(e);
             }
         }
-        var oldReduced = new HashMap<String,LocalType>();
-        var oldQs = qs.duplicate();
-        do{ // missed a turn
-            oldReduced = new HashMap<>();
-            oldQs = qs.duplicate();
-            for (String s : reducedTypes.keySet()) {
-                oldReduced.put(s, reducedTypes.get(s).duplicate());
-            }
+        history.add(initialStates);
+        var mustContinue = true;
+        while(mustContinue){
+            // reduce all local choreographies
             for (String s : reducedTypes.keySet()) {
                 try {
-                    var b = reducedTypes.get(s).reduceNoRec(s, qs);
-                    if(b instanceof RecurseCallType) b = new EndType();
-                    reducedTypes.put(s, b);
+                    reducedTypes.put(s, reducedTypes.get(s).reduce(s, qs));
                 } catch(Exception e){
                     System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
-                    return false;
                 }
             }
-        }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
-        return true;
-    }
-
-    public Boolean deadlockFreedomPreliminary(){
-        reducedTypes = new HashMap<>();
-        for (String s : compilerCtx.behaviours.keySet()) {
-            try {
-                reducedTypes.put(s, LocalType.extractLocalType(compilerCtx.behaviours.get(s)));
-            } catch (Exception e) {
-                System.err.println("error while extracting type for process "+s);
-                throw new RuntimeException(e);
-            }
-        }
-        var oldReduced = new HashMap<String,LocalType>();
-        var oldQs = qs.duplicate();
-        do{ // missed a turn
-            oldReduced = new HashMap<>();
-            oldQs = qs.duplicate();
-            for (String s : reducedTypes.keySet()) {
-                oldReduced.put(s, reducedTypes.get(s).duplicate());
-            }
-            for (String s : reducedTypes.keySet()) {
-                try {
-                    var b = reducedTypes.get(s).reduce(s, qs);
-                    reducedTypes.put(s, b);
-                } catch(Exception e){
-                    System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
-                    return false;
-                }
-            }
-        }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
-        qs.reset();
-        for (String s : reducedTypes.keySet()) {
-            reducedTypes.get(s).hardReset();
-        }
-        do { // missed a turn
-            oldReduced = new HashMap<>();
-            oldQs = qs.duplicate();
-            for (String s : reducedTypes.keySet()) {
-                oldReduced.put(s, reducedTypes.get(s).duplicate());
-            }
-            for (String s : reducedTypes.keySet()) {
-                var mustReduceProcess = processMustBeReduced(s);
-                if (mustReduceProcess) {
-                    try {
-                        if(reducedTypes.get(s) instanceof RecurseCallType rct){
-                            reducedTypes.put(s, rct.getOrigin());
-                        }
-                        var b = reducedTypes.get(s).reduceOnce(s, qs);
-                        reducedTypes.put(s, b);
-                        var allDone = reducedTypes.keySet().stream()
-                                .map(el -> reducedTypes.get(el))
-                                .allMatch(el -> el.visitedAllPaths() &&
-                                        (el instanceof  RecurseCallType || el instanceof EndType));
-                        if(allDone) return true;
-                    } catch(Exception e){
-                        System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
-                        return false;
+            // check if states are already registered AND their children are fully visited
+            for (Collection<LocalType> localTypes : history) {
+                //this set of states has already been registered
+                if(localTypes.containsAll(reducedTypes.values())){
+                    if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
+                        //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
+                        mustContinue = !initialStates.stream().allMatch(LocalType::visitedAllPaths);
+                        if(mustContinue) reducedTypes = initialTypes;
+                        break;
                     }
                 }
             }
-        }while(!oldReduced.equals(reducedTypes) || !oldQs.equals(qs));
-        return true;
+            var toAdd = new ArrayList<LocalType>();
+            for (String s : reducedTypes.keySet()) {
+                toAdd.add(reducedTypes.get(s));
+            }
+            history.add(toAdd);
+        }
+
     }
 
     private boolean processMustBeReduced(String s){
@@ -259,8 +218,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public boolean deadlockFreedomLocalType(){
-        if(!typeSafetyLocalType()) return false;
-        if(!deadlockFreedomPreliminary()) return false;
+        reduceNetwork();
         System.out.println(reducedTypes);
         System.out.println(qs);
         for (String s : reducedTypes.keySet()) {

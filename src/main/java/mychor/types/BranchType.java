@@ -59,9 +59,6 @@ public class BranchType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
-        if(visitingLabel != null){
-            return updateVisitingBranch(process, mqs);
-        }
         var msg = mqs.poll(destination, process);
         // no label has been sent, we wait
         if(msg == null) return this;
@@ -74,102 +71,7 @@ public class BranchType extends LocalType{
         if(!nextTypes.containsKey(msg.label())) throw new RuntimeException(
                 String.format("Process %s does not support label %s at that point of its execution, type is not valid",
                         process, msg.label()));
-        // we received a label we do support
-        visitedLabels.add(msg.label());
-        visitingLabel = msg.label();
-        visitingBranch = nextTypes.get(msg.label());
-        return updateVisitingBranch(process, mqs);
-    }
-
-    @Override
-    public LocalType reduceNoRec(String process, MessageQueues mqs) {
-        if(visitingLabel != null){
-            return updateNoRecVisitingBranch(process, mqs);
-        }
-        var msg = mqs.poll(destination, process);
-        // no label has been sent, we wait
-        if(msg == null) return this;
-        if(!msg.direction().equals(Utils.Direction.SELECT)) throw new RuntimeException(
-                String.format("A label branching is expected at process %s," +
-                        " the queue contains a value, type is not valid", process)
-        );
-        // we received a label, we can proceed
-        // we might have received a label we don't support
-        if(!nextTypes.containsKey(msg.label())) throw new RuntimeException(
-                String.format("Process %s does not support label %s at that point of its execution, type is not valid",
-                        process, msg.label()));
-        // we received a label we do support
-        visitedLabels.add(msg.label());
-        visitingLabel = msg.label();
-        visitingBranch = nextTypes.get(msg.label());
-        return updateNoRecVisitingBranch(process, mqs);
-    }
-
-    @Override
-    public LocalType reduceOnce(String process, MessageQueues mqs) {
-        if(visitingLabel != null){
-            return updateOnceVisitingBranch(process, mqs);
-        }
-        var msg = mqs.poll(destination, process);
-        // no label has been sent, we wait
-        if(msg == null) return this;
-        if(!msg.direction().equals(Utils.Direction.SELECT)) throw new RuntimeException(
-                String.format("A label branching is expected at process %s," +
-                        " the queue contains a value, type is not valid", process)
-        );
-        // we received a label, we can proceed
-        // we might have received a label we don't support
-        if(!nextTypes.containsKey(msg.label())) throw new RuntimeException(
-                String.format("Process %s does not support label %s at that point of its execution, type is not valid",
-                        process, msg.label()));
-        // we received a label we do support
-        visitedLabels.add(msg.label());
-        visitingLabel = msg.label();
-        visitingBranch = nextTypes.get(msg.label());
-        return updateOnceVisitingBranch(process, mqs);
-    }
-
-    private LocalType updateOnceVisitingBranch(String pr, MessageQueues mqs){
-        visitingBranch = visitingBranch.reduceOnce(pr, mqs);
-        if(visitingBranch instanceof EndType || visitingBranch instanceof RecurseCallType){
-            finishedBranches.add(visitingLabel);
-            visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
-        }
-        return this;
-    }
-
-    private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
-        visitingBranch = visitingBranch.reduce(pr, mqs);
-        if(visitingBranch instanceof RecurseDefType){
-            visitingLabel = null;
-            return visitingBranch;
-        }
-        if(visitingBranch.equals(new EndType())){
-            finishedBranches.add(visitingLabel);
-            visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
-        }
-        return this;
-    }
-
-    private LocalType updateNoRecVisitingBranch(String pr, MessageQueues mqs){
-        visitingBranch = visitingBranch.reduceNoRec(pr, mqs);
-        if(visitingBranch instanceof EndType){
-            finishedBranches.add(visitingLabel);
-            visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
-        }
-        return this;
-    }
-
-    @Override
-    public void hardReset() {
-        this.visitedLabels.remove(this.visitingLabel);
-        this.visitingLabel = null;
-        for (String s : nextTypes.keySet()) {
-            nextTypes.get(s).hardReset();
-        }
+        return nextTypes.get(msg.label());
     }
 
     @Override
@@ -208,16 +110,6 @@ public class BranchType extends LocalType{
         return true;
     }
 
-    @Override
-    protected LocalType softReset() {
-        this.visitedLabels.remove(this.visitingLabel);
-        this.visitingLabel = null;
-        for (String s : nextTypes.keySet()) {
-            nextTypes.get(s).softReset();
-        }
-        return this;
-    }
-
     private void removeBranch(String s) {
         nextTypes.remove(s);
     }
@@ -239,8 +131,5 @@ public class BranchType extends LocalType{
         return b.toString();
     }
 
-    public boolean visted(String label) {
-        return visitedLabels.contains(label);
-    }
 
 }

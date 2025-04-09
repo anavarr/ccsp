@@ -12,10 +12,6 @@ import java.util.Map;
 
 public class SelectType extends LocalType {
     String destination;
-    private List<String> visitedLabels = new ArrayList<>();
-    private ArrayList<String> finishedBranches = new ArrayList<>();
-    private String visitingLabel = null;
-    private LocalType visitingBranch = null;
     private HashMap<String, Integer> visitStats = new HashMap<>();
 
     public SelectType(String destination, HashMap<String, LocalType> branches){
@@ -76,18 +72,11 @@ public class SelectType extends LocalType {
 
     @Override
     public LocalType reduce(String pr, MessageQueues mqs) {
-        if(visitingLabel != null){
-            return updateVisitingBranch(pr, mqs);
-        }
-
         var label = getLeastVisitedLabel();
         if(label == null) return new EndType();
-        visitedLabels.add(label);
         visitStats.put(label, visitStats.get(label)+1);
-        visitingLabel = label;
         mqs.add(Utils.Direction.SELECT, pr, destination, label);
-        visitingBranch = nextTypes.get(label);
-        return updateVisitingBranch(pr, mqs);
+        return nextTypes.get(label);
     }
 
     private String getLeastVisitedLabel() {
@@ -103,15 +92,6 @@ public class SelectType extends LocalType {
     public LocalType duplicate() {
         var s = new SelectType(destination, nextTypes);
         s.nextTypes.replaceAll((k, v) -> s.nextTypes.get(k).duplicate());
-        if(visitingBranch != null) {
-            if(visitingBranch.equals(this)){
-                s.visitingBranch = new SelectType(destination, nextTypes);
-            }else{
-                s.visitingBranch = visitingBranch.duplicate();
-            }
-        }
-        s.visitedLabels.addAll(visitedLabels);
-        s.visitingLabel = visitingLabel;
         s.visitStats = visitStats;
         return s;
     }
@@ -139,59 +119,9 @@ public class SelectType extends LocalType {
         return true;
     }
 
-    @Override
-    protected LocalType softReset() {
-        visitedLabels.remove(visitingLabel);
-        nextTypes.forEach((key, value) -> value.softReset());
-        return this;
-    }
-
     private void removeBranch(String s) {
         nextTypes.remove(s);
         visitStats.remove(s);
-    }
-
-    @Override
-    public void hardReset() {
-        visitingLabel = null;
-        visitedLabels = new ArrayList<>();
-        visitStats = new HashMap<>();
-        for (String s : nextTypes.keySet()) {
-            visitStats.put(s, 0);
-            nextTypes.get(s).hardReset();
-        }
-    }
-
-    @Override
-    public LocalType reduceOnce(String process, MessageQueues mqs) {
-        if(visitingLabel != null){
-            return updateOnceVisitingBranch(process, mqs);
-        }
-        var label = getLeastVisitedLabel();
-        if(visitStats.values().stream().allMatch(v -> v >0)) return new EndType();
-        if(label == null) return new EndType();
-        visitedLabels.add(label);
-        visitStats.put(label, visitStats.get(label)+1);
-        visitingLabel = label;
-        mqs.add(Utils.Direction.SELECT, process, destination, label);
-        visitingBranch = nextTypes.get(label);
-        return updateOnceVisitingBranch(process, mqs);
-    }
-
-    @Override
-    public LocalType reduceNoRec(String process, MessageQueues mqs) {
-        if(visitingLabel != null){
-            return updateNoRecVisitingBranch(process, mqs);
-        }
-        var label = getLeastVisitedLabel();
-        if(visitStats.values().stream().allMatch(v -> v >0)) return new EndType();
-        if(label == null) return new EndType();
-        visitedLabels.add(label);
-        visitStats.put(label, visitStats.get(label)+1);
-        visitingLabel = label;
-        mqs.add(Utils.Direction.SELECT, process, destination, label);
-        visitingBranch = nextTypes.get(label);
-        return updateNoRecVisitingBranch(process, mqs);
     }
 
     @Override
@@ -204,42 +134,5 @@ public class SelectType extends LocalType {
         var allSame = branches.stream().noneMatch(el -> !el.equals(branches.getFirst()));
         if(allSame) return branches.getFirst();
         else throw new RuntimeException("execution branches don't match");
-    }
-
-    private LocalType updateNoRecVisitingBranch(String pr, MessageQueues mqs){
-        visitingBranch = visitingBranch.reduceNoRec(pr, mqs);
-        if(visitingBranch instanceof EndType){
-            finishedBranches.add(visitingLabel);
-            visitStats.remove(visitingLabel);
-            visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
-        }
-        return this;
-    }
-
-    private LocalType updateOnceVisitingBranch(String pr, MessageQueues mqs){
-        visitingBranch = visitingBranch.reduceOnce(pr, mqs);
-        if(visitingBranch instanceof EndType || visitingBranch instanceof RecurseCallType){
-            finishedBranches.add(visitingLabel);
-            visitStats.remove(visitingLabel);
-            visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
-        }
-        return this;
-    }
-
-    private LocalType updateVisitingBranch(String pr, MessageQueues mqs){
-        visitingBranch = visitingBranch.reduce(pr, mqs);
-        if(visitingBranch instanceof RecurseDefType){
-            visitingLabel = null;
-            return visitingBranch;
-        }
-        if(visitingBranch.equals(new EndType())){
-            finishedBranches.add(visitingLabel);
-            visitStats.remove(visitingLabel);
-            visitingLabel = null;
-            if(visitedLabels.containsAll(nextTypes.keySet())) return new EndType();
-        }
-        return this;
     }
 }
