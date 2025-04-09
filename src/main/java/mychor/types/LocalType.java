@@ -9,7 +9,6 @@ import mychor.MessageQueues;
 import mychor.None;
 import mychor.Utils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +63,7 @@ public abstract class LocalType {
                     LocalType oldLocalType = extractLocalType(branches.getFirst());
                     for (Behaviour branch : branches) {
                         lt = extractLocalType(branch);
-                        if(!oldLocalType.equals(lt)) {
+                        if(!oldLocalType.equivalent(lt)) {
                             throw new Exception("Can't extract local type as branches of conditional are not valid");
                         }
                     }
@@ -109,8 +108,7 @@ public abstract class LocalType {
         };
     }
 
-    @Override
-    public boolean equals(Object obj) {
+    public boolean equivalent(Object obj) {
         return super.equals(obj);
     }
 

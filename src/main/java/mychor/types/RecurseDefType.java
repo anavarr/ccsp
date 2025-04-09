@@ -30,9 +30,9 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equivalent(Object obj) {
         if(!(obj instanceof RecurseDefType rdt)) return false;
-        return this.nextTypes.get("unfold").equals(rdt.nextTypes.get("unfold"));
+        return this.nextTypes.get("unfold").equivalent(rdt.nextTypes.get("unfold"));
     }
 
     @Override

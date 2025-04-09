@@ -32,7 +32,7 @@ public class BranchType extends LocalType{
         var s = new BranchType(destination, nextTypes);
         s.nextTypes.replaceAll((k, v) -> s.nextTypes.get(k).duplicate());
         if(visitingBranch != null) {
-            if(visitingBranch.equals(this)){
+            if(visitingBranch.equivalent(this)){
                 s.visitingBranch = new BranchType(destination, nextTypes);
             }else if (visitingBranch instanceof SelectType set){
                 s.visitingBranch = new SelectType(set.destination, set.nextTypes);
@@ -46,13 +46,13 @@ public class BranchType extends LocalType{
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equivalent(Object obj) {
         if(!(obj instanceof BranchType bt)) return false;
         // if they don't have the exact same labels
         if(!(bt.nextTypes.keySet().containsAll(this.nextTypes.keySet()) &
                 this.nextTypes.keySet().containsAll(bt.nextTypes.keySet()))) return false;
         for (String s : nextTypes.keySet()) {
-            if(!nextTypes.get(s).equals(bt.nextTypes.get(s))) return false;
+            if(!nextTypes.get(s).equivalent(bt.nextTypes.get(s))) return false;
         }
         return true;
     }
@@ -80,7 +80,7 @@ public class BranchType extends LocalType{
         nextTypes.forEach((pr, type) -> {
             branches.add(type.extractParticipation(process));
         });
-        var allSame = branches.stream().noneMatch(el -> !el.equals(branches.getFirst()));
+        var allSame = branches.stream().noneMatch(el -> !el.equivalent(branches.getFirst()));
         if(allSame) return branches.getFirst();
         else throw new RuntimeException("execution branches don't match");
     }
@@ -95,7 +95,7 @@ public class BranchType extends LocalType{
                 return false;
             }
         }
-        if(branches.stream().anyMatch(el -> !el.equals(branches.getFirst()))) return false;
+        if(branches.stream().anyMatch(el -> !el.equivalent(branches.getFirst()))) return false;
         for (String s : nextTypes.keySet()) {
             if(!nextTypes.get(s).knowlegdgeOfChoice(processes)) return false;
         }

@@ -13,9 +13,9 @@ public class SendType extends LocalType{
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equivalent(Object obj) {
         if(!(obj instanceof SendType)) return false;
-        return nextTypes.get(";").equals(((SendType) obj).nextTypes.get(";"));
+        return nextTypes.get(";").equivalent(((SendType) obj).nextTypes.get(";"));
     }
 
     @Override

@@ -6,7 +6,6 @@ import mychor.Utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -33,13 +32,13 @@ public class SelectType extends LocalType {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equivalent(Object obj) {
         if(!(obj instanceof SelectType st)) return false;
         // if they don't have the exact same labels
         if(!(st.nextTypes.keySet().containsAll(this.nextTypes.keySet()) &
                 this.nextTypes.keySet().containsAll(st.nextTypes.keySet()))) return false;
         for (String s : nextTypes.keySet()) {
-            if(!nextTypes.get(s).equals(st.nextTypes.get(s))) return false;
+            if(!nextTypes.get(s).equivalent(st.nextTypes.get(s))) return false;
         }
         return true;
     }
@@ -104,7 +103,7 @@ public class SelectType extends LocalType {
                 try{
                     if(branches.containsKey(process)) {
                         var lt = branches.get(s).extractParticipation(process);
-                        return branches.get(process).equals(lt);
+                        return branches.get(process).equivalent(lt);
                     }else{
                         branches.put(process, nextTypes.get(s).extractParticipation(process));
                     }
@@ -131,7 +130,7 @@ public class SelectType extends LocalType {
         nextTypes.forEach((pr, type) -> {
             branches.add(type.extractParticipation(process));
         });
-        var allSame = branches.stream().noneMatch(el -> !el.equals(branches.getFirst()));
+        var allSame = branches.stream().noneMatch(el -> !el.equivalent(branches.getFirst()));
         if(allSame) return branches.getFirst();
         else throw new RuntimeException("execution branches don't match");
     }

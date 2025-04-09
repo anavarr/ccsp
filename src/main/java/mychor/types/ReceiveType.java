@@ -18,10 +18,10 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equivalent(Object obj) {
         if(!(obj instanceof ReceiveType rt)) return false;
         if(!this.destination.equals(rt.destination)) return false;
-        return nextTypes.get(";").equals(((ReceiveType) obj).nextTypes.get(";"));
+        return nextTypes.get(";").equivalent(((ReceiveType) obj).nextTypes.get(";"));
     }
 
     @Override
