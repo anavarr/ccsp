@@ -38,6 +38,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         HashMap<String, List<String>> possibleStates = new HashMap<>();
         HashMap<String, List<String>> visitedLabels = new HashMap<>();
         ArrayList<Collection<LocalType>> history = new ArrayList<>();
+        ArrayList<List<Collection<LocalType>>> loopingStates = new ArrayList<>();
         reducedTypes = new HashMap<>();
         HashMap<String,LocalType> initialTypes = new HashMap<>();
         ArrayList<LocalType> initialStates= new ArrayList<>();
@@ -68,6 +69,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 //this set of states has already been registered
                 if(localTypes.containsAll(reducedTypes.values())){
                     if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
+                        var start = history.indexOf(localTypes);
+                        var loopingSet = new ArrayList<Collection<LocalType>>();
+                        for (int i = start; i < history.size(); i++) {
+                            loopingSet.add(history.get(i));
+                        }
+                        loopingStates.add(loopingSet);
                         //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
                         mustContinue = !initialStates.stream().allMatch(LocalType::visitedAllPaths);
                         if(mustContinue) reducedTypes = initialTypes;
