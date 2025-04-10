@@ -170,5 +170,10 @@ public class PropertiesTest extends ProgramReaderTest{
             var spc = testFile("example_fred.sp");
             spc.reduceNetwork();
         }
+        @Test
+        public void OAuth2LocalTypeSafe() throws IOException {
+            var spc = testFile("OAuth2_fragment.sp");
+            spc.reduceNetwork();
+        }
     }
 }

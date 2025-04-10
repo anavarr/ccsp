@@ -2,6 +2,7 @@ package mychor.types;
 
 import mychor.MessageQueues;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -56,4 +57,23 @@ public class RecurseCallType extends LocalType{
         return name;
     }
 
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
+        return null;
+    }
+
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
+        return null;
+    }
+
+    @Override
+    public PossibleMessages getMsgsToReceive(String name) {
+        return null;
+    }
+
+    @Override
+    public PossibleMessages getMsgsToSend(String name) {
+        return null;
+    }
 }

@@ -1,19 +1,13 @@
 package mychor;
 
-import mychor.types.BranchType;
 import mychor.types.EndType;
 import mychor.types.LocalType;
-import mychor.types.ReceiveType;
-import mychor.types.RecurseCallType;
-import mychor.types.RecurseDefType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -25,7 +19,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
-    HashMap<String,Behaviour> reduced = new HashMap<>();
     HashMap<String,LocalType> reducedTypes = new HashMap<>();
     MessageQueues qs = new MessageQueues();
 
@@ -69,15 +62,60 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 //this set of states has already been registered
                 if(localTypes.containsAll(reducedTypes.values())){
                     if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
-                        var start = history.indexOf(localTypes);
-                        var loopingSet = new ArrayList<Collection<LocalType>>();
-                        for (int i = start; i < history.size(); i++) {
-                            loopingSet.add(history.get(i));
+                        if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){
+                            // we are looping
+                            var start = history.indexOf(localTypes);
+                            var loopingSet = new ArrayList<Collection<LocalType>>();
+                            for (int i = start; i < history.size(); i++) {
+                                loopingSet.add(history.get(i));
+                            }
+                            loopingStates.add(loopingSet);
+                            //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
                         }
-                        loopingStates.add(loopingSet);
-                        //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
                         mustContinue = !initialStates.stream().allMatch(LocalType::visitedAllPaths);
-                        if(mustContinue) reducedTypes = initialTypes;
+                        HashMap<String, HashMap<String, ArrayList<String>>> messagesToSend = new HashMap<>();
+                        HashMap<String, HashMap<String, ArrayList<String>>> messagesToReceive = new HashMap<>();
+                        if(mustContinue){
+                            // must check that the "non-taken paths" can be taken
+                            // non-taken branches
+                            // non-taken selections
+                            //
+                            for (String process : initialTypes.keySet()) {
+                                var toReceive = initialTypes.get(process).getMsgsToReceiveRecursive();
+                                if(toReceive != null){
+                                    for (String source : toReceive.keySet()) {
+                                        if(messagesToReceive.containsKey(source)){
+                                            if(messagesToReceive.get(source).containsKey(process)){
+                                                messagesToReceive.get(source).get(process).addAll(toReceive.get(source));
+                                            }else{
+                                                messagesToReceive.get(source).put(process, toReceive.get(source));
+                                            }
+                                        }else{ //gucci
+                                            var hm = new HashMap<String, ArrayList<String>>();
+                                            hm.put(process, toReceive.get(source));
+                                            messagesToReceive.put(source, hm);
+                                        }
+                                    }
+                                }
+                                var toSend = initialTypes.get(process).getMsgsToSendRecursive();
+                                if(toSend != null){
+                                    for (String destination : toSend.keySet()) {
+                                        if(messagesToSend.containsKey(process)){
+                                            if(messagesToSend.get(process).containsKey(destination)){
+                                                messagesToSend.get(process).get(destination).addAll(toSend.get(destination));
+                                            }else{
+                                                messagesToSend.get(process).put(destination, toSend.get(destination));
+                                            }
+                                        }else{ // gucci
+                                            var hm = new HashMap<String, ArrayList<String>>();
+                                            hm.put(destination, toSend.get(destination));
+                                            messagesToSend.put(process, hm);
+                                        }
+                                    }
+                                }
+                            }
+                            reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+                        }
                         break;
                     }
                 }

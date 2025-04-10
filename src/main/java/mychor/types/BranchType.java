@@ -12,7 +12,6 @@ public class BranchType extends LocalType{
     String destination;
 
     private List<String> visitedLabels = new ArrayList<>();
-    private ArrayList<String> finishedBranches = new ArrayList<>();
     private String visitingLabel = null;
     private LocalType visitingBranch = null;
 
@@ -71,6 +70,7 @@ public class BranchType extends LocalType{
         if(!nextTypes.containsKey(msg.label())) throw new RuntimeException(
                 String.format("Process %s does not support label %s at that point of its execution, type is not valid",
                         process, msg.label()));
+        visitedLabels.add(msg.label());
         return nextTypes.get(msg.label());
     }
 
@@ -108,6 +108,47 @@ public class BranchType extends LocalType{
             if(!nextTypes.get(s).visitedAllPaths()) return false;
         }
         return true;
+    }
+
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
+        HashMap<String, ArrayList<String>> toSend = new HashMap<>();
+        for (String s : nextTypes.keySet()) {
+            var hm = nextTypes.get(s).getMsgsToSendRecursive();
+            if(hm != null){
+                for (String string : hm.keySet()) {
+                    if(toSend.containsKey(string)) toSend.get(string).addAll(hm.get(string));
+                    else toSend.put(string, hm.get(string));
+                }
+            }
+        }
+        return toSend;
+    }
+
+    @Override
+    public PossibleMessages getMsgsToReceive(String name) {
+        return new PossibleMessages(destination, name, nextTypes.keySet().stream().toList());
+    }
+
+    @Override
+    public PossibleMessages getMsgsToSend(String name) {
+        return null;
+    }
+
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
+        HashMap<String, ArrayList<String>> toReceive = new HashMap<>();
+        toReceive.put(destination, new ArrayList<>(nextTypes.keySet().stream().toList()));
+        for (String s : nextTypes.keySet()) {
+            var hm = nextTypes.get(s).getMsgsToReceiveRecursive();
+            if(hm != null){
+                for (String string : hm.keySet()) {
+                    if(toReceive.containsKey(string)) toReceive.get(string).addAll(hm.get(string));
+                    else toReceive.put(string, hm.get(string));
+                }
+            }
+        }
+        return toReceive;
     }
 
     private void removeBranch(String s) {

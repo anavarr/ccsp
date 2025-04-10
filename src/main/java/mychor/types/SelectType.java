@@ -6,6 +6,7 @@ import mychor.Utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -133,5 +134,47 @@ public class SelectType extends LocalType {
         var allSame = branches.stream().noneMatch(el -> !el.equivalent(branches.getFirst()));
         if(allSame) return branches.getFirst();
         else throw new RuntimeException("execution branches don't match");
+    }
+
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
+        HashMap<String, ArrayList<String>> toSend = new HashMap<>();
+        toSend.put(destination, new ArrayList<>(nextTypes.keySet().stream().toList()));
+
+        for (String s : nextTypes.keySet()) {
+            var hm = nextTypes.get(s).getMsgsToSendRecursive();
+            if(hm != null){
+                for (String string : hm.keySet()) {
+                    if(toSend.containsKey(string)) toSend.get(string).addAll(hm.get(string));
+                    else toSend.put(string, hm.get(string));
+                }
+            }
+        }
+        return toSend;
+    }
+
+    @Override
+    public PossibleMessages getMsgsToReceive(String name) {
+        return null;
+    }
+
+    @Override
+    public PossibleMessages getMsgsToSend(String name) {
+        return new PossibleMessages(name, destination, nextTypes.keySet().stream().toList());
+    }
+
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
+        HashMap<String, ArrayList<String>> toReceive = new HashMap<>();
+        for (String s : nextTypes.keySet()) {
+            var hm = nextTypes.get(s).getMsgsToReceiveRecursive();
+            if(hm != null){
+                for (String string : hm.keySet()) {
+                    if(toReceive.containsKey(string)) toReceive.get(string).addAll(hm.get(string));
+                    else toReceive.put(string, hm.get(string));
+                }
+            }
+        }
+        return toReceive;
     }
 }

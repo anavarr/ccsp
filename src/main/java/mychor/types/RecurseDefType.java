@@ -2,7 +2,9 @@ package mychor.types;
 
 import mychor.MessageQueues;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 public class RecurseDefType extends LocalType{
     String varName;
@@ -60,5 +62,25 @@ public class RecurseDefType extends LocalType{
         StringBuilder b = new StringBuilder();
         b.append("µ ").append(varName).append(".").append(" ").append(nextTypes.get("unfold").toString());
         return b.toString();
+    }
+
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
+        return nextTypes.get("unfold").getMsgsToReceiveRecursive();
+    }
+
+    @Override
+    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
+        return nextTypes.get("unfold").getMsgsToSendRecursive();
+    }
+
+    @Override
+    public PossibleMessages getMsgsToReceive(String name) {
+        return nextTypes.get(";").getMsgsToReceive(name);
+    }
+
+    @Override
+    public PossibleMessages getMsgsToSend(String name) {
+        return nextTypes.get(";").getMsgsToSend(name);
     }
 }

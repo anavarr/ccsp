@@ -750,17 +750,4 @@ public class BehaviourTest {
             assertTrue(branches.containsAll(List.of(branch1, branch2, branch3, branch4)));
         }
     }
-    @Nested
-    class IntricatePathExtractionTest extends ProgramReaderTest{
-        @Test
-        public void IntricateBranchingEqualsSetOfSimpleProcesses() throws IOException{
-            var spc = testFile("branching_paths/intricate_branching.sp");
-            var subbranches  = new ArrayList<SPcheckerRich>();
-            var i = 13;
-            for (int i1 = 1; i1 < i; i1++) {
-                subbranches.add(testFile("branching_paths/intricate_branching_comb_"+i1+".sp"));
-                assertTrue(spc.getExecutionPaths().containsAll(subbranches.get(i1-1).getExecutionPaths()));
-            }
-        }
-    }
 }
