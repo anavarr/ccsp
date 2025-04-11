@@ -58,6 +58,15 @@ public class SelectType extends LocalType {
     }
 
     @Override
+    public boolean contains(LocalType lt) {
+        if(lt == this) return true;
+        for (LocalType value : nextTypes.values()) {
+            if(value.contains(lt)) return true;
+        }
+        return false;
+    }
+
+    @Override
     public List<String> getSelectionsToVisit() {
         ArrayList<String> labels = new ArrayList<>(visitStats.entrySet().stream()
                 .filter(el -> el.getValue() == 0)

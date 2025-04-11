@@ -67,6 +67,11 @@ public class EndType extends LocalType{
         return null;
     }
 
+    @Override
+    public boolean contains(LocalType lt) {
+        return lt == this;
+    }
+
 
     @Override
     public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {

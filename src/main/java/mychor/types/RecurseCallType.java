@@ -58,6 +58,11 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
+    public boolean contains(LocalType lt) {
+        return lt == this;
+    }
+
+    @Override
     public LocalType duplicate() {
         return this;
     }

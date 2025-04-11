@@ -41,6 +41,12 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
+    public boolean contains(LocalType lt) {
+        if(lt == this) return true;
+        return nextTypes.get(";").contains(lt);
+    }
+
+    @Override
     public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
         HashMap<String, ArrayList<String>> toReceive = new HashMap<>();
         toReceive.put(destination, new ArrayList<>(List.of("")));

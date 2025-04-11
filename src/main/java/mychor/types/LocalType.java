@@ -130,6 +130,8 @@ public abstract class LocalType {
     public abstract HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit();
     public abstract HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit();
 
+    public abstract boolean contains(LocalType lt);
+
     public abstract HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive();
     public abstract HashMap<String, ArrayList<String>> getMsgsToSendRecursive();
 

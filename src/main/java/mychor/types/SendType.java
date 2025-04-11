@@ -57,6 +57,12 @@ public class SendType extends LocalType{
     }
 
     @Override
+    public boolean contains(LocalType lt) {
+        if(this == lt) return true;
+        return nextTypes.get(";").contains(lt);
+    }
+
+    @Override
     public LocalType duplicate() {
         return new SendType(destination, nextTypes.get(";"));
     }

@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public void reduceNetwork(){
         ArrayList<Collection<LocalType>> history = new ArrayList<>();
         ArrayList<List<Collection<LocalType>>> loopingStates = new ArrayList<>();
+        ArrayList<List<Collection<LocalType>>> unreachableNodesSequence = new ArrayList<>();
 
         // extracting types
         reducedTypes = new HashMap<>();
@@ -92,26 +94,44 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                             if(hms != null) selectionNodes.put(process, hms);
                         }
                         var unreachableNodes = getUnreachableNodes(branchingNodes, selectionNodes);
+                        int oldUnreachableCount;
+                        do{
+                            oldUnreachableCount = unreachableNodes.size();
+                            for (LocalType unreachableNode : unreachableNodes) {
+                                for (String process: selectionNodes.keySet()) {
+                                    var toRemove = new ArrayList<SelectType>();
+                                    for (SelectType selectType : selectionNodes.get(process).keySet()) {
+                                        if(unreachableNode.contains(selectType)) {
+                                            toRemove.add(selectType);
+                                        }
+                                    }
+                                    for (SelectType selectType : toRemove) {
+                                        selectionNodes.get(process).remove(selectType);
+                                    }
+                                }
+                                selectionNodes.entrySet().removeIf(e -> e.getValue().isEmpty());
 
-
-//                        HashMap<String, List<String>> branchesToVisit = new HashMap<>();
-//                        for (String s : initialTypes.keySet()) {
-//                            branchesToVisit.put(s, initialTypes.get(s).getBranchesToVisit());
-//                        }
-//                        HashMap<String, List<String>> selectionsToVisit = new HashMap<>();
-//                        for (String s : initialTypes.keySet()) {
-//                            selectionsToVisit.put(s, initialTypes.get(s).getSelectionsToVisit());
-//                        }
-//                        var inaccessibleBranches = getInaccessibleBranches(initialTypes);
-//                        var inaccessibleSelections = getInaccessibleSelections(initialTypes);
-//                        for (String source : inaccessibleBranches.keySet()) {
-//                            for (String destination : inaccessibleBranches.get(source).keySet()) {
-//                                for (String s : inaccessibleBranches.get(source).get(destination)) {
-//                                    initialTypes.get(destination);
-//                                }
-//                            }
-//                        }
-                        reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+                                for (String process: branchingNodes.keySet()) {
+                                    var toRemove = new ArrayList<BranchType>();
+                                    for (BranchType branchType : branchingNodes.get(process).keySet()) {
+                                        if(unreachableNode.contains(branchType)) {
+                                            toRemove.add(branchType);
+                                        }
+                                    }
+                                    for (BranchType branchType : toRemove) {
+                                        selectionNodes.get(process).remove(branchType);
+                                    }
+                                }
+                                branchingNodes.entrySet().removeIf(e -> e.getValue().isEmpty());
+                            }
+                            unreachableNodes.addAll(getUnreachableNodes(branchingNodes, selectionNodes));
+                        }while(unreachableNodes.size() != oldUnreachableCount);
+                        unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
+                        if(selectionNodes.isEmpty() && !unreachableNodes.isEmpty()){
+                            mustContinue = false;
+                        }else{
+                            reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+                        }
                     }
                 }
             }
@@ -123,29 +143,36 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
     }
 
-    private HashMap<String, HashMap<BranchType, List<String>>> getUnreachableNodes(HashMap<String, HashMap<BranchType, List<String>>> branchingNodes,
+    private ArrayList<LocalType> getUnreachableNodes(HashMap<String, HashMap<BranchType, List<String>>> branchingNodes,
                                                 HashMap<String, HashMap<SelectType, List<String>>> selectionNodes) {
+        var bNodes = new ArrayList<LocalType>();
         for (String destination : branchingNodes.keySet()) {
             for (BranchType branchType : branchingNodes.get(destination).keySet()) {
                 var toRemove = new ArrayList<String>();
                 for (String label : branchingNodes.get(destination).get(branchType)) {
+                    boolean add = true;
                     for (String source : selectionNodes.keySet().stream()
                             .filter(el -> !el.equals(destination)).toList()) {
                         for (SelectType selectType : selectionNodes.get(source).keySet().stream()
                                 .filter(el -> el.getDestination().equals(destination)).toList()) {
                             if(selectionNodes.get(source).get(selectType).contains(label)) {
-                                toRemove.add(label);
+                                add = false;
                             }
                         }
                     }
+                    if(add){
+                        bNodes.add(branchType.nextTypes.get(label));
+                        toRemove.add(label);
+                    }
                 }
-                branchingNodes.get(destination).put(branchType, new ArrayList<>(branchingNodes.get(destination).get(branchType)));
-                branchingNodes.get(destination).get(branchType).removeAll(toRemove);
+                var l = new ArrayList<>(branchingNodes.get(destination).get(branchType));
+                l.removeAll(toRemove);
+                branchingNodes.get(destination).put(branchType, l);
             }
             branchingNodes.get(destination).entrySet().removeIf(e -> e.getValue().isEmpty());
         }
         branchingNodes.entrySet().removeIf(e -> e.getValue().isEmpty());
-        return branchingNodes;
+        return bNodes;
     }
 
 

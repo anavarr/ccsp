@@ -36,6 +36,12 @@ public class RecurseDefType extends LocalType{
         return nextTypes.get("unfold").getSelectionNodesAndLabelsToVisit();
     }
 
+    @Override
+    public boolean contains(LocalType lt) {
+        if(lt == this) return true;
+        return nextTypes.get("unfold").contains(lt);
+    }
+
     public int getVisited(){
         return visited;
     }

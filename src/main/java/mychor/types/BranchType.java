@@ -155,6 +155,15 @@ public class BranchType extends LocalType{
     }
 
     @Override
+    public boolean contains(LocalType lt) {
+        if(lt == this) return true;
+        for (LocalType value : nextTypes.values()) {
+            if(value.contains(lt)) return true;
+        }
+        return false;
+    }
+
+    @Override
     public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
         HashMap<String, ArrayList<String>> toSend = new HashMap<>();
         for (String s : nextTypes.keySet()) {
