@@ -27,12 +27,12 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+    public HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit() {
         return nextTypes.get("unfold").getBranchingNodesAndLabelsToVisit();
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+    public HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit() {
         return nextTypes.get("unfold").getSelectionNodesAndLabelsToVisit();
     }
 

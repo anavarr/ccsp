@@ -48,12 +48,12 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+    public HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit() {
         return null;
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+    public HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit() {
         return null;
     }
 

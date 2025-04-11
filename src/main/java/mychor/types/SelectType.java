@@ -14,6 +14,10 @@ public class SelectType extends LocalType {
     String destination;
     private HashMap<String, Integer> visitStats = new HashMap<>();
 
+    public String getDestination() {
+        return destination;
+    }
+
     public SelectType(String destination, HashMap<String, LocalType> branches){
         this.destination = destination;
         for (String s : branches.keySet()) {
@@ -74,18 +78,27 @@ public class SelectType extends LocalType {
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
-        HashMap<LocalType, List<String>> hm = new HashMap<>();
-        hm.put(this, visitStats.entrySet().stream().filter((e) -> e.getValue() == 0).map(Map.Entry::getKey).toList());
+    public HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        HashMap<BranchType, List<String>> bNodesAndLabels = new HashMap<>();
         for (LocalType value : nextTypes.values()) {
-            hm.putAll(value.getBranchingNodesAndLabelsToVisit());
+            var hm = value.getBranchingNodesAndLabelsToVisit();
+            if(hm != null) bNodesAndLabels.putAll(hm);
         }
-        return hm;
+        if(bNodesAndLabels.isEmpty()) return null;
+        return bNodesAndLabels;
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
-        return null;
+    public HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        HashMap<SelectType, List<String>> sNodesAndLabels = new HashMap<>();
+        var labels = visitStats.entrySet().stream().filter((e) -> e.getValue() == 0).map(Map.Entry::getKey).toList();
+        if(!labels.isEmpty()) sNodesAndLabels.put(this, labels);
+        for (LocalType value : nextTypes.values()) {
+            var hm = value.getSelectionNodesAndLabelsToVisit();
+            if(hm != null) sNodesAndLabels.putAll(hm);
+        }
+        if(sNodesAndLabels.isEmpty()) return null;
+        return sNodesAndLabels;
     }
 
     @Override

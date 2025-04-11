@@ -127,8 +127,8 @@ public abstract class LocalType {
     public abstract List<String> getSelectionsToVisit();
     public abstract List<String> getBranchesToVisit();
 
-    public abstract HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit();
-    public abstract HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit();
+    public abstract HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit();
+    public abstract HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit();
 
     public abstract HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive();
     public abstract HashMap<String, ArrayList<String>> getMsgsToSendRecursive();

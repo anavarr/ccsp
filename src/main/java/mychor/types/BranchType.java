@@ -130,22 +130,27 @@ public class BranchType extends LocalType{
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
-        var bNodesAndLabels = new HashMap<LocalType, List<String>>();
-        bNodesAndLabels.put(this, nextTypes.keySet().stream()
-                .filter(el -> !visitedLabels.contains(el)).toList());
+    public HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        var bNodesAndLabels = new HashMap<BranchType, List<String>>();
+        var labels = nextTypes.keySet().stream()
+                .filter(el -> !visitedLabels.contains(el)).toList();
+        if(!labels.isEmpty()) bNodesAndLabels.put(this, labels);
         for (LocalType value : nextTypes.values()) {
-            bNodesAndLabels.putAll(value.getBranchingNodesAndLabelsToVisit());
+            var hm = value.getBranchingNodesAndLabelsToVisit();
+            if (hm != null) bNodesAndLabels.putAll(hm);
         }
+        if(bNodesAndLabels.isEmpty()) return null;
         return bNodesAndLabels;
     }
 
     @Override
-    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
-        var sNodesAndLabels = new HashMap<LocalType, List<String>>();
+    public HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        var sNodesAndLabels = new HashMap<SelectType, List<String>>();
         for (LocalType value : nextTypes.values()) {
-            sNodesAndLabels.putAll(value.getBranchingNodesAndLabelsToVisit());
+            var hm = value.getSelectionNodesAndLabelsToVisit();
+            if(hm != null) sNodesAndLabels.putAll(hm);
         }
+        if(sNodesAndLabels.isEmpty()) return null;
         return sNodesAndLabels;
     }
 
