@@ -33,11 +33,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // extracting types
         reducedTypes = new HashMap<>();
         HashMap<String,LocalType> initialTypes = new HashMap<>();
-        ArrayList<LocalType> initialStates= new ArrayList<>();
         for (String s : compilerCtx.behaviours.keySet()) {
             try {
                 var type = LocalType.extractLocalType(compilerCtx.behaviours.get(s));
-                initialStates.add(type);
                 reducedTypes.put(s, type);
                 initialTypes.put(s, type);
             } catch (Exception e) {
@@ -45,7 +43,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 throw new RuntimeException(e);
             }
         }
-        history.add(initialStates);
+        history.add(initialTypes.values());
 
         var mustContinue = true;
         while(mustContinue){
@@ -67,7 +65,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             //this set of states has already been registered
             if(loopingTypes != null){
                 if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths)){ // all paths have been visited
-                    history = new ArrayList<>();
                     if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){ // at least one is not the end Type
                         // we are looping
                         var start = history.indexOf(loopingTypes);
@@ -78,7 +75,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                         loopingStates.add(loopingSet);
                         //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
                     }
-                    mustContinue = !initialStates.stream().allMatch(LocalType::visitedAllPaths);
+                    history = new ArrayList<>();
+                    mustContinue = !initialTypes.values().stream().allMatch(LocalType::visitedAllPaths);
                     if(mustContinue){
                         //two situations :
                         //  1. there are non-selected labels, in which case we must send them
