@@ -5,6 +5,7 @@ import mychor.MessageQueues;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class RecurseDefType extends LocalType{
     String varName;
@@ -13,6 +14,26 @@ public class RecurseDefType extends LocalType{
     @Override
     public boolean visitedAllPaths() {
         return nextTypes.get("unfold").visitedAllPaths();
+    }
+
+    @Override
+    public List<String> getSelectionsToVisit() {
+        return nextTypes.get("unfold").getSelectionsToVisit();
+    }
+
+    @Override
+    public List<String> getBranchesToVisit() {
+        return nextTypes.get("unfold").getBranchesToVisit();
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        return nextTypes.get("unfold").getBranchingNodesAndLabelsToVisit();
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        return nextTypes.get("unfold").getSelectionNodesAndLabelsToVisit();
     }
 
     public int getVisited(){

@@ -5,6 +5,7 @@ import mychor.MessageQueues;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class EndType extends LocalType{
     public EndType(){
@@ -45,6 +46,27 @@ public class EndType extends LocalType{
     public boolean visitedAllPaths() {
         return true;
     }
+
+    @Override
+    public List<String> getSelectionsToVisit() {
+        return List.of();
+    }
+
+    @Override
+    public List<String> getBranchesToVisit() {
+        return List.of();
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        return null;
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        return null;
+    }
+
 
     @Override
     public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {

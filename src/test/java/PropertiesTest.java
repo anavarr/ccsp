@@ -175,5 +175,17 @@ public class PropertiesTest extends ProgramReaderTest{
             var spc = testFile("OAuth2_fragment.sp");
             spc.reduceNetwork();
         }
+
+        @Test
+        public void twoVSoneShouldWork() throws IOException {
+            var spc = testFile("recursion/2_vs_1.sp");
+            spc.reduceNetwork();
+        }
+
+        @Test
+        public void recurseVsStaticShouldWork() throws IOException {
+            var spc = testFile("recurse_vs_static.sp");
+            spc.reduceNetwork();
+        }
     }
 }

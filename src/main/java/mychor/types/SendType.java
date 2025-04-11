@@ -38,6 +38,25 @@ public class SendType extends LocalType{
     }
 
     @Override
+    public List<String> getSelectionsToVisit() {
+        return nextTypes.get(";").getSelectionsToVisit();
+    }
+
+    @Override
+    public List<String> getBranchesToVisit() {
+        return nextTypes.get(";").getBranchesToVisit();
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        return nextTypes.get(";").getBranchingNodesAndLabelsToVisit();
+    }
+    @Override
+    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        return nextTypes.get(";").getBranchingNodesAndLabelsToVisit();
+    }
+
+    @Override
     public LocalType duplicate() {
         return new SendType(destination, nextTypes.get(";"));
     }
@@ -56,15 +75,17 @@ public class SendType extends LocalType{
 
     @Override
     public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
+        var toSend = new HashMap<String, ArrayList<String>>();
+        toSend.put(destination, new ArrayList<>(List.of("")));
+
         var hm = nextTypes.get(";").getMsgsToSendRecursive();
-        if(hm == null){
-            hm = new HashMap<>();
-            hm.put(destination, new ArrayList<>(List.of("")));
-        }else{
-            if(hm.containsKey(destination)) hm.get(destination).add("");
-            else hm.put(destination, new ArrayList<>(List.of("")));
+        if(hm != null){
+            for (String s : hm.keySet()) {
+                if(toSend.containsKey(s)) toSend.get(s).addAll(hm.get(s));
+                else toSend.put(s, hm.get(s));
+            }
         }
-        return hm;
+        return toSend;
     }
 
     @Override

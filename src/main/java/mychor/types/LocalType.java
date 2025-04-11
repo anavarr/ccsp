@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 public abstract class LocalType {
 
@@ -123,9 +124,17 @@ public abstract class LocalType {
 
     public abstract boolean visitedAllPaths();
 
+    public abstract List<String> getSelectionsToVisit();
+    public abstract List<String> getBranchesToVisit();
+
+    public abstract HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit();
+    public abstract HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit();
+
     public abstract HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive();
     public abstract HashMap<String, ArrayList<String>> getMsgsToSendRecursive();
 
     public abstract PossibleMessages getMsgsToReceive(String name);
     public abstract PossibleMessages getMsgsToSend(String name);
+
+
 }

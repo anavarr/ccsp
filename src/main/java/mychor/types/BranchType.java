@@ -111,6 +111,45 @@ public class BranchType extends LocalType{
     }
 
     @Override
+    public List<String> getSelectionsToVisit() {
+        ArrayList<String> labels = new ArrayList<>();
+        for (LocalType value : nextTypes.values()) {
+            labels.addAll(value.getSelectionsToVisit());
+        }
+        return labels;
+    }
+
+    @Override
+    public List<String> getBranchesToVisit() {
+        ArrayList<String> labels = new ArrayList<>(nextTypes.keySet().stream()
+                .filter(el -> !visitedLabels.contains(el)).toList());
+        for (LocalType value : nextTypes.values()) {
+            labels.addAll(value.getBranchesToVisit());
+        }
+        return labels;
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        var bNodesAndLabels = new HashMap<LocalType, List<String>>();
+        bNodesAndLabels.put(this, nextTypes.keySet().stream()
+                .filter(el -> !visitedLabels.contains(el)).toList());
+        for (LocalType value : nextTypes.values()) {
+            bNodesAndLabels.putAll(value.getBranchingNodesAndLabelsToVisit());
+        }
+        return bNodesAndLabels;
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        var sNodesAndLabels = new HashMap<LocalType, List<String>>();
+        for (LocalType value : nextTypes.values()) {
+            sNodesAndLabels.putAll(value.getBranchingNodesAndLabelsToVisit());
+        }
+        return sNodesAndLabels;
+    }
+
+    @Override
     public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
         HashMap<String, ArrayList<String>> toSend = new HashMap<>();
         for (String s : nextTypes.keySet()) {

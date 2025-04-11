@@ -27,11 +27,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public void reduceNetwork(){
-        HashMap<String, List<String>> possibleLabels = new HashMap<>();
-        HashMap<String, List<String>> possibleStates = new HashMap<>();
-        HashMap<String, List<String>> visitedLabels = new HashMap<>();
         ArrayList<Collection<LocalType>> history = new ArrayList<>();
         ArrayList<List<Collection<LocalType>>> loopingStates = new ArrayList<>();
+
+        // extracting types
         reducedTypes = new HashMap<>();
         HashMap<String,LocalType> initialTypes = new HashMap<>();
         ArrayList<LocalType> initialStates= new ArrayList<>();
@@ -47,6 +46,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
         }
         history.add(initialStates);
+
         var mustContinue = true;
         while(mustContinue){
             // reduce all local choreographies
@@ -58,65 +58,49 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 }
             }
             // check if states are already registered AND their children are fully visited
+            Collection<LocalType> loopingTypes = null;
             for (Collection<LocalType> localTypes : history) {
-                //this set of states has already been registered
-                if(localTypes.containsAll(reducedTypes.values())){
-                    if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
-                        if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){
-                            // we are looping
-                            var start = history.indexOf(localTypes);
-                            var loopingSet = new ArrayList<Collection<LocalType>>();
-                            for (int i = start; i < history.size(); i++) {
-                                loopingSet.add(history.get(i));
-                            }
-                            loopingStates.add(loopingSet);
-                            //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
+                if (localTypes.containsAll(reducedTypes.values())) {
+                    loopingTypes = localTypes;
+                }
+            }
+            //this set of states has already been registered
+            if(loopingTypes != null){
+                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths)){ // all paths have been visited
+                    history = new ArrayList<>();
+                    if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){ // at least one is not the end Type
+                        // we are looping
+                        var start = history.indexOf(loopingTypes);
+                        var loopingSet = new ArrayList<Collection<LocalType>>();
+                        for (int i = start; i < history.size(); i++) {
+                            loopingSet.add(history.get(i));
                         }
-                        mustContinue = !initialStates.stream().allMatch(LocalType::visitedAllPaths);
-                        HashMap<String, HashMap<String, ArrayList<String>>> messagesToSend = new HashMap<>();
-                        HashMap<String, HashMap<String, ArrayList<String>>> messagesToReceive = new HashMap<>();
-                        if(mustContinue){
-                            // must check that the "non-taken paths" can be taken
-                            // non-taken branches
-                            // non-taken selections
-                            //
-                            for (String process : initialTypes.keySet()) {
-                                var toReceive = initialTypes.get(process).getMsgsToReceiveRecursive();
-                                if(toReceive != null){
-                                    for (String source : toReceive.keySet()) {
-                                        if(messagesToReceive.containsKey(source)){
-                                            if(messagesToReceive.get(source).containsKey(process)){
-                                                messagesToReceive.get(source).get(process).addAll(toReceive.get(source));
-                                            }else{
-                                                messagesToReceive.get(source).put(process, toReceive.get(source));
-                                            }
-                                        }else{ //gucci
-                                            var hm = new HashMap<String, ArrayList<String>>();
-                                            hm.put(process, toReceive.get(source));
-                                            messagesToReceive.put(source, hm);
-                                        }
-                                    }
-                                }
-                                var toSend = initialTypes.get(process).getMsgsToSendRecursive();
-                                if(toSend != null){
-                                    for (String destination : toSend.keySet()) {
-                                        if(messagesToSend.containsKey(process)){
-                                            if(messagesToSend.get(process).containsKey(destination)){
-                                                messagesToSend.get(process).get(destination).addAll(toSend.get(destination));
-                                            }else{
-                                                messagesToSend.get(process).put(destination, toSend.get(destination));
-                                            }
-                                        }else{ // gucci
-                                            var hm = new HashMap<String, ArrayList<String>>();
-                                            hm.put(destination, toSend.get(destination));
-                                            messagesToSend.put(process, hm);
-                                        }
-                                    }
+                        loopingStates.add(loopingSet);
+                        //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
+                    }
+                    mustContinue = !initialStates.stream().allMatch(LocalType::visitedAllPaths);
+                    if(mustContinue){
+                        //two situations :
+                        //  1. there are non-selected labels, in which case we must send them
+                        //  2. there are non-selected branches, in which case we must see if they can be selected
+                        HashMap<String, List<String>> branchesToVisit = new HashMap<>();
+                        for (String s : initialTypes.keySet()) {
+                            branchesToVisit.put(s, initialTypes.get(s).getBranchesToVisit());
+                        }
+                        HashMap<String, List<String>> selectionsToVisit = new HashMap<>();
+                        for (String s : initialTypes.keySet()) {
+                            selectionsToVisit.put(s, initialTypes.get(s).getSelectionsToVisit());
+                        }
+                        var inaccessibleBranches = getInaccessibleBranches(initialTypes);
+                        var inaccessibleSelections = getInaccessibleSelections(initialTypes);
+                        for (String source : inaccessibleBranches.keySet()) {
+                            for (String destination : inaccessibleBranches.get(source).keySet()) {
+                                for (String s : inaccessibleBranches.get(source).get(destination)) {
+                                    initialTypes.get(destination);
                                 }
                             }
-                            reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
                         }
-                        break;
+                        reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
                     }
                 }
             }
@@ -126,7 +110,110 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             history.add(toAdd);
         }
+    }
 
+    public HashMap<String, HashMap<String, ArrayList<String>>> getInaccessibleBranches(HashMap<String, LocalType> initialTypes) {
+        var messagesToSend = populateMessagesToSend(initialTypes);
+        var messagesToReceive = populateMessagesToReceive(initialTypes);
+        for (String source : messagesToReceive.keySet()) {
+            for (String destination : messagesToReceive.get(source).keySet()) {
+                var labels = messagesToReceive.get(source).get(destination);
+                var toRemove = new ArrayList<String>();
+                for (String label : labels) {
+                    if(messagesToSend.get(source).get(destination).contains(label)){
+                        toRemove.add(label);
+                    }
+                }
+                for (String label : toRemove) {
+                    messagesToReceive.get(source).get(destination).remove(label);
+                    messagesToSend.get(source).get(destination).remove(label);
+                }
+            }
+        }
+        messagesToSend.entrySet().removeIf(e -> {
+            e.getValue().entrySet().removeIf(e1 -> e1.getValue().isEmpty());
+            return e.getValue().isEmpty();
+        });
+        messagesToReceive.entrySet().removeIf(e -> {
+            e.getValue().entrySet().removeIf(e1 -> e1.getValue().isEmpty());
+            return e.getValue().isEmpty();
+        });
+        return messagesToReceive;
+    }
+
+    public HashMap<String, HashMap<String, ArrayList<String>>> getInaccessibleSelections(HashMap<String, LocalType> initialTypes) {
+        var messagesToSend = populateMessagesToSend(initialTypes);
+        var messagesToReceive = populateMessagesToReceive(initialTypes);
+        for (String source : messagesToSend.keySet()) {
+            for (String destination : messagesToSend.get(source).keySet()) {
+                var labels = messagesToSend.get(source).get(destination);
+                var toRemove = new ArrayList<String>();
+                for (String label : labels) {
+                    if(messagesToReceive.get(source).get(destination).contains(label)){
+                        toRemove.add(label);
+                    }
+                }
+                for (String label : toRemove) {
+                    messagesToReceive.get(source).get(destination).remove(label);
+                    messagesToSend.get(source).get(destination).remove(label);
+                }
+            }
+        }
+        messagesToSend.entrySet().removeIf(e -> {
+            e.getValue().entrySet().removeIf(e1 -> e1.getValue().isEmpty());
+            return e.getValue().isEmpty();
+        });
+        messagesToReceive.entrySet().removeIf(e -> {
+            e.getValue().entrySet().removeIf(e1 -> e1.getValue().isEmpty());
+            return e.getValue().isEmpty();
+        });
+        return messagesToSend;
+    }
+
+    public HashMap<String, HashMap<String, ArrayList<String>>> populateMessagesToReceive(HashMap<String, LocalType> initialTypes){
+        HashMap<String, HashMap<String, ArrayList<String>>> messagesToReceive = new HashMap<>();
+        for (String process : initialTypes.keySet()) {
+            var toReceive = initialTypes.get(process).getMsgsToReceiveRecursive();
+            if(toReceive != null){
+                for (String source : toReceive.keySet()) {
+                    if(messagesToReceive.containsKey(source)){
+                        if(messagesToReceive.get(source).containsKey(process)){
+                            messagesToReceive.get(source).get(process).addAll(toReceive.get(source));
+                        }else{
+                            messagesToReceive.get(source).put(process, toReceive.get(source));
+                        }
+                    }else{
+                        var hm = new HashMap<String, ArrayList<String>>();
+                        hm.put(process, toReceive.get(source));
+                        messagesToReceive.put(source, hm);
+                    }
+                }
+            }
+        }
+        return messagesToReceive;
+    }
+
+    public HashMap<String, HashMap<String, ArrayList<String>>> populateMessagesToSend(HashMap<String, LocalType> initialTypes){
+        HashMap<String, HashMap<String, ArrayList<String>>> messagesToSend = new HashMap<>();
+        for (String process : initialTypes.keySet()) {
+            var toSend = initialTypes.get(process).getMsgsToSendRecursive();
+            if(toSend != null){
+                for (String destination : toSend.keySet()) {
+                    if(messagesToSend.containsKey(process)){
+                        if(messagesToSend.get(process).containsKey(destination)){
+                            messagesToSend.get(process).get(destination).addAll(toSend.get(destination));
+                        }else{
+                            messagesToSend.get(process).put(destination, toSend.get(destination));
+                        }
+                    }else{
+                        var hm = new HashMap<String, ArrayList<String>>();
+                        hm.put(destination, toSend.get(destination));
+                        messagesToSend.put(process, hm);
+                    }
+                }
+            }
+        }
+        return messagesToSend;
     }
 
     public boolean sessionsBranchingAreValid(){

@@ -54,6 +54,41 @@ public class SelectType extends LocalType {
     }
 
     @Override
+    public List<String> getSelectionsToVisit() {
+        ArrayList<String> labels = new ArrayList<>(visitStats.entrySet().stream()
+                .filter(el -> el.getValue() == 0)
+                .map(Map.Entry::getKey).toList());
+        for (LocalType value : nextTypes.values()) {
+            labels.addAll(value.getSelectionsToVisit());
+        }
+        return labels;
+    }
+
+    @Override
+    public List<String> getBranchesToVisit() {
+        ArrayList<String> labels = new ArrayList<>();
+        for (LocalType value : nextTypes.values()) {
+            labels.addAll(value.getBranchesToVisit());
+        }
+        return labels;
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        HashMap<LocalType, List<String>> hm = new HashMap<>();
+        hm.put(this, visitStats.entrySet().stream().filter((e) -> e.getValue() == 0).map(Map.Entry::getKey).toList());
+        for (LocalType value : nextTypes.values()) {
+            hm.putAll(value.getBranchingNodesAndLabelsToVisit());
+        }
+        return hm;
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append(destination);

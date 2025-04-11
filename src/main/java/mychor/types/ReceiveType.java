@@ -21,6 +21,26 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
+    public List<String> getSelectionsToVisit() {
+        return nextTypes.get(";").getSelectionsToVisit();
+    }
+
+    @Override
+    public List<String> getBranchesToVisit() {
+        return nextTypes.get(";").getBranchesToVisit();
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getBranchingNodesAndLabelsToVisit() {
+        return nextTypes.get(";").getBranchingNodesAndLabelsToVisit();
+    }
+
+    @Override
+    public HashMap<LocalType, List<String>> getSelectionNodesAndLabelsToVisit() {
+        return nextTypes.get(";").getSelectionNodesAndLabelsToVisit();
+    }
+
+    @Override
     public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
         HashMap<String, ArrayList<String>> toReceive = new HashMap<>();
         toReceive.put(destination, new ArrayList<>(List.of("")));
