@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -25,9 +26,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public CompilerContext compilerCtx = new CompilerContext();
 
 
-    ArrayList<ArrayList<Collection<LocalType>>> history = new ArrayList<>();
+    ArrayList<ArrayList<HashMap<String, LocalType>>> history = new ArrayList<>();
     int currentHistory = 0;
-    ArrayList<List<Collection<LocalType>>> loopingStates = new ArrayList<>();
+    ArrayList<List<HashMap<String, LocalType>>> loopingStates = new ArrayList<>();
     ArrayList<List<Collection<LocalType>>> unreachableNodesSequence = new ArrayList<>();
     HashMap<String,LocalType> reducedTypes = new HashMap<>();
     MessageQueues qs = new MessageQueues();
@@ -61,18 +62,18 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
     }
 
-    private Collection<LocalType> checkLoop(){
-        for (Collection<LocalType> localTypes : history.get(currentHistory)) {
-            if (localTypes.containsAll(reducedTypes.values())) {
+    private HashMap<String, LocalType> checkLoop(){
+        for (HashMap<String, LocalType> localTypes : history.get(currentHistory)) {
+            if (localTypes.values().containsAll(reducedTypes.values())) {
                 return localTypes;
             }
         }
         return null;
     }
 
-    private void registerLoop(Collection<LocalType> loopingTypes){
+    private void registerLoop(HashMap<String, LocalType> loopingTypes){
         var start = history.get(currentHistory).indexOf(loopingTypes);
-        var loopingSet = new ArrayList<Collection<LocalType>>();
+        var loopingSet = new ArrayList<HashMap<String, LocalType>>();
         for (int i = start; i < history.get(currentHistory).size(); i++) {
             loopingSet.add(history.get(currentHistory).get(i));
         }
@@ -81,9 +82,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     private void addReducedTypesToHistory(){
-        var toAdd = new ArrayList<LocalType>();
+        var toAdd = new HashMap<String, LocalType>();
         for (String s : reducedTypes.keySet()) {
-            toAdd.add(reducedTypes.get(s));
+            toAdd.put(s, reducedTypes.get(s));
         }
         history.get(currentHistory).add(toAdd);
     }
@@ -135,14 +136,16 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             unreachableNodes.addAll(getUnreachableNodes(branchingNodes, selectionNodes));
         }while(unreachableNodes.size() != oldUnreachableCount);
         if(!unreachableNodes.isEmpty()) unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
-        return !selectionNodes.isEmpty() && !unreachableNodes.isEmpty();
+        return !selectionNodes.isEmpty() && unreachableNodes.isEmpty();
     }
 
-    private boolean handleLoop(Collection<LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
+    private boolean handleLoop(HashMap<String, LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
         if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){ // at least one is not the end Type
             // we are looping
             registerLoop(loopingTypes);
             //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
+        }else{
+            loopingStates.add(new ArrayList<>());
         }
         addReducedTypesToHistory();
         if(!initialTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
@@ -165,7 +168,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // extracting types
         var initialTypes = setupTypes();
         history.add(new ArrayList<>());
-        history.get(currentHistory).add(initialTypes.values());
+        var hm = new HashMap<String, LocalType>();
+        hm.putAll(initialTypes);
+        history.get(currentHistory).add(hm);
 
         var mustContinue = true;
         while(mustContinue){
@@ -174,10 +179,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             var loopingTypes = checkLoop();
             //this set of states has already been registered
             if(loopingTypes != null){
-                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths))
-                    mustContinue = handleLoop(loopingTypes, initialTypes);
-            }else{
-                loopingStates.add(new ArrayList<>());
+                mustContinue = handleLoop(loopingTypes, initialTypes);
             }
             if(mustContinue){
                 addReducedTypesToHistory();
@@ -528,20 +530,33 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public boolean generateWaste() {
-        throw new NotImplementedException("not implemented");
+        for (ArrayList<Message> leftOver : qs.leftOvers) {
+            if(!leftOver.isEmpty()) return true;
+        }
+        return false;
     }
 
     public ArrayList<List<Collection<LocalType>>> getUnreachableNodes() {
         return unreachableNodesSequence;
     }
 
-    public List<LocalType> deadlockedNodes(){
-        var deadlockedNodes = new ArrayList<LocalType>();
-        for (ArrayList<Collection<LocalType>> iteration : history) {
-             var it = iteration.getLast();
-             deadlockedNodes.addAll(
-                     it.stream().filter(el -> el instanceof ReceiveType || el instanceof BranchType).toList()
-             );
+    public HashMap<String, ArrayList<LocalType>> deadlockedNodes(){
+        var deadlockedNodes = new HashMap<String, ArrayList<LocalType>>();
+        int counter = 0;
+        for (ArrayList<HashMap<String, LocalType>> iteration : history) {
+            var it = iteration.getLast();
+            for (String s : it.keySet()) {
+                var node = it.get(s);
+                if(node instanceof ReceiveType  || node instanceof BranchType){
+                    //there is a receive/branch in the last step of the history
+                    if(!loopingStates.get(counter).stream().map(el -> el.get(s)).toList().contains(node)){
+                        //the receive is in a loop so it is not a terminal
+                        if(!deadlockedNodes.containsKey(s)) deadlockedNodes.put(s, new ArrayList<>());
+                            deadlockedNodes.get(s).add(it.get(s));
+                    }
+                }
+            }
+            counter++;
         }
         return deadlockedNodes;
     }
