@@ -3,8 +3,10 @@ package mychor;
 import mychor.types.BranchType;
 import mychor.types.EndType;
 import mychor.types.LocalType;
+import mychor.types.ReceiveType;
 import mychor.types.SelectType;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -132,7 +134,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             unreachableNodes.addAll(getUnreachableNodes(branchingNodes, selectionNodes));
         }while(unreachableNodes.size() != oldUnreachableCount);
-        unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
+        if(!unreachableNodes.isEmpty()) unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
         return !selectionNodes.isEmpty() && !unreachableNodes.isEmpty();
     }
 
@@ -148,10 +150,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
                 currentHistory++;
                 history.add(new ArrayList<>());
-                qs.saveIteration();
+                reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+                qs.saveIterationAndPrepareNextOne();
                 return true;
             }
         }
+        qs.saveIteration();
         return false;
     }
 
@@ -172,12 +176,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             if(loopingTypes != null){
                 if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths))
                     mustContinue = handleLoop(loopingTypes, initialTypes);
+            }else{
+                loopingStates.add(new ArrayList<>());
             }
             if(mustContinue){
                 addReducedTypesToHistory();
             }
         }
     }
+
 
     private ArrayList<LocalType> getUnreachableNodes(HashMap<String, HashMap<BranchType, List<String>>> branchingNodes,
                                                 HashMap<String, HashMap<SelectType, List<String>>> selectionNodes) {
@@ -520,4 +527,26 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return new ArrayList<>();
     }
 
+    public boolean generateWaste() {
+        throw new NotImplementedException("not implemented");
+    }
+
+    public ArrayList<List<Collection<LocalType>>> getUnreachableNodes() {
+        return unreachableNodesSequence;
+    }
+
+    public List<LocalType> deadlockedNodes(){
+        var deadlockedNodes = new ArrayList<LocalType>();
+        for (ArrayList<Collection<LocalType>> iteration : history) {
+             var it = iteration.getLast();
+             deadlockedNodes.addAll(
+                     it.stream().filter(el -> el instanceof ReceiveType || el instanceof BranchType).toList()
+             );
+        }
+        return deadlockedNodes;
+    }
+
+    public boolean deadlockFreedom() {
+        return deadlockedNodes().isEmpty();
+    }
 }

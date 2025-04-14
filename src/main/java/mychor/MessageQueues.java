@@ -1,9 +1,7 @@
 package mychor;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -89,7 +87,15 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
         return accessed == qs.accessed;
     }
 
-    public void saveIteration() {
+    public void saveIteration(){
+        for (String s : keySet()) {
+            while(!get(s).isEmpty()){
+                leftOvers.get(currentHistory).add(get(s).poll());
+            }
+        }
+    }
+
+    public void saveIterationAndPrepareNextOne() {
         for (String s : keySet()) {
             while(!get(s).isEmpty()){
                 leftOvers.get(currentHistory).add(get(s).poll());

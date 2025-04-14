@@ -1,10 +1,10 @@
-import mychor.Message;
-import mychor.Utils;
 import mychor.types.LocalType;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,8 +15,8 @@ public class PropertiesTest extends ProgramReaderTest{
 
 
     // Local Types
-//    @Nested
-//    public class LocalTypeTests{
+    @Nested
+    public class LocalTypeTests{
 //        @Test
 //        public void knowledgeofChoiceOfAsymmetricConditionShouldReturnFalse() throws IOException{
 //            var spc = testFile("branching_paths/asymmetric_branching.sp");
@@ -26,39 +26,39 @@ public class PropertiesTest extends ProgramReaderTest{
 //            assertTrue(knowledgeTable.get("service"));
 //        }
 //
-//        @Test
-//        public void OAuth2LocalTypeExists() throws IOException {
-//            var spc = testFile("OAuth2_fragment.sp");
-//            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
-//                assertDoesNotThrow(()  -> LocalType.extractLocalType(bev));
-//            });
-//        }
+        @Test
+        public void OAuth2LocalTypeExists() throws IOException {
+            var spc = testFile("OAuth2_fragment.sp");
+            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
+                assertDoesNotThrow(()  -> LocalType.extractLocalType(bev));
+            });
+        }
 //        @Test
 //        public void OAuth2LocalTypeSafe() throws IOException {
 //            var spc = testFile("OAuth2_fragment.sp");
 //            assertTrue(spc.typeSafetyLocalType());
 //        }
 //
-//        @Test
-//        public void OAuth2NonSafeIsTypable() throws IOException {
-//            var spc = testFile("OAuth2_fragment_nonsafe.sp");
-//            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
-//                assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
-//            });
-//        }
+        @Test
+        public void OAuth2NonSafeIsTypable() throws IOException {
+            var spc = testFile("OAuth2_fragment_nonsafe.sp");
+            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
+                assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
+            });
+        }
 //        @Test
 //        public void OAuth2NonSafeIsNotTypeSafe() throws IOException {
 //            var spc = testFile("OAuth2_fragment_nonsafe.sp");
 //            assertFalse(spc.typeSafetyLocalType());
 //
 //        }
-//        @Test
-//        public void OAuth2AsyncIsTypable() throws IOException {
-//            var spc = testFile("OAuth2_fragment_async.sp");
-//            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
-//                assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
-//            });
-//        }
+        @Test
+        public void OAuth2AsyncIsTypable() throws IOException {
+            var spc = testFile("OAuth2_fragment_async.sp");
+            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
+                assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
+            });
+        }
 //
 //        @Test
 //        public void OAuth2AsyncIsTypeSafe() throws IOException {
@@ -66,13 +66,13 @@ public class PropertiesTest extends ProgramReaderTest{
 //            assertTrue(spc.typeSafetyLocalType());
 //        }
 //
-//        @Test
-//        public void ThreeBuyerProtoolIsTypable() throws IOException {
-//            var spc = testFile("Three_buyer_protocol.sp");
-//            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
-//                assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
-//            });
-//        }
+        @Test
+        public void ThreeBuyerProtoolIsTypable() throws IOException {
+            var spc = testFile("Three_buyer_protocol.sp");
+            spc.compilerCtx.behaviours.forEach((pr, bev) -> {
+                assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
+            });
+        }
 //        @Test
 //        public void ThreeBuyerProtoolIsTypeSafe() throws IOException {
 //            var spc = testFile("Three_buyer_protocol.sp");
@@ -87,7 +87,7 @@ public class PropertiesTest extends ProgramReaderTest{
 //
 //        @Test
 //        public void nReceiveVSArbitrarySendShouldDeadlock() throws IOException {
-//            var spc = testFile("recursion/asymmetric_deadlock.sp");
+//            var spc = testFile("recursion/asymmetric_send_waste.sp");
 //            assertFalse(spc.deadlockFreedomLocalType());
 //        }
 //
@@ -160,38 +160,89 @@ public class PropertiesTest extends ProgramReaderTest{
 //            var spc = testFile("recursion/2_vs_1.sp");
 //            assertTrue(spc.deadlockFreedomLocalType());
 //        }
-//    }
+    }
 
 
     @Nested
     public class ExactAlgorithm{
-        @Test
-        public void exampleFred() throws IOException {
-            var spc = testFile("example_fred.sp");
-            spc.reduceNetwork();
-        }
-        @Test
-        public void OAuth2LocalTypeSafe() throws IOException {
-            var spc = testFile("OAuth2_fragment.sp");
-            spc.reduceNetwork();
+
+        @Nested
+        public class DeadlockFreedom{
+            @Test
+            public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
+                var spc = testFile("Three_buyer_protocol.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void OAuth2LocalIsDeadlockFree() throws IOException {
+                var spc = testFile("OAuth2_fragment.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+
+            @Test
+            public void nReceiveVSArbitrarySendShouldNotDeadlock() throws IOException {
+                var spc = testFile("recursion/asymmetric_send_waste.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void doubleSendVSSimpleReceiveShouldBeDeadlockFree() throws IOException{
+                var spc = testFile("recursion/2_vs_1.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
         }
 
-        @Test
-        public void twoVSoneShouldWork() throws IOException {
-            var spc = testFile("recursion/2_vs_1.sp");
-            spc.reduceNetwork();
+        @Nested
+        public class WasteGeneration{
+            @Test
+            public void nReceiveVSArbitrarySendShouldGenerateWaste() throws IOException {
+                var spc = testFile("recursion/asymmetric_send_waste.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.generateWaste());
+            }
         }
 
-        @Test
-        public void recurseVsStaticShouldWork() throws IOException {
-            var spc = testFile("recurse_vs_static.sp");
-            spc.reduceNetwork();
-        }
+        @Nested
+        public class DeadBranches{
+            @Test
+            public void OAuth2LocalHasDeadBranches() throws IOException {
+                var spc = testFile("OAuth2_fragment.sp");
+                spc.reduceNetwork();
+                var unreachableNodes = spc.getUnreachableNodes();
+                assertFalse(unreachableNodes.stream().allMatch(List::isEmpty));
+                assertEquals(unreachableNodes.size(), 1);
+            }
+            @Test
+            public void exampleFredHasNoUnreachableNodes() throws IOException {
+                var spc = testFile("example_fred.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertTrue(spc.deadlockFreedom());
+            }
 
-        @Test
-        public void recurseVSStaticEndFirstShouldWork() throws IOException {
-            var spc = testFile("recurse_vs_static_end_first.sp");
-            spc.reduceNetwork();
+            @Test
+            public void twoVSoneHasNoDeadBranches() throws IOException {
+                var spc = testFile("recursion/2_vs_1.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+            }
+
+            @Test
+            public void recurseVsStaticHasNoDeadBranches() throws IOException {
+                var spc = testFile("recurse_vs_static.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+            }
+
+            @Test
+            public void recurseVSStaticEndHasDeadBranches() throws IOException {
+                var spc = testFile("recurse_vs_static_end_first.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+            }
         }
     }
 }
