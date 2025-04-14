@@ -22,6 +22,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     public HashMap<String, ParseTree> recDefs = new HashMap<>();
     public CompilerContext compilerCtx = new CompilerContext();
 
+
+    ArrayList<ArrayList<Collection<LocalType>>> history = new ArrayList<>();
+    int currentHistory = 0;
+    ArrayList<List<Collection<LocalType>>> loopingStates = new ArrayList<>();
+    ArrayList<List<Collection<LocalType>>> unreachableNodesSequence = new ArrayList<>();
     HashMap<String,LocalType> reducedTypes = new HashMap<>();
     MessageQueues qs = new MessageQueues();
 
@@ -29,117 +34,148 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return qs;
     }
 
-    public void reduceNetwork(){
-        ArrayList<Collection<LocalType>> history = new ArrayList<>();
-        ArrayList<List<Collection<LocalType>>> loopingStates = new ArrayList<>();
-        ArrayList<List<Collection<LocalType>>> unreachableNodesSequence = new ArrayList<>();
-
-        // extracting types
-        reducedTypes = new HashMap<>();
+    private HashMap<String, LocalType> setupTypes(){
         HashMap<String,LocalType> initialTypes = new HashMap<>();
         for (String s : compilerCtx.behaviours.keySet()) {
             try {
                 var type = LocalType.extractLocalType(compilerCtx.behaviours.get(s));
-                reducedTypes.put(s, type);
                 initialTypes.put(s, type);
+                reducedTypes.put(s, type);
             } catch (Exception e) {
                 System.err.println("error while extracting type for process "+s);
                 throw new RuntimeException(e);
             }
         }
-        history.add(initialTypes.values());
+        return initialTypes;
+    }
+
+    private void reduceTypes(){
+        for (String s : reducedTypes.keySet()) {
+            try {
+                reducedTypes.put(s, reducedTypes.get(s).reduce(s, qs));
+            } catch(Exception e){
+                System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
+            }
+        }
+    }
+
+    private Collection<LocalType> checkLoop(){
+        for (Collection<LocalType> localTypes : history.get(currentHistory)) {
+            if (localTypes.containsAll(reducedTypes.values())) {
+                return localTypes;
+            }
+        }
+        return null;
+    }
+
+    private void registerLoop(Collection<LocalType> loopingTypes){
+        var start = history.get(currentHistory).indexOf(loopingTypes);
+        var loopingSet = new ArrayList<Collection<LocalType>>();
+        for (int i = start; i < history.get(currentHistory).size(); i++) {
+            loopingSet.add(history.get(currentHistory).get(i));
+        }
+        loopingSet.add(loopingTypes);
+        loopingStates.add(loopingSet);
+    }
+
+    private void addReducedTypesToHistory(){
+        var toAdd = new ArrayList<LocalType>();
+        for (String s : reducedTypes.keySet()) {
+            toAdd.add(reducedTypes.get(s));
+        }
+        history.get(currentHistory).add(toAdd);
+    }
+
+    private boolean nonVisitedPathsAreReachable(HashMap<String, LocalType> initialTypes){
+
+        //two situations :
+        //  1. there are non-selected labels, in which case we must send them
+        //  2. there are non-selected branches, in which case we must see if they can be selected
+        HashMap<String, HashMap<BranchType, List<String>>> branchingNodes = new HashMap<>();
+        HashMap<String, HashMap<SelectType, List<String>>> selectionNodes = new HashMap<>();
+        for (String process : initialTypes.keySet()) {
+            var hmb = initialTypes.get(process).getBranchingNodesAndLabelsToVisit();
+            var hms = initialTypes.get(process).getSelectionNodesAndLabelsToVisit();
+            if(hmb != null) branchingNodes.put(process, hmb);
+            if(hms != null) selectionNodes.put(process, hms);
+        }
+        var unreachableNodes = getUnreachableNodes(branchingNodes, selectionNodes);
+        int oldUnreachableCount;
+        do{
+            oldUnreachableCount = unreachableNodes.size();
+            for (LocalType unreachableNode : unreachableNodes) {
+                for (String process: selectionNodes.keySet()) {
+                    var toRemove = new ArrayList<SelectType>();
+                    for (SelectType selectType : selectionNodes.get(process).keySet()) {
+                        if(unreachableNode.contains(selectType)) {
+                            toRemove.add(selectType);
+                        }
+                    }
+                    for (SelectType selectType : toRemove) {
+                        selectionNodes.get(process).remove(selectType);
+                    }
+                }
+                selectionNodes.entrySet().removeIf(e -> e.getValue().isEmpty());
+
+                for (String process: branchingNodes.keySet()) {
+                    var toRemove = new ArrayList<BranchType>();
+                    for (BranchType branchType : branchingNodes.get(process).keySet()) {
+                        if(unreachableNode.contains(branchType)) {
+                            toRemove.add(branchType);
+                        }
+                    }
+                    for (BranchType branchType : toRemove) {
+                        selectionNodes.get(process).remove(branchType);
+                    }
+                }
+                branchingNodes.entrySet().removeIf(e -> e.getValue().isEmpty());
+            }
+            unreachableNodes.addAll(getUnreachableNodes(branchingNodes, selectionNodes));
+        }while(unreachableNodes.size() != oldUnreachableCount);
+        unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
+        return !selectionNodes.isEmpty() && !unreachableNodes.isEmpty();
+    }
+
+    private boolean handleLoop(Collection<LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
+        if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){ // at least one is not the end Type
+            // we are looping
+            registerLoop(loopingTypes);
+            //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
+        }
+        addReducedTypesToHistory();
+        if(!initialTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
+            if(nonVisitedPathsAreReachable(initialTypes)) {
+                reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+                currentHistory++;
+                history.add(new ArrayList<>());
+                qs.saveIteration();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void reduceNetwork(){
+
+
+        // extracting types
+        var initialTypes = setupTypes();
+        history.add(new ArrayList<>());
+        history.get(currentHistory).add(initialTypes.values());
 
         var mustContinue = true;
         while(mustContinue){
-            // reduce all local choreographies
-            for (String s : reducedTypes.keySet()) {
-                try {
-                    reducedTypes.put(s, reducedTypes.get(s).reduce(s, qs));
-                } catch(Exception e){
-                    System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
-                }
-            }
+            reduceTypes();
             // check if states are already registered AND their children are fully visited
-            Collection<LocalType> loopingTypes = null;
-            for (Collection<LocalType> localTypes : history) {
-                if (localTypes.containsAll(reducedTypes.values())) {
-                    loopingTypes = localTypes;
-                }
-            }
+            var loopingTypes = checkLoop();
             //this set of states has already been registered
             if(loopingTypes != null){
-                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths)){ // all paths have been visited
-                    if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){ // at least one is not the end Type
-                        // we are looping
-                        var start = history.indexOf(loopingTypes);
-                        var loopingSet = new ArrayList<Collection<LocalType>>();
-                        for (int i = start; i < history.size(); i++) {
-                            loopingSet.add(history.get(i));
-                        }
-                        loopingStates.add(loopingSet);
-                        //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
-                    }
-                    history = new ArrayList<>();
-                    mustContinue = !initialTypes.values().stream().allMatch(LocalType::visitedAllPaths);
-                    if(mustContinue){
-                        //two situations :
-                        //  1. there are non-selected labels, in which case we must send them
-                        //  2. there are non-selected branches, in which case we must see if they can be selected
-                        HashMap<String, HashMap<BranchType, List<String>>> branchingNodes = new HashMap<>();
-                        HashMap<String, HashMap<SelectType, List<String>>> selectionNodes = new HashMap<>();
-                        for (String process : initialTypes.keySet()) {
-                            var hmb = initialTypes.get(process).getBranchingNodesAndLabelsToVisit();
-                            var hms = initialTypes.get(process).getSelectionNodesAndLabelsToVisit();
-                            if(hmb != null) branchingNodes.put(process, hmb);
-                            if(hms != null) selectionNodes.put(process, hms);
-                        }
-                        var unreachableNodes = getUnreachableNodes(branchingNodes, selectionNodes);
-                        int oldUnreachableCount;
-                        do{
-                            oldUnreachableCount = unreachableNodes.size();
-                            for (LocalType unreachableNode : unreachableNodes) {
-                                for (String process: selectionNodes.keySet()) {
-                                    var toRemove = new ArrayList<SelectType>();
-                                    for (SelectType selectType : selectionNodes.get(process).keySet()) {
-                                        if(unreachableNode.contains(selectType)) {
-                                            toRemove.add(selectType);
-                                        }
-                                    }
-                                    for (SelectType selectType : toRemove) {
-                                        selectionNodes.get(process).remove(selectType);
-                                    }
-                                }
-                                selectionNodes.entrySet().removeIf(e -> e.getValue().isEmpty());
-
-                                for (String process: branchingNodes.keySet()) {
-                                    var toRemove = new ArrayList<BranchType>();
-                                    for (BranchType branchType : branchingNodes.get(process).keySet()) {
-                                        if(unreachableNode.contains(branchType)) {
-                                            toRemove.add(branchType);
-                                        }
-                                    }
-                                    for (BranchType branchType : toRemove) {
-                                        selectionNodes.get(process).remove(branchType);
-                                    }
-                                }
-                                branchingNodes.entrySet().removeIf(e -> e.getValue().isEmpty());
-                            }
-                            unreachableNodes.addAll(getUnreachableNodes(branchingNodes, selectionNodes));
-                        }while(unreachableNodes.size() != oldUnreachableCount);
-                        unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
-                        if(selectionNodes.isEmpty() && !unreachableNodes.isEmpty()){
-                            mustContinue = false;
-                        }else{
-                            reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
-                        }
-                    }
-                }
+                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths))
+                    mustContinue = handleLoop(loopingTypes, initialTypes);
             }
-            var toAdd = new ArrayList<LocalType>();
-            for (String s : reducedTypes.keySet()) {
-                toAdd.add(reducedTypes.get(s));
+            if(mustContinue){
+                addReducedTypesToHistory();
             }
-            history.add(toAdd);
         }
     }
 

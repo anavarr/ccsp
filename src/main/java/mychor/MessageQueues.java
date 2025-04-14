@@ -1,6 +1,9 @@
 package mychor;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -8,8 +11,13 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
 
     public int accessed = 0;
     static int DEFAULT_CAPACITY = 1000;
+    public ArrayList<ArrayList<Message>> qsHistory = new ArrayList<>();
+    public ArrayList<ArrayList<Message>> leftOvers = new ArrayList<>();
+    int currentHistory = 0;
     public MessageQueues(){
         super();
+        qsHistory.add(new ArrayList<>());
+        leftOvers.add(new ArrayList<>());
     }
 
     public boolean messagesMustBeProcessed(String process){
@@ -27,6 +35,7 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
             accessed++;
             put(key, new ArrayBlockingQueue<>(DEFAULT_CAPACITY));
         }
+        qsHistory.get(currentHistory).add(msg);
         return get(key).add(msg);
     }
     public Message poll(String source, String dest){
@@ -80,11 +89,14 @@ public class MessageQueues extends HashMap<String, Queue<Message>>{
         return accessed == qs.accessed;
     }
 
-    public void reset() {
+    public void saveIteration() {
         for (String s : keySet()) {
             while(!get(s).isEmpty()){
-                get(s).remove();
+                leftOvers.get(currentHistory).add(get(s).poll());
             }
         }
+        currentHistory++;
+        leftOvers.add(new ArrayList<>());
+        qsHistory.add(new ArrayList<>());
     }
 }

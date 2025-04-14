@@ -187,5 +187,11 @@ public class PropertiesTest extends ProgramReaderTest{
             var spc = testFile("recurse_vs_static.sp");
             spc.reduceNetwork();
         }
+
+        @Test
+        public void recurseVSStaticEndFirstShouldWork() throws IOException {
+            var spc = testFile("recurse_vs_static_end_first.sp");
+            spc.reduceNetwork();
+        }
     }
 }

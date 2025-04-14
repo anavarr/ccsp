@@ -95,6 +95,7 @@ public class ReceiveType extends LocalType{
                                 " contains a labeled selection, type is not valid"
        );
         // we got the right message, this communication can reduce
+        if(nextTypes.get(";") instanceof RecurseCallType rct) return rct.reduce(process, mqs);
         return nextTypes.get(";");
     }
 
