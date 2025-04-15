@@ -29,7 +29,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     ArrayList<ArrayList<HashMap<String, LocalType>>> history = new ArrayList<>();
     int currentHistory = 0;
     ArrayList<List<HashMap<String, LocalType>>> loopingStates = new ArrayList<>();
-    ArrayList<List<Collection<LocalType>>> unreachableNodesSequence = new ArrayList<>();
+    ArrayList<List<Collection<LocalType>>> unreachableNodesSequence = null;
     HashMap<String,LocalType> reducedTypes = new HashMap<>();
     MessageQueues qs = new MessageQueues();
 
@@ -135,7 +135,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             unreachableNodes.addAll(getUnreachableNodes(branchingNodes, selectionNodes));
         }while(unreachableNodes.size() != oldUnreachableCount);
-        if(!unreachableNodes.isEmpty()) unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
+        if(!unreachableNodes.isEmpty()) {
+            if (unreachableNodesSequence == null)
+                unreachableNodesSequence = new ArrayList<>();
+            unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
+        }
         return !selectionNodes.isEmpty() && unreachableNodes.isEmpty();
     }
 
@@ -163,13 +167,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public void reduceNetwork(){
-
-
         // extracting types
         var initialTypes = setupTypes();
         history.add(new ArrayList<>());
-        var hm = new HashMap<String, LocalType>();
-        hm.putAll(initialTypes);
+        var hm = new HashMap<String, LocalType>(initialTypes);
         history.get(currentHistory).add(hm);
 
         var mustContinue = true;
@@ -179,7 +180,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             var loopingTypes = checkLoop();
             //this set of states has already been registered
             if(loopingTypes != null){
-                mustContinue = handleLoop(loopingTypes, initialTypes);
+                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths))
+                    mustContinue = handleLoop(loopingTypes, initialTypes);
             }
             if(mustContinue){
                 addReducedTypesToHistory();
@@ -537,6 +539,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public ArrayList<List<Collection<LocalType>>> getUnreachableNodes() {
+        if(unreachableNodesSequence == null){
+            HashMap<String,LocalType> initialTypes = new HashMap<>();
+            unreachableNodesSequence = new ArrayList<>();
+            for (String s : compilerCtx.behaviours.keySet()) {
+                try {
+                    var type = LocalType.extractLocalType(compilerCtx.behaviours.get(s));
+                    initialTypes.put(s, type);
+                } catch (Exception e) {
+                    System.err.println("error while extracting type for process "+s);
+                    throw new RuntimeException(e);
+                }
+            }
+            nonVisitedPathsAreReachable(initialTypes);
+        }
         return unreachableNodesSequence;
     }
 

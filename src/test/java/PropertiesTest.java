@@ -78,48 +78,6 @@ public class PropertiesTest extends ProgramReaderTest{
 //            var spc = testFile("Three_buyer_protocol.sp");
 //            assertTrue(spc.typeSafetyLocalType());
 //        }
-//        @Test
-//        public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
-//            var spc = testFile("Three_buyer_protocol.sp");
-//            assertTrue(spc.deadlockFreedomLocalType());
-//        }
-//
-//
-//        @Test
-//        public void nReceiveVSArbitrarySendShouldDeadlock() throws IOException {
-//            var spc = testFile("recursion/asymmetric_send_waste.sp");
-//            assertFalse(spc.deadlockFreedomLocalType());
-//        }
-//
-//        @Test
-//        public void asymmetricRecursionShouldDeadlock() throws IOException {
-//            var spc = testFile("recursion/asymmetric_recursion.sp");
-//            assertFalse(spc.deadlockFreedomLocalType());
-//        }
-//
-//        @Test
-//        public void testComplementaryComplexSessionShouldBeDeadLockFree() throws IOException {
-//            var spc = testFile("complementaryComplexSession.sp");
-//            assertTrue(spc.deadlockFreedomLocalType());
-//        }
-//
-//        @Test
-//        public void IPProtocolShouldBeDeadlockFree() throws IOException{
-//            var spc = testFile("IP_protocol.sp");
-//            assertTrue(spc.deadlockFreedomLocalType());
-//        }
-//
-//        @Test
-//        public void recurseVSStaticShouldBeDeadLockFree() throws IOException{
-//            var spc = testFile("recurse_vs_static.sp");
-//            assertTrue(spc.deadlockFreedomLocalType());
-//        }
-//
-//        @Test
-//        public void recursionSelectionSecondShouldBeDeadlockFree() throws IOException {
-//            var spc = testFile("recursion/recursion_selection_second.sp");
-//            assertTrue(spc.deadlockFreedomLocalType());
-//        }
 //
 //        @Test
 //        public void programSelectingEndFirstShouldBeDeadlocked() throws IOException {
@@ -154,12 +112,6 @@ public class PropertiesTest extends ProgramReaderTest{
 //            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"end\"")));
 //            assertTrue(qs.get("client-server").contains(new Message(Utils.Direction.SELECT, "\"1choice1\"")));
 //        }
-//
-//        @Test
-//        public void doubleSendVSSimpleReceiveShouldBeDeadlockFree() throws IOException{
-//            var spc = testFile("recursion/2_vs_1.sp");
-//            assertTrue(spc.deadlockFreedomLocalType());
-//        }
     }
 
 
@@ -168,6 +120,18 @@ public class PropertiesTest extends ProgramReaderTest{
 
         @Nested
         public class DeadlockFreedom{
+            @Test
+            public void testComplementaryComplexSessionShouldBeDeadLockFree() throws IOException {
+                var spc = testFile("complementaryComplexSession.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void IPProtocolShouldBeDeadlockFree() throws IOException{
+                var spc = testFile("IP_protocol.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
             @Test
             public void ThreeBuyerProtoolIsDeadlockFree() throws IOException {
                 var spc = testFile("Three_buyer_protocol.sp");
@@ -180,9 +144,8 @@ public class PropertiesTest extends ProgramReaderTest{
                 spc.reduceNetwork();
                 assertTrue(spc.deadlockFreedom());
             }
-
             @Test
-            public void nReceiveVSArbitrarySendShouldNotDeadlock() throws IOException {
+            public void nReceiveVSArbitrarySendIsDeadlockFree() throws IOException {
                 var spc = testFile("recursion/asymmetric_send_waste.sp");
                 spc.reduceNetwork();
                 assertTrue(spc.deadlockFreedom());
@@ -193,20 +156,75 @@ public class PropertiesTest extends ProgramReaderTest{
                 spc.reduceNetwork();
                 assertTrue(spc.deadlockFreedom());
             }
+            @Test
+            public void recurseVsStaticIsDeadlockFree() throws IOException {
+                var spc = testFile("recurse_vs_static.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void recurseVSStaticEndIsDeadlockFree() throws IOException {
+                var spc = testFile("recurse_vs_static_end_first.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void asymmetricRecursionShouldBeDeadlockFree() throws IOException {
+                var spc = testFile("recursion/asymmetric_recursion.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void recursionSelectionSecondShouldBeDeadlockFree() throws IOException {
+                var spc = testFile("recursion/recursion_selection_second.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void asymmetricRecursionReceiveRecurseShouldDeadlock() throws IOException{
+                var spc = testFile("recursion/asymmetric_recursion_receive_recurse.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.deadlockFreedom());
+            }
         }
 
         @Nested
         public class WasteGeneration{
+            @Test
+            public void IPProtocolShouldBeNotGenerateWaste() throws IOException{
+                var spc = testFile("IP_protocol.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.generateWaste());
+            }
             @Test
             public void nReceiveVSArbitrarySendShouldGenerateWaste() throws IOException {
                 var spc = testFile("recursion/asymmetric_send_waste.sp");
                 spc.reduceNetwork();
                 assertTrue(spc.generateWaste());
             }
+
+            @Test
+            public void asymmetricRecursionShouldGenerateWaste() throws IOException {
+                var spc = testFile("recursion/asymmetric_recursion.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.generateWaste());
+            }
+            @Test
+            public void recursionSelectionSecondShouldNotGenerateWaste() throws IOException {
+                var spc = testFile("recursion/recursion_selection_second.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.generateWaste());
+            }
         }
 
         @Nested
         public class DeadBranches{
+            @Test
+            public void IPProtocolShouldNotHaveDeadBranches() throws IOException{
+                var spc = testFile("IP_protocol.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+            }
             @Test
             public void OAuth2LocalHasDeadBranches() throws IOException {
                 var spc = testFile("OAuth2_fragment.sp");
@@ -242,6 +260,19 @@ public class PropertiesTest extends ProgramReaderTest{
                 var spc = testFile("recurse_vs_static_end_first.sp");
                 spc.reduceNetwork();
                 assertFalse(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+            }
+
+            @Test
+            public void starvingBranchShouldGiveMeAnError() throws IOException{
+                var spc = testFile("recursion/starving_one_branch.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+            }
+            @Test
+            public void recursionSelectionSecondShouldNotHaveDeadBranches() throws IOException {
+                var spc = testFile("recursion/recursion_selection_second.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
             }
         }
     }
