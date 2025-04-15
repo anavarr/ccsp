@@ -5,6 +5,7 @@ import mychor.types.EndType;
 import mychor.types.LocalType;
 import mychor.types.ReceiveType;
 import mychor.types.SelectType;
+import mychor.types.SendType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -566,9 +568,38 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 if(node instanceof ReceiveType  || node instanceof BranchType){
                     //there is a receive/branch in the last step of the history
                     if(!loopingStates.get(counter).stream().map(el -> el.get(s)).toList().contains(node)){
-                        //the receive is in a loop so it is not a terminal
-                        if(!deadlockedNodes.containsKey(s)) deadlockedNodes.put(s, new ArrayList<>());
-                            deadlockedNodes.get(s).add(it.get(s));
+                        //the receive is not in a loop, it is a deadlock
+                        if(!deadlockedNodes.containsKey(s)) {
+                            deadlockedNodes.put(s, new ArrayList<>());
+                            deadlockedNodes.get(s).add(node);
+                        }
+                    }else {
+                        // the receive is in a loop, it might or might not be a deadlock
+                        String dest;
+                        if (node instanceof ReceiveType rt) dest = rt.getDestination();
+                        else {
+                            BranchType bt = (BranchType) node;
+                            dest = bt.getDestination();
+                        }
+                        String finalDest = dest;
+                        var senderStates = loopingStates.get(counter).stream().map(el -> el.get(finalDest)).toList();
+                        var hs = new HashSet<LocalType>(senderStates);
+                        if (hs.size() == 1) {
+                            if (!deadlockedNodes.containsKey(s)) {
+                                deadlockedNodes.put(s, new ArrayList<>());
+                                deadlockedNodes.get(s).add(node);
+                            }
+                        } else if (node instanceof ReceiveType && hs.stream().noneMatch(el -> el instanceof SendType)) {
+                            if (!deadlockedNodes.containsKey(s)) {
+                                deadlockedNodes.put(s, new ArrayList<>());
+                                deadlockedNodes.get(s).add(node);
+                            }
+                        } else if (node instanceof BranchType && hs.stream().noneMatch(el -> el instanceof SelectType)) {
+                            if (!deadlockedNodes.containsKey(s)) {
+                                deadlockedNodes.put(s, new ArrayList<>());
+                                deadlockedNodes.get(s).add(node);
+                            }
+                        }
                     }
                 }
             }
