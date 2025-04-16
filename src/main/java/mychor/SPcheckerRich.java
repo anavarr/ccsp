@@ -63,7 +63,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             try {
                 reducedTypes.put(s, reducedTypes.get(s).reduce(s, qs));
             } catch(Exception e){
-                System.err.println("error while reducing process "+s +" : \n" +e.getMessage());
+                throw new RuntimeException("error while reducing process "+s +" : \n" +e.getMessage());
             }
         }
     }
@@ -254,6 +254,24 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return false;
     }
 
+    private boolean checkContinuingIsPossible(){
+        int unvisitedUnreachable = 0;
+        var unreachablePaths = computeUnreachablePaths(reducedTypes);
+        var unvisitedPaths = reducedTypes.values().stream().filter(el -> !el.visitedAllPaths()).toList();
+        for (LocalType unvisitedPath : unvisitedPaths) {
+            if(unreachablePaths.contains(unvisitedPath)) unvisitedUnreachable ++;
+            else if(unvisitedPath instanceof BranchType bt){
+                var allUnvisitedLabelsAreUnreachable = bt.nextTypes.keySet().stream()
+                        .filter(el -> !bt.getVisitedLabels().contains(el))
+                        .allMatch(el -> unreachablePaths.contains(bt.nextTypes.get(el)));
+                if(allUnvisitedLabelsAreUnreachable) unvisitedUnreachable ++;
+            }else if(unvisitedPath instanceof ReceiveType rt){
+                if(unreachablePaths.contains(rt.nextTypes.get(";"))) unvisitedUnreachable ++;
+            }
+        }
+        return unvisitedUnreachable != unvisitedPaths.size();
+    }
+
     public void reduceNetwork(){
         // extracting types
         var initialTypes = setupTypes();
@@ -273,23 +291,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                     mustContinue = handleLoop(loopingTypes, initialTypes);
                 else{
                     //we check that non-visited paths are reachable
-                    int unvisitedUnreachable = 0;
-                    var unreachablePaths = computeUnreachablePaths(reducedTypes);
-                    var unvisitedPaths = reducedTypes.values().stream().filter(el -> !el.visitedAllPaths()).toList();
-                    for (LocalType unvisitedPath : unvisitedPaths) {
-                        if(unreachablePaths.contains(unvisitedPath)) unvisitedUnreachable ++;
-                        else if(unvisitedPath instanceof BranchType bt){
-                            var allUnvisitedLabelsAreUnreachable = bt.nextTypes.keySet().stream()
-                                    .filter(el -> !bt.getVisitedLabels().contains(el))
-                                    .allMatch(el -> unreachablePaths.contains(bt.nextTypes.get(el)));
-                            if(allUnvisitedLabelsAreUnreachable) unvisitedUnreachable ++;
-                        }else if(unvisitedPath instanceof ReceiveType rt){
-                            if(unreachablePaths.contains(rt.nextTypes.get(";"))) unvisitedUnreachable ++;
-                        }
-                    }
-                    if(unvisitedUnreachable == unvisitedPaths.size()){
-                        mustContinue = handleLoop(loopingTypes, initialTypes);
-                    }
+                    var continuingIsPossible = checkContinuingIsPossible();
+                    if(!continuingIsPossible) handleLoop(loopingTypes, initialTypes);
                 }
             }
             if(mustContinue){

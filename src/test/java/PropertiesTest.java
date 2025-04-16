@@ -9,6 +9,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PropertiesTest extends ProgramReaderTest{
@@ -119,6 +120,15 @@ public class PropertiesTest extends ProgramReaderTest{
     public class ExactAlgorithm{
 
         @Nested
+        public class TypeSafety{
+            @Test
+            public void OAuth2NotSafeShouldNotBeSafe() throws IOException {
+                var spc = testFile("OAuth2_fragment_nonsafe.sp");
+                assertThrows(RuntimeException.class, spc::reduceNetwork);
+            }
+        }
+
+        @Nested
         public class DeadlockFreedom{
             @Test
             public void testComplementaryComplexSessionShouldBeDeadLockFree() throws IOException {
@@ -141,6 +151,12 @@ public class PropertiesTest extends ProgramReaderTest{
             @Test
             public void OAuth2LocalIsDeadlockFree() throws IOException {
                 var spc = testFile("OAuth2_fragment.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.deadlockFreedom());
+            }
+            @Test
+            public void OAuth2AsyncLocalIsDeadlockFree() throws IOException {
+                var spc = testFile("OAuth2_fragment_async.sp");
                 spc.reduceNetwork();
                 assertTrue(spc.deadlockFreedom());
             }
@@ -189,6 +205,21 @@ public class PropertiesTest extends ProgramReaderTest{
         }
 
         @Nested
+        public class Termination{
+
+        }
+
+        @Nested
+        public class Liveness{
+
+        }
+
+        @Nested
+        public class Livelock{
+
+        }
+
+        @Nested
         public class WasteGeneration{
             @Test
             public void IPProtocolShouldBeNotGenerateWaste() throws IOException{
@@ -212,6 +243,12 @@ public class PropertiesTest extends ProgramReaderTest{
             @Test
             public void recursionSelectionSecondShouldNotGenerateWaste() throws IOException {
                 var spc = testFile("recursion/recursion_selection_second.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.generateWaste());
+            }
+            @Test
+            public void OAuth2ShouldNotGenerateWaste() throws IOException {
+                var spc = testFile("OAuth2_fragment.sp");
                 spc.reduceNetwork();
                 assertFalse(spc.generateWaste());
             }
