@@ -13,6 +13,7 @@ public class RecurseDefType extends LocalType{
     LocalType visiting = null;
     @Override
     public boolean visitedAllPaths() {
+        if(visited == 0) return false;
         return nextTypes.get("unfold").visitedAllPaths();
     }
 
@@ -66,6 +67,7 @@ public class RecurseDefType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
+        visited++;
         return nextTypes.get("unfold");
     }
 

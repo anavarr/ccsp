@@ -129,6 +129,7 @@ public class SelectType extends LocalType {
 
     @Override
     public LocalType reduce(String pr, MessageQueues mqs) {
+        visited++;
         var label = getLeastVisitedLabel();
         if(label == null) return new EndType();
         visitStats.put(label, visitStats.get(label)+1);

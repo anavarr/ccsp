@@ -17,6 +17,7 @@ public class ReceiveType extends LocalType{
 
     @Override
     public boolean visitedAllPaths() {
+        if(visited == 0) return false;
         return nextTypes.get(";").visitedAllPaths();
     }
 
@@ -85,6 +86,7 @@ public class ReceiveType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
+        visited++;
         var msg = mqs.poll(destination, process);
         // maybe the message didn't arrive yet
         if(msg == null) return this;

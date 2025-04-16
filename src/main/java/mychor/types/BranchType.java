@@ -15,6 +15,10 @@ public class BranchType extends LocalType{
     private String visitingLabel = null;
     private LocalType visitingBranch = null;
 
+    public List<String> getVisitedLabels() {
+        return visitedLabels;
+    }
+
     public BranchType(String destination, HashMap<String, LocalType> branches){
         this.destination = destination;
         for (String s : branches.keySet()) {
@@ -58,6 +62,7 @@ public class BranchType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
+        visited++;
         var msg = mqs.poll(destination, process);
         // no label has been sent, we wait
         if(msg == null) return this;
@@ -105,6 +110,7 @@ public class BranchType extends LocalType{
 
     @Override
     public boolean visitedAllPaths() {
+        if(visited == 0) return false;
         for (String s : nextTypes.keySet()) {
             if(!nextTypes.get(s).visitedAllPaths()) return false;
         }
@@ -118,6 +124,11 @@ public class BranchType extends LocalType{
             labels.addAll(value.getSelectionsToVisit());
         }
         return labels;
+    }
+
+    public List<String> getBranchesToVisitFirstLevel() {
+        return new ArrayList<>(nextTypes.keySet().stream()
+                .filter(el -> !visitedLabels.contains(el)).toList());
     }
 
     @Override

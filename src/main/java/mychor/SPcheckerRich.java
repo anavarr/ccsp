@@ -3,7 +3,9 @@ package mychor;
 import mychor.types.BranchType;
 import mychor.types.EndType;
 import mychor.types.LocalType;
+import mychor.types.MessageTrace;
 import mychor.types.ReceiveType;
+import mychor.types.RecurseDefType;
 import mychor.types.SelectType;
 import mychor.types.SendType;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -29,6 +32,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
 
     ArrayList<ArrayList<HashMap<String, LocalType>>> history = new ArrayList<>();
+    ArrayList<ArrayList<ArrayList<Message>>> qsHistory = new ArrayList<>();
     int currentHistory = 0;
     ArrayList<List<HashMap<String, LocalType>>> loopingStates = new ArrayList<>();
     ArrayList<List<Collection<LocalType>>> unreachableNodesSequence = null;
@@ -67,6 +71,31 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     private HashMap<String, LocalType> checkLoop(){
         for (HashMap<String, LocalType> localTypes : history.get(currentHistory)) {
             if (localTypes.values().containsAll(reducedTypes.values())) {
+                //before looping, we want to take all the new labels
+                var mts = new ArrayList<MessageTrace>();
+                for (String name : qs.keySet()) {
+                    var source = name.split("-")[0];
+                    var destin = name.split("-")[1];
+                    var msgs = new ArrayList<>(qs.get(name));
+                    for (Message msg : msgs) {
+                        mts.add(new MessageTrace(source, destin, msg));
+                    }
+                }
+                for (String process : reducedTypes.keySet()) {
+                    var lt = reducedTypes.get(process);
+                    if(lt instanceof BranchType bt){
+                        var nonvisitedLabels = bt.getBranchesToVisitFirstLevel();
+                        for (String nonvisitedLabel : nonvisitedLabels) {
+                            for (MessageTrace mt : mts) {
+                                if(mt.source().equals(((BranchType) lt).getDestination()) &&
+                                        mt.destination().equals(process) &&
+                                        mt.message().label().equals(nonvisitedLabel))
+                                    // in the queue, there is a message that process will receive that it has never received before
+                                    return null;
+                            }
+                        }
+                    }
+                }
                 return localTypes;
             }
         }
@@ -83,7 +112,16 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         loopingStates.add(loopingSet);
     }
 
+    private void saveQs(){
+        var msgs = new ArrayList<Message>();
+        for (Queue<Message> q : qs.values()) {
+            msgs.addAll(q);
+        }
+        qsHistory.get(currentHistory).add(msgs);
+    }
+
     private void addReducedTypesToHistory(){
+        saveQs();
         var toAdd = new HashMap<String, LocalType>();
         for (String s : reducedTypes.keySet()) {
             toAdd.put(s, reducedTypes.get(s));
@@ -91,16 +129,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         history.get(currentHistory).add(toAdd);
     }
 
-    private boolean nonVisitedPathsAreReachable(HashMap<String, LocalType> initialTypes){
-
+    private ArrayList<LocalType> computeUnreachablePaths(HashMap<String, LocalType> startingPoint){
         //two situations :
         //  1. there are non-selected labels, in which case we must send them
         //  2. there are non-selected branches, in which case we must see if they can be selected
         HashMap<String, HashMap<BranchType, List<String>>> branchingNodes = new HashMap<>();
         HashMap<String, HashMap<SelectType, List<String>>> selectionNodes = new HashMap<>();
-        for (String process : initialTypes.keySet()) {
-            var hmb = initialTypes.get(process).getBranchingNodesAndLabelsToVisit();
-            var hms = initialTypes.get(process).getSelectionNodesAndLabelsToVisit();
+        for (String process : startingPoint.keySet()) {
+            var hmb = startingPoint.get(process).getBranchingNodesAndLabelsToVisit();
+            var hms = startingPoint.get(process).getSelectionNodesAndLabelsToVisit();
             if(hmb != null) branchingNodes.put(process, hmb);
             if(hms != null) selectionNodes.put(process, hms);
         }
@@ -137,12 +174,59 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             unreachableNodes.addAll(getUnreachableNodes(branchingNodes, selectionNodes));
         }while(unreachableNodes.size() != oldUnreachableCount);
+        return unreachableNodes;
+    }
+
+    private boolean nonVisitedPathsAreReachable(HashMap<String, LocalType> initialTypes){
+        var unreachableNodes = computeUnreachablePaths(initialTypes);
         if(!unreachableNodes.isEmpty()) {
             if (unreachableNodesSequence == null)
                 unreachableNodesSequence = new ArrayList<>();
             unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
         }
-        return !selectionNodes.isEmpty() && unreachableNodes.isEmpty();
+        return unreachableNodes.isEmpty();
+    }
+
+    private void alignMessages(){
+        if(!qs.isEmpty()){
+            for (String s : qs.keySet()) {
+                LocalType consumer = null;
+                while(!qs.get(s).isEmpty()){
+                    var dest = s.split("-")[1];
+                    if(consumer == null){
+                        consumer = reducedTypes.get(dest);
+                    }
+                    var msg = qs.get(s).peek();
+                    assert msg != null;
+                    var mustReduceConsumer = consumer instanceof RecurseDefType;
+                    while(mustReduceConsumer){
+                        var c2 = consumer.reduce(s, qs);
+                        while(c2 instanceof RecurseDefType){
+                            if (c2.equals(consumer)) {
+                                mustReduceConsumer = false;
+                                break;
+                            }
+                            c2 = c2.reduce(s, qs);
+                        }
+                        consumer = c2;
+                        mustReduceConsumer = consumer instanceof RecurseDefType;
+                    }
+                    if(msg.label() == null){
+                        if(consumer instanceof ReceiveType) {
+                            consumer = consumer.reduce(s, qs);
+                            qs.get(s).poll();
+                        }
+                        else break;
+                    }else{
+                        if(consumer instanceof BranchType) {
+                            consumer = consumer.reduce(s, qs);
+                            qs.get(s).poll();
+                        }
+                        else break;
+                    }
+                }
+            }
+        }
     }
 
     private boolean handleLoop(HashMap<String, LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
@@ -153,12 +237,14 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }else{
             loopingStates.add(new ArrayList<>());
         }
+        alignMessages();
         addReducedTypesToHistory();
         if(!initialTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
             if(nonVisitedPathsAreReachable(initialTypes)) {
                 reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
                 currentHistory++;
                 history.add(new ArrayList<>());
+                qsHistory.add(new ArrayList<>());
                 reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
                 qs.saveIterationAndPrepareNextOne();
                 return true;
@@ -172,9 +258,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         // extracting types
         var initialTypes = setupTypes();
         history.add(new ArrayList<>());
+        qsHistory.add(new ArrayList<>());
         var hm = new HashMap<String, LocalType>(initialTypes);
         history.get(currentHistory).add(hm);
-
+        qsHistory.get(currentHistory).add(new ArrayList<>());
         var mustContinue = true;
         while(mustContinue){
             reduceTypes();
@@ -184,6 +271,26 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             if(loopingTypes != null){
                 if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths))
                     mustContinue = handleLoop(loopingTypes, initialTypes);
+                else{
+                    //we check that non-visited paths are reachable
+                    int unvisitedUnreachable = 0;
+                    var unreachablePaths = computeUnreachablePaths(reducedTypes);
+                    var unvisitedPaths = reducedTypes.values().stream().filter(el -> !el.visitedAllPaths()).toList();
+                    for (LocalType unvisitedPath : unvisitedPaths) {
+                        if(unreachablePaths.contains(unvisitedPath)) unvisitedUnreachable ++;
+                        else if(unvisitedPath instanceof BranchType bt){
+                            var allUnvisitedLabelsAreUnreachable = bt.nextTypes.keySet().stream()
+                                    .filter(el -> !bt.getVisitedLabels().contains(el))
+                                    .allMatch(el -> unreachablePaths.contains(bt.nextTypes.get(el)));
+                            if(allUnvisitedLabelsAreUnreachable) unvisitedUnreachable ++;
+                        }else if(unvisitedPath instanceof ReceiveType rt){
+                            if(unreachablePaths.contains(rt.nextTypes.get(";"))) unvisitedUnreachable ++;
+                        }
+                    }
+                    if(unvisitedUnreachable == unvisitedPaths.size()){
+                        mustContinue = handleLoop(loopingTypes, initialTypes);
+                    }
+                }
             }
             if(mustContinue){
                 addReducedTypesToHistory();

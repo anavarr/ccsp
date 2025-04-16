@@ -20,6 +20,8 @@ public abstract class LocalType {
     public LocalType(){
     }
 
+    int visited = 0;
+
     public HashMap<String, LocalType> nextTypes = new HashMap<>();
     private static HashMap<String, LocalType> recursionDef = new HashMap<String, LocalType>();
     public static LocalType extractLocalType(Behaviour bev) throws Exception {

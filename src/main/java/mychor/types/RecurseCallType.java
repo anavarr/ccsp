@@ -29,11 +29,13 @@ public class RecurseCallType extends LocalType{
 
     @Override
     public LocalType reduce(String process, MessageQueues mqs) {
+        visited++;
         return origin;
     }
 
     @Override
     public boolean visitedAllPaths() {
+        if(visited == 0) return false;
         return true;
     }
 

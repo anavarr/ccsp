@@ -24,6 +24,7 @@ public class EndType extends LocalType{
 
     @Override
     public LocalType reduce(String pr, MessageQueues mqs) {
+        visited++;
         return this;
     }
 
@@ -44,6 +45,7 @@ public class EndType extends LocalType{
 
     @Override
     public boolean visitedAllPaths() {
+        if(visited == 0) return false;
         return true;
     }
 

@@ -16,14 +16,5 @@ P2:
     p1 + "continue" @+"";
     p1 + "continue" @+"";
     p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
-    p1 + "continue" @+"";
     p1 + "end" @+"";
     End
