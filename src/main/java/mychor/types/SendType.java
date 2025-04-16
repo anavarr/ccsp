@@ -3,7 +3,6 @@ package mychor.types;
 import mychor.MessageQueues;
 import mychor.Utils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -41,16 +40,6 @@ public class SendType extends LocalType{
     }
 
     @Override
-    public List<String> getSelectionsToVisit() {
-        return nextTypes.get(";").getSelectionsToVisit();
-    }
-
-    @Override
-    public List<String> getBranchesToVisit() {
-        return nextTypes.get(";").getBranchesToVisit();
-    }
-
-    @Override
     public HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit() {
         return nextTypes.get(";").getBranchingNodesAndLabelsToVisit();
     }
@@ -76,36 +65,6 @@ public class SendType extends LocalType{
         return nextTypes.get(";").extractParticipation(process);
     }
 
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
-        return nextTypes.get(";").getMsgsToSendRecursive();
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
-        var toSend = new HashMap<String, ArrayList<String>>();
-        toSend.put(destination, new ArrayList<>(List.of("")));
-
-        var hm = nextTypes.get(";").getMsgsToSendRecursive();
-        if(hm != null){
-            for (String s : hm.keySet()) {
-                if(toSend.containsKey(s)) toSend.get(s).addAll(hm.get(s));
-                else toSend.put(s, hm.get(s));
-            }
-        }
-        return toSend;
-    }
-
-    @Override
-    public PossibleMessages getMsgsToReceive(String name) {
-        return null;
-    }
-
-    @Override
-    public PossibleMessages getMsgsToSend(String name) {
-        return new PossibleMessages(name, destination, List.of(""));
-    }
 
     @Override
     public Boolean knowlegdgeOfChoice(Collection<String> processes) {

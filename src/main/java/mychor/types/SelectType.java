@@ -67,26 +67,6 @@ public class SelectType extends LocalType {
     }
 
     @Override
-    public List<String> getSelectionsToVisit() {
-        ArrayList<String> labels = new ArrayList<>(visitStats.entrySet().stream()
-                .filter(el -> el.getValue() == 0)
-                .map(Map.Entry::getKey).toList());
-        for (LocalType value : nextTypes.values()) {
-            labels.addAll(value.getSelectionsToVisit());
-        }
-        return labels;
-    }
-
-    @Override
-    public List<String> getBranchesToVisit() {
-        ArrayList<String> labels = new ArrayList<>();
-        for (LocalType value : nextTypes.values()) {
-            labels.addAll(value.getBranchesToVisit());
-        }
-        return labels;
-    }
-
-    @Override
     public HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit() {
         HashMap<BranchType, List<String>> bNodesAndLabels = new HashMap<>();
         for (LocalType value : nextTypes.values()) {
@@ -195,45 +175,4 @@ public class SelectType extends LocalType {
         else throw new RuntimeException("execution branches don't match");
     }
 
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
-        HashMap<String, ArrayList<String>> toSend = new HashMap<>();
-        toSend.put(destination, new ArrayList<>(nextTypes.keySet().stream().toList()));
-
-        for (String s : nextTypes.keySet()) {
-            var hm = nextTypes.get(s).getMsgsToSendRecursive();
-            if(hm != null){
-                for (String string : hm.keySet()) {
-                    if(toSend.containsKey(string)) toSend.get(string).addAll(hm.get(string));
-                    else toSend.put(string, hm.get(string));
-                }
-            }
-        }
-        return toSend;
-    }
-
-    @Override
-    public PossibleMessages getMsgsToReceive(String name) {
-        return null;
-    }
-
-    @Override
-    public PossibleMessages getMsgsToSend(String name) {
-        return new PossibleMessages(name, destination, nextTypes.keySet().stream().toList());
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
-        HashMap<String, ArrayList<String>> toReceive = new HashMap<>();
-        for (String s : nextTypes.keySet()) {
-            var hm = nextTypes.get(s).getMsgsToReceiveRecursive();
-            if(hm != null){
-                for (String string : hm.keySet()) {
-                    if(toReceive.containsKey(string)) toReceive.get(string).addAll(hm.get(string));
-                    else toReceive.put(string, hm.get(string));
-                }
-            }
-        }
-        return toReceive;
-    }
 }

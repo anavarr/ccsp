@@ -9,7 +9,6 @@ import mychor.MessageQueues;
 import mychor.None;
 import mychor.Utils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -126,19 +125,8 @@ public abstract class LocalType {
 
     public abstract boolean visitedAllPaths();
 
-    public abstract List<String> getSelectionsToVisit();
-    public abstract List<String> getBranchesToVisit();
-
     public abstract HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit();
     public abstract HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit();
 
     public abstract boolean contains(LocalType lt);
-
-    public abstract HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive();
-    public abstract HashMap<String, ArrayList<String>> getMsgsToSendRecursive();
-
-    public abstract PossibleMessages getMsgsToReceive(String name);
-    public abstract PossibleMessages getMsgsToSend(String name);
-
-
 }

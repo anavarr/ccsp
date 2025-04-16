@@ -2,7 +2,6 @@ package mychor.types;
 
 import mychor.MessageQueues;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -15,16 +14,6 @@ public class RecurseDefType extends LocalType{
     public boolean visitedAllPaths() {
         if(visited == 0) return false;
         return nextTypes.get("unfold").visitedAllPaths();
-    }
-
-    @Override
-    public List<String> getSelectionsToVisit() {
-        return nextTypes.get("unfold").getSelectionsToVisit();
-    }
-
-    @Override
-    public List<String> getBranchesToVisit() {
-        return nextTypes.get("unfold").getBranchesToVisit();
     }
 
     @Override
@@ -93,23 +82,4 @@ public class RecurseDefType extends LocalType{
         return b.toString();
     }
 
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
-        return nextTypes.get("unfold").getMsgsToReceiveRecursive();
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
-        return nextTypes.get("unfold").getMsgsToSendRecursive();
-    }
-
-    @Override
-    public PossibleMessages getMsgsToReceive(String name) {
-        return nextTypes.get(";").getMsgsToReceive(name);
-    }
-
-    @Override
-    public PossibleMessages getMsgsToSend(String name) {
-        return nextTypes.get(";").getMsgsToSend(name);
-    }
 }

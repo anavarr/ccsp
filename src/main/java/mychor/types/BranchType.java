@@ -117,28 +117,9 @@ public class BranchType extends LocalType{
         return true;
     }
 
-    @Override
-    public List<String> getSelectionsToVisit() {
-        ArrayList<String> labels = new ArrayList<>();
-        for (LocalType value : nextTypes.values()) {
-            labels.addAll(value.getSelectionsToVisit());
-        }
-        return labels;
-    }
-
     public List<String> getBranchesToVisitFirstLevel() {
         return new ArrayList<>(nextTypes.keySet().stream()
                 .filter(el -> !visitedLabels.contains(el)).toList());
-    }
-
-    @Override
-    public List<String> getBranchesToVisit() {
-        ArrayList<String> labels = new ArrayList<>(nextTypes.keySet().stream()
-                .filter(el -> !visitedLabels.contains(el)).toList());
-        for (LocalType value : nextTypes.values()) {
-            labels.addAll(value.getBranchesToVisit());
-        }
-        return labels;
     }
 
     @Override
@@ -173,47 +154,6 @@ public class BranchType extends LocalType{
             if(value.contains(lt)) return true;
         }
         return false;
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
-        HashMap<String, ArrayList<String>> toSend = new HashMap<>();
-        for (String s : nextTypes.keySet()) {
-            var hm = nextTypes.get(s).getMsgsToSendRecursive();
-            if(hm != null){
-                for (String string : hm.keySet()) {
-                    if(toSend.containsKey(string)) toSend.get(string).addAll(hm.get(string));
-                    else toSend.put(string, hm.get(string));
-                }
-            }
-        }
-        return toSend;
-    }
-
-    @Override
-    public PossibleMessages getMsgsToReceive(String name) {
-        return new PossibleMessages(destination, name, nextTypes.keySet().stream().toList());
-    }
-
-    @Override
-    public PossibleMessages getMsgsToSend(String name) {
-        return null;
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
-        HashMap<String, ArrayList<String>> toReceive = new HashMap<>();
-        toReceive.put(destination, new ArrayList<>(nextTypes.keySet().stream().toList()));
-        for (String s : nextTypes.keySet()) {
-            var hm = nextTypes.get(s).getMsgsToReceiveRecursive();
-            if(hm != null){
-                for (String string : hm.keySet()) {
-                    if(toReceive.containsKey(string)) toReceive.get(string).addAll(hm.get(string));
-                    else toReceive.put(string, hm.get(string));
-                }
-            }
-        }
-        return toReceive;
     }
 
     private void removeBranch(String s) {

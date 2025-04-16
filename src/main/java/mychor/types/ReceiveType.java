@@ -3,7 +3,6 @@ package mychor.types;
 import mychor.MessageQueues;
 import mychor.Utils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -22,16 +21,6 @@ public class ReceiveType extends LocalType{
     }
 
     @Override
-    public List<String> getSelectionsToVisit() {
-        return nextTypes.get(";").getSelectionsToVisit();
-    }
-
-    @Override
-    public List<String> getBranchesToVisit() {
-        return nextTypes.get(";").getBranchesToVisit();
-    }
-
-    @Override
     public HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit() {
         return nextTypes.get(";").getBranchingNodesAndLabelsToVisit();
     }
@@ -45,36 +34,6 @@ public class ReceiveType extends LocalType{
     public boolean contains(LocalType lt) {
         if(lt == this) return true;
         return nextTypes.get(";").contains(lt);
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToReceiveRecursive() {
-        HashMap<String, ArrayList<String>> toReceive = new HashMap<>();
-        toReceive.put(destination, new ArrayList<>(List.of("")));
-
-        var hm = nextTypes.get(";").getMsgsToReceiveRecursive();
-        if(hm != null){
-            for (String s : hm.keySet()) {
-                if(toReceive.containsKey(s)) toReceive.get(s).addAll(hm.get(s));
-                else toReceive.put(s, hm.get(s));
-            }
-        }
-        return toReceive;
-    }
-
-    @Override
-    public HashMap<String, ArrayList<String>> getMsgsToSendRecursive() {
-        return nextTypes.get(";").getMsgsToSendRecursive();
-    }
-
-    @Override
-    public PossibleMessages getMsgsToReceive(String name) {
-        return new PossibleMessages(destination, name, List.of(""));
-    }
-
-    @Override
-    public PossibleMessages getMsgsToSend(String name) {
-        return null;
     }
 
     @Override
