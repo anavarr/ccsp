@@ -237,15 +237,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     private void handleLoop(HashMap<String, LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
-        if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){ // at least one is not the end Type
-            // we are looping
-            registerLoop(loopingTypes);
-            //this local minimum is looping, we will only re-run the algorithm if some state has not been visited
-        }else{
-            loopingStates.add(new ArrayList<>());
-        }
+        // we are looping
+        registerLoop(loopingTypes);
         alignMessages();
-        addReducedTypesToHistory();
     }
     private void finalizeIteration(){
         qs.saveIteration();
@@ -283,30 +277,37 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var initialTypes = setupTypes();
         history.add(new ArrayList<>());
         qsHistory.add(new ArrayList<>());
-        var hm = new HashMap<String, LocalType>(initialTypes);
+        var hm = new HashMap<>(initialTypes);
         history.get(currentHistory).add(hm);
         qsHistory.get(currentHistory).add(new ArrayList<>());
         var mustContinue = true;
         while(mustContinue){
+            var iterationOver = false;
             reduceTypes();
-            // check if states are already registered AND their children are fully visited
-            var loopingTypes = checkLoop();
-            //this set of states has already been registered
-            if(loopingTypes != null){
-                var continuingIsPossible = checkContinuingIsPossible();
-                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths) || !continuingIsPossible) {
-                    handleLoop(loopingTypes, initialTypes);
-                    if (mustRunOtherIteration(initialTypes)) {
-                        prepareIteration(initialTypes);
-                        mustContinue = true;
-                    } else {
-                        finalizeIteration();
-                        mustContinue = false;
+            if(reducedTypes.values().stream().allMatch(t -> t instanceof EndType)){
+                reducedTypes.values().forEach(t -> t.reduce(null, null));
+                loopingStates.add(new ArrayList<>());
+                iterationOver = true;
+            }else{
+                // check if states are already registered AND their children are fully visited
+                var loopingTypes = checkLoop();
+                //this set of states has already been registered
+                if(loopingTypes != null){
+                    var continuingIsPossible = checkContinuingIsPossible();
+                    if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths) || !continuingIsPossible) {
+                        handleLoop(loopingTypes, initialTypes);
+                        iterationOver = true;
                     }
                 }
             }
-            if(mustContinue){
-                addReducedTypesToHistory();
+            addReducedTypesToHistory();
+            if(iterationOver){
+                if (mustRunOtherIteration(initialTypes)) {
+                    prepareIteration(initialTypes);
+                } else {
+                    finalizeIteration();
+                    mustContinue = false;
+                }
             }
         }
     }
