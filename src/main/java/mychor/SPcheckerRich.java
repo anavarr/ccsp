@@ -292,7 +292,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 else{
                     //we check that non-visited paths are reachable
                     var continuingIsPossible = checkContinuingIsPossible();
-                    if(!continuingIsPossible) handleLoop(loopingTypes, initialTypes);
+                    if(!continuingIsPossible)
+                        mustContinue = handleLoop(loopingTypes, initialTypes);
                 }
             }
             if(mustContinue){
