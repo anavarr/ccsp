@@ -229,7 +229,14 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
     }
 
-    private boolean handleLoop(HashMap<String, LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
+    private boolean mustRunOtherIteration(HashMap<String, LocalType> initialTypes){
+        if(!initialTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
+            return nonVisitedPathsAreReachable(initialTypes);
+        }
+        return false;
+    }
+
+    private void handleLoop(HashMap<String, LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
         if(reducedTypes.values().stream().anyMatch(el -> !(el instanceof EndType))){ // at least one is not the end Type
             // we are looping
             registerLoop(loopingTypes);
@@ -239,19 +246,18 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
         alignMessages();
         addReducedTypesToHistory();
-        if(!initialTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
-            if(nonVisitedPathsAreReachable(initialTypes)) {
-                reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
-                currentHistory++;
-                history.add(new ArrayList<>());
-                qsHistory.add(new ArrayList<>());
-                reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
-                qs.saveIterationAndPrepareNextOne();
-                return true;
-            }
-        }
+    }
+    private void finalizeIteration(){
         qs.saveIteration();
-        return false;
+    }
+
+    private void prepareIteration(HashMap<String, LocalType> initialTypes){
+        reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+        currentHistory++;
+        history.add(new ArrayList<>());
+        qsHistory.add(new ArrayList<>());
+        reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+        qs.saveIterationAndPrepareNextOne();
     }
 
     private boolean checkContinuingIsPossible(){
@@ -287,13 +293,16 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             var loopingTypes = checkLoop();
             //this set of states has already been registered
             if(loopingTypes != null){
-                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths))
-                    mustContinue = handleLoop(loopingTypes, initialTypes);
-                else{
-                    //we check that non-visited paths are reachable
-                    var continuingIsPossible = checkContinuingIsPossible();
-                    if(!continuingIsPossible)
-                        mustContinue = handleLoop(loopingTypes, initialTypes);
+                var continuingIsPossible = checkContinuingIsPossible();
+                if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths) || !continuingIsPossible) {
+                    handleLoop(loopingTypes, initialTypes);
+                    if (mustRunOtherIteration(initialTypes)) {
+                        prepareIteration(initialTypes);
+                        mustContinue = true;
+                    } else {
+                        finalizeIteration();
+                        mustContinue = false;
+                    }
                 }
             }
             if(mustContinue){
