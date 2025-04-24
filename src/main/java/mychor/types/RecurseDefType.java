@@ -2,6 +2,7 @@ package mychor.types;
 
 import mychor.MessageQueues;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,11 @@ public class RecurseDefType extends LocalType{
     public boolean visitedAllPaths() {
         if(visited == 0) return false;
         return nextTypes.get("unfold").visitedAllPaths();
+    }
+
+    @Override
+    public ArrayList<LocalType> getUnvisitedNodes() {
+        return nextTypes.get("unfold").getUnvisitedNodes();
     }
 
     @Override

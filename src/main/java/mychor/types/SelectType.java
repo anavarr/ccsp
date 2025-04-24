@@ -58,6 +58,16 @@ public class SelectType extends LocalType {
     }
 
     @Override
+    public ArrayList<LocalType> getUnvisitedNodes() {
+        var l = new ArrayList<LocalType>();
+        for (LocalType value : nextTypes.values()) {
+            l.addAll(value.getUnvisitedNodes());
+        }
+        if(visited == 0) l.add(this);
+        return l;
+    }
+
+    @Override
     public boolean contains(LocalType lt) {
         if(lt == this) return true;
         for (LocalType value : nextTypes.values()) {

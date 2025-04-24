@@ -3,6 +3,7 @@ package mychor.types;
 import mychor.MessageQueues;
 import mychor.Utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,13 @@ public class ReceiveType extends LocalType{
     public boolean visitedAllPaths() {
         if(visited == 0) return false;
         return nextTypes.get(";").visitedAllPaths();
+    }
+
+    @Override
+    public ArrayList<LocalType> getUnvisitedNodes() {
+        var l = nextTypes.get(";").getUnvisitedNodes();
+        if(visited == 0) l.add(this);
+        return l;
     }
 
     @Override

@@ -9,6 +9,7 @@ import mychor.MessageQueues;
 import mychor.None;
 import mychor.Utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -124,6 +125,8 @@ public abstract class LocalType {
     public abstract Boolean knowlegdgeOfChoice(Collection<String> processes);
 
     public abstract boolean visitedAllPaths();
+
+    public abstract ArrayList<LocalType> getUnvisitedNodes();
 
     public abstract HashMap<BranchType, List<String>> getBranchingNodesAndLabelsToVisit();
     public abstract HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit();

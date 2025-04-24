@@ -257,6 +257,13 @@ public class PropertiesTest extends ProgramReaderTest{
         @Nested
         public class DeadBranches{
             @Test
+            public void lessUnreachableThanUnvisitedShouldHaveDeadBranches() throws IOException{
+                var spc = testFile("less_unreachable_than_unvisited.sp");
+                spc.reduceNetwork();
+                assertEquals(spc.getHistory().size(), 2);
+            }
+
+            @Test
             public void IPProtocolShouldNotHaveDeadBranches() throws IOException{
                 var spc = testFile("IP_protocol.sp");
                 spc.reduceNetwork();

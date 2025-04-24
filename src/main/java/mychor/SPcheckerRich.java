@@ -43,6 +43,14 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return qs;
     }
 
+    public ArrayList<ArrayList<HashMap<String, LocalType>>> getHistory() {
+        return history;
+    }
+
+    public ArrayList<ArrayList<ArrayList<Message>>> getQsHistory() {
+        return qsHistory;
+    }
+
     private HashMap<String, LocalType> setupTypes(){
         HashMap<String,LocalType> initialTypes = new HashMap<>();
         for (String s : compilerCtx.behaviours.keySet()) {
@@ -179,12 +187,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     private boolean nonVisitedPathsAreReachable(HashMap<String, LocalType> initialTypes){
         var unreachableNodes = computeUnreachablePaths(initialTypes);
+        var unvisitedNodes = new ArrayList<LocalType>();
+        for (LocalType value : initialTypes.values()) {
+            unvisitedNodes.addAll(value.getUnvisitedNodes());
+        }
         if(!unreachableNodes.isEmpty()) {
             if (unreachableNodesSequence == null)
                 unreachableNodesSequence = new ArrayList<>();
             unreachableNodesSequence.add(Collections.singletonList(unreachableNodes));
         }
-        return unreachableNodes.isEmpty();
+        for (LocalType unvisitedNode : unvisitedNodes) {
+            if(!unreachableNodes.contains(unvisitedNode) &&
+                    unreachableNodes.stream().noneMatch(type -> type.contains(unvisitedNode))) return true;
+        }
+        return false;
     }
 
     private void alignMessages(){
@@ -236,11 +252,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return false;
     }
 
-    private void handleLoop(HashMap<String, LocalType> loopingTypes, HashMap<String, LocalType> initialTypes){
-        // we are looping
-        registerLoop(loopingTypes);
-        alignMessages();
-    }
     private void finalizeIteration(){
         qs.saveIteration();
     }
@@ -251,6 +262,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         history.add(new ArrayList<>());
         qsHistory.add(new ArrayList<>());
         reducedTypes.replaceAll((s, v) -> initialTypes.get(s));
+        history.get(currentHistory).add(new HashMap<>(initialTypes));
+        qsHistory.get(currentHistory).add(new ArrayList<>());
         qs.saveIterationAndPrepareNextOne();
     }
 
@@ -280,8 +293,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var hm = new HashMap<>(initialTypes);
         history.get(currentHistory).add(hm);
         qsHistory.get(currentHistory).add(new ArrayList<>());
-        var mustContinue = true;
-        while(mustContinue){
+        while(true){
             var iterationOver = false;
             reduceTypes();
             if(reducedTypes.values().stream().allMatch(t -> t instanceof EndType)){
@@ -295,7 +307,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 if(loopingTypes != null){
                     var continuingIsPossible = checkContinuingIsPossible();
                     if(reducedTypes.values().stream().allMatch(LocalType::visitedAllPaths) || !continuingIsPossible) {
-                        handleLoop(loopingTypes, initialTypes);
+                        registerLoop(loopingTypes);
+                        alignMessages();
                         iterationOver = true;
                     }
                 }
@@ -306,7 +319,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                     prepareIteration(initialTypes);
                 } else {
                     finalizeIteration();
-                    mustContinue = false;
+                    break;
                 }
             }
         }

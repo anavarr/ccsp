@@ -117,6 +117,16 @@ public class BranchType extends LocalType{
         return true;
     }
 
+    @Override
+    public ArrayList<LocalType> getUnvisitedNodes() {
+        var l = new ArrayList<LocalType>();
+        for (LocalType value : nextTypes.values()) {
+            l.addAll(value.getUnvisitedNodes());
+        }
+        if(visited == 0) l.add(this);
+        return l;
+    }
+
     public List<String> getBranchesToVisitFirstLevel() {
         return new ArrayList<>(nextTypes.keySet().stream()
                 .filter(el -> !visitedLabels.contains(el)).toList());
