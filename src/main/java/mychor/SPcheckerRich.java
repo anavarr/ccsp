@@ -692,52 +692,65 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return unreachableNodesSequence;
     }
 
-    public HashMap<String, ArrayList<LocalType>> deadlockedNodes(){
+    private HashMap<String, ArrayList<LocalType>> deadlockedNodesInIteration(int iteration){
         var deadlockedNodes = new HashMap<String, ArrayList<LocalType>>();
-        int counter = 0;
-        for (ArrayList<HashMap<String, LocalType>> iteration : history) {
-            var it = iteration.getLast();
-            for (String s : it.keySet()) {
-                var node = it.get(s);
-                if(node instanceof ReceiveType  || node instanceof BranchType){
-                    //there is a receive/branch in the last step of the history
-                    if(!loopingStates.get(counter).stream().map(el -> el.get(s)).toList().contains(node)){
-                        //the receive is not in a loop, it is a deadlock
-                        if(!deadlockedNodes.containsKey(s)) {
+        var round = history.get(iteration).getLast();
+        for (String s : round.keySet()) {
+            var node = round.get(s);
+            if(node instanceof ReceiveType  || node instanceof BranchType){
+                //there is a receive/branch in the last step of the history
+                if(!loopingStates.get(iteration).stream().map(el -> el.get(s)).toList().contains(node)){
+                    //the receive is not in a loop, it is a deadlock
+                    if(!deadlockedNodes.containsKey(s)) {
+                        deadlockedNodes.put(s, new ArrayList<>());
+                        deadlockedNodes.get(s).add(node);
+                    }
+                }else {
+                    // the receive is in a loop, it might or might not be a deadlock
+                    String dest;
+                    if (node instanceof ReceiveType rt) dest = rt.getDestination();
+                    else {
+                        BranchType bt = (BranchType) node;
+                        dest = bt.getDestination();
+                    }
+                    String finalDest = dest;
+                    var senderStates = loopingStates.get(iteration).stream().map(el -> el.get(finalDest)).toList();
+                    var hs = new HashSet<>(senderStates);
+                    if (hs.size() == 1 ||
+                            (node instanceof ReceiveType && hs.stream()
+                                    .noneMatch(el -> el instanceof SendType st && st.getDestination().equals(s))) ||
+                            (node instanceof BranchType && hs.stream()
+                                    .noneMatch(el -> el instanceof SelectType slt && slt.getDestination().equals(s)))) {
+                        if (!deadlockedNodes.containsKey(s)) {
                             deadlockedNodes.put(s, new ArrayList<>());
                             deadlockedNodes.get(s).add(node);
-                        }
-                    }else {
-                        // the receive is in a loop, it might or might not be a deadlock
-                        String dest;
-                        if (node instanceof ReceiveType rt) dest = rt.getDestination();
-                        else {
-                            BranchType bt = (BranchType) node;
-                            dest = bt.getDestination();
-                        }
-                        String finalDest = dest;
-                        var senderStates = loopingStates.get(counter).stream().map(el -> el.get(finalDest)).toList();
-                        var hs = new HashSet<LocalType>(senderStates);
-                        if (hs.size() == 1) {
-                            if (!deadlockedNodes.containsKey(s)) {
-                                deadlockedNodes.put(s, new ArrayList<>());
-                                deadlockedNodes.get(s).add(node);
-                            }
-                        } else if (node instanceof ReceiveType && hs.stream().noneMatch(el -> el instanceof SendType)) {
-                            if (!deadlockedNodes.containsKey(s)) {
-                                deadlockedNodes.put(s, new ArrayList<>());
-                                deadlockedNodes.get(s).add(node);
-                            }
-                        } else if (node instanceof BranchType && hs.stream().noneMatch(el -> el instanceof SelectType)) {
-                            if (!deadlockedNodes.containsKey(s)) {
-                                deadlockedNodes.put(s, new ArrayList<>());
-                                deadlockedNodes.get(s).add(node);
-                            }
                         }
                     }
                 }
             }
-            counter++;
+        }
+        return deadlockedNodes;
+    }
+
+    public HashMap<String, ArrayList<LocalType>> deadlockedNodes(){
+        var deadlockedNodes = new HashMap<String, ArrayList<LocalType>>();
+        for (int i = 0; i < history.size(); i++) {
+            var dn = deadlockedNodesInIteration(i);
+            if(!dn.isEmpty()){
+                var deadlockedState = history.get(i).getLast();
+                for (int i1 = 0; i1 < history.size(); i1++) {
+                    if(i1 != i && (history.get(i1).contains(deadlockedState) &&
+                            deadlockedNodesInIteration(i1).isEmpty())){
+                        break;
+                    }
+                    for (String s : dn.keySet()) {
+                        if(!deadlockedNodes.containsKey(s)){
+                            deadlockedNodes.put(s, new ArrayList<>());
+                        }
+                        deadlockedNodes.get(s).addAll(dn.get(s));
+                    }
+                }
+            }
         }
         return deadlockedNodes;
     }

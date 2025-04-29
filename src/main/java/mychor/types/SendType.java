@@ -15,6 +15,10 @@ public class SendType extends LocalType{
         nextTypes.put(";", next);
     }
 
+    public String getDestination() {
+        return destination;
+    }
+
     @Override
     public boolean equivalent(Object obj) {
         if(!(obj instanceof SendType)) return false;
