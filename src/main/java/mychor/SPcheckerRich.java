@@ -735,7 +735,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             if(loopingStates.get(i).contains(history.get(i).getLast())){
                 var deadlockedState = history.get(i).getLast();
+                int finalI = i;
                 var canProgress = history.stream().anyMatch(it ->
+                        !it.equals(history.get(finalI)) &&
                         it.contains(deadlockedState) &&
                         deadlockedNodesInIteration(history.indexOf(it)).isEmpty());
                 if(canProgress) continue;
