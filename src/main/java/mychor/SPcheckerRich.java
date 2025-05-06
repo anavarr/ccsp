@@ -738,16 +738,18 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             var dn = deadlockedNodesInIteration(i);
             if(!dn.isEmpty()){
                 var deadlockedState = history.get(i).getLast();
-                for (int i1 = 0; i1 < history.size(); i1++) {
-                    if(i1 != i && (history.get(i1).contains(deadlockedState) &&
-                            deadlockedNodesInIteration(i1).isEmpty())){
-                        break;
-                    }
-                    for (String s : dn.keySet()) {
-                        if(!deadlockedNodes.containsKey(s)){
-                            deadlockedNodes.put(s, new ArrayList<>());
+                if(loopingStates.get(i).contains(history.get(i).getLast())){
+                    for (int i1 = 0; i1 < history.size(); i1++) {
+                        if(i1 != i && (history.get(i1).contains(deadlockedState) &&
+                                deadlockedNodesInIteration(i1).isEmpty())){
+                            break;
                         }
-                        deadlockedNodes.get(s).addAll(dn.get(s));
+                        for (String s : dn.keySet()) {
+                            if(!deadlockedNodes.containsKey(s)){
+                                deadlockedNodes.put(s, new ArrayList<>());
+                            }
+                            deadlockedNodes.get(s).addAll(dn.get(s));
+                        }
                     }
                 }
             }
