@@ -701,10 +701,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 //there is a receive/branch in the last step of the history
                 if(!loopingStates.get(iteration).stream().map(el -> el.get(s)).toList().contains(node)){
                     //the receive is not in a loop, it is a deadlock
-                    if(!deadlockedNodes.containsKey(s)) {
-                        deadlockedNodes.put(s, new ArrayList<>());
-                        deadlockedNodes.get(s).add(node);
-                    }
+                    deadlockedNodes.computeIfAbsent(s, k-> new ArrayList<>()).add(node);
                 }else {
                     // the receive is in a loop, it might or might not be a deadlock
                     String dest;
@@ -721,10 +718,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                                     .noneMatch(el -> el instanceof SendType st && st.getDestination().equals(s))) ||
                             (node instanceof BranchType && hs.stream()
                                     .noneMatch(el -> el instanceof SelectType slt && slt.getDestination().equals(s)))) {
-                        if (!deadlockedNodes.containsKey(s)) {
-                            deadlockedNodes.put(s, new ArrayList<>());
-                            deadlockedNodes.get(s).add(node);
-                        }
+                            deadlockedNodes.computeIfAbsent(s, k -> new ArrayList<>()).add(node);
                     }
                 }
             }
@@ -736,22 +730,19 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         var deadlockedNodes = new HashMap<String, ArrayList<LocalType>>();
         for (int i = 0; i < history.size(); i++) {
             var dn = deadlockedNodesInIteration(i);
-            if(!dn.isEmpty()){
+            if(dn.isEmpty()){
+                continue;
+            }
+            if(loopingStates.get(i).contains(history.get(i).getLast())){
                 var deadlockedState = history.get(i).getLast();
-                if(loopingStates.get(i).contains(history.get(i).getLast())){
-                    for (int i1 = 0; i1 < history.size(); i1++) {
-                        if(i1 != i && (history.get(i1).contains(deadlockedState) &&
-                                deadlockedNodesInIteration(i1).isEmpty())){
-                            break;
-                        }
-                        for (String s : dn.keySet()) {
-                            if(!deadlockedNodes.containsKey(s)){
-                                deadlockedNodes.put(s, new ArrayList<>());
-                            }
-                            deadlockedNodes.get(s).addAll(dn.get(s));
-                        }
-                    }
-                }
+                var canProgress = history.stream().anyMatch(it ->
+                        it.contains(deadlockedState) &&
+                        deadlockedNodesInIteration(history.indexOf(it)).isEmpty());
+                if(canProgress) continue;
+            }
+            for (String s : dn.keySet()) {
+                deadlockedNodes.computeIfAbsent(s, k  -> new ArrayList<>())
+                        .addAll(dn.get(s));
             }
         }
         return deadlockedNodes;
