@@ -674,6 +674,23 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return false;
     }
 
+    public List<List<HashMap<String, LocalType>>> livelockedNodes(){
+        var lln = new ArrayList<List<HashMap<String, LocalType>>>();
+        for (int i = 0; i < loopingStates.size(); i++) {
+            var cls = loopingStates.get(i);
+            if(cls.isEmpty()) continue;
+            for (int i1 = 0; i1 < history.size(); i1++) {
+                if(i== i1) continue;
+                var ch = history.get(i1);
+                var o = ch.stream().filter(cls::contains).toList();
+                if(o.isEmpty()) {
+                    lln.add(cls);
+                }
+            }
+        }
+        return lln;
+    }
+    
     public ArrayList<List<Collection<LocalType>>> getUnreachableNodes() {
         if(unreachableNodesSequence == null){
             HashMap<String,LocalType> initialTypes = new HashMap<>();

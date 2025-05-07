@@ -215,7 +215,20 @@ public class PropertiesTest extends ProgramReaderTest{
 
         @Nested
         public class Livelock{
+            @Test
+            public void twoBuyerHasNoLiveLock()throws IOException{
+                var spc = testFile("Three_buyer_protocol.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.livelockedNodes().isEmpty());
+            }
 
+            @Test
+            public void exampleFredHasLiveLocks() throws IOException{
+                var spc = testFile("example_fred.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.livelockedNodes().isEmpty());
+                System.out.println(spc.livelockedNodes());
+            }
         }
 
         @Nested
