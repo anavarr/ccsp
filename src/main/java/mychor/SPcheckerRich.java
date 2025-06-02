@@ -143,18 +143,20 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         //  2. there are non-selected branches, in which case we must see if they can be selected
         //  3. all nodes are stuck on receive or end and
         if(reducedTypes.values().stream().allMatch(el -> el instanceof ReceiveType || el instanceof EndType)){
-            var pendingComms = reducedTypes.entrySet().stream()
-                    .filter(entry -> entry.getValue() instanceof ReceiveType)
-                    .map(entry -> ((ReceiveType) entry.getValue()).getDestination()+"-"+entry.getKey()).toList();
-            var stuck = true;
-            for (String pendingComm : pendingComms) {
-                if(qs.containsKey(pendingComm) && !qs.get(pendingComm).isEmpty()){
-                    stuck = false;
-                    break;
+            if(reducedTypes.values().stream().anyMatch(el -> el instanceof ReceiveType)){
+                var pendingComms = reducedTypes.entrySet().stream()
+                        .filter(entry -> entry.getValue() instanceof ReceiveType)
+                        .map(entry -> ((ReceiveType) entry.getValue()).getDestination()+"-"+entry.getKey()).toList();
+                var stuck = true;
+                for (String pendingComm : pendingComms) {
+                    if(qs.containsKey(pendingComm) && !qs.get(pendingComm).isEmpty()){
+                        stuck = false;
+                        break;
+                    }
                 }
-            }
-            if(stuck) {
-                return new ArrayList<>(reducedTypes.values().stream().filter(el -> el instanceof ReceiveType).toList());
+                if(stuck) {
+                    return new ArrayList<>(reducedTypes.values().stream().filter(el -> el instanceof ReceiveType).toList());
+                }
             }
         }
         HashMap<String, HashMap<BranchType, List<String>>> branchingNodes = new HashMap<>();
