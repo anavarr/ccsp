@@ -1,8 +1,14 @@
+import mychor.SPcheckerRich;
+import mychor.SPlexer;
+import mychor.SPparserRich;
 import mychor.types.LocalType;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -72,6 +78,19 @@ public class PropertiesTest extends ProgramReaderTest{
             spc.compilerCtx.behaviours.forEach((pr, bev) -> {
                 assertDoesNotThrow(() -> LocalType.extractLocalType(bev));
             });
+        }
+
+        @Test
+        public void test() throws IOException {
+            var path = Path.of("/", "tmp","choreoGen", "system.sp");
+            SPlexer spl = new SPlexer(CharStreams.fromPath(path));
+            var spp = new SPparserRich(new CommonTokenStream(spl));
+            var spc = new SPcheckerRich();
+            spp.program().accept(spc);
+            spc.reduceNetwork();
+            assertTrue(spc.deadlockFreedom());
+            assertTrue(spc.livelockedNodes().isEmpty());
+            assertTrue(spc.getUnreachableNodes().isEmpty());
         }
 //        @Test
 //        public void ThreeBuyerProtoolIsTypeSafe() throws IOException {
