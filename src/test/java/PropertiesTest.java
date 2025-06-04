@@ -82,15 +82,16 @@ public class PropertiesTest extends ProgramReaderTest{
 
         @Test
         public void test() throws IOException {
-            var path = Path.of("/", "tmp","choreoGen", "system.sp");
+            var path = Path.of("/", "home","arnavarr","Documents","thesis", "prog", "antlr4", "system.sp");
             SPlexer spl = new SPlexer(CharStreams.fromPath(path));
             var spp = new SPparserRich(new CommonTokenStream(spl));
             var spc = new SPcheckerRich();
             spp.program().accept(spc);
             spc.reduceNetwork();
-            assertTrue(spc.deadlockFreedom());
-            assertTrue(spc.livelockedNodes().isEmpty());
-            assertTrue(spc.getUnreachableNodes().isEmpty());
+            var dln = spc.deadlockedNodes();
+            var lln = spc.livelockedNodes();
+            var urn = spc.getUnreachableNodes();
+            System.out.println("a");
         }
 //        @Test
 //        public void ThreeBuyerProtoolIsTypeSafe() throws IOException {

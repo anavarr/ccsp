@@ -40,6 +40,11 @@ public class RecurseCallType extends LocalType{
     }
 
     @Override
+    public boolean visitedAllBranches() {
+        return true;
+    }
+
+    @Override
     public ArrayList<LocalType> getUnvisitedNodes() {
         if(visited == 0) return new ArrayList<>(List.of(this));
         return new ArrayList<>();

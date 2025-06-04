@@ -18,6 +18,11 @@ public class RecurseDefType extends LocalType{
     }
 
     @Override
+    public boolean visitedAllBranches() {
+        return nextTypes.get("unfold").visitedAllBranches();
+    }
+
+    @Override
     public ArrayList<LocalType> getUnvisitedNodes() {
         return nextTypes.get("unfold").getUnvisitedNodes();
     }

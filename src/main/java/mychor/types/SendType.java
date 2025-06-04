@@ -45,6 +45,11 @@ public class SendType extends LocalType{
     }
 
     @Override
+    public boolean visitedAllBranches() {
+        return nextTypes.get(";").visitedAllBranches();
+    }
+
+    @Override
     public ArrayList<LocalType> getUnvisitedNodes() {
         var l = nextTypes.get(";").getUnvisitedNodes();
         if(visited == 0) l.add(this);

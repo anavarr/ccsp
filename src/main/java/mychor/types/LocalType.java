@@ -125,6 +125,8 @@ public abstract class LocalType {
     public abstract Boolean knowlegdgeOfChoice(Collection<String> processes);
 
     public abstract boolean visitedAllPaths();
+    public abstract boolean visitedAllBranches();
+
 
     public abstract ArrayList<LocalType> getUnvisitedNodes();
 

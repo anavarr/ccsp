@@ -142,9 +142,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         //  1. there are non-selected labels, in which case we must send them
         //  2. there are non-selected branches, in which case we must see if they can be selected
         //  3. all nodes are stuck on receive or end and
-        if(reducedTypes.values().stream().allMatch(el -> el instanceof ReceiveType || el instanceof EndType)){
-            if(reducedTypes.values().stream().anyMatch(el -> el instanceof ReceiveType)){
-                var pendingComms = reducedTypes.entrySet().stream()
+        if(startingPoint.values().stream().allMatch(el -> el instanceof ReceiveType || el instanceof EndType)){
+            if(startingPoint.values().stream().anyMatch(el -> el instanceof ReceiveType)){
+                var pendingComms = startingPoint.entrySet().stream()
                         .filter(entry -> entry.getValue() instanceof ReceiveType)
                         .map(entry -> ((ReceiveType) entry.getValue()).getDestination()+"-"+entry.getKey()).toList();
                 var stuck = true;
@@ -155,7 +155,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                     }
                 }
                 if(stuck) {
-                    return new ArrayList<>(reducedTypes.values().stream().filter(el -> el instanceof ReceiveType).toList());
+                    return new ArrayList<>(startingPoint.values().stream().filter(el -> el instanceof ReceiveType).toList());
                 }
             }
         }
@@ -264,7 +264,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     private boolean mustRunOtherIteration(HashMap<String, LocalType> initialTypes){
-        if(!initialTypes.values().stream().allMatch(LocalType::visitedAllPaths)){
+        var nonVisitedBranch = initialTypes.values().stream().filter(el -> !el.visitedAllBranches()).toList();
+        if(!nonVisitedBranch.isEmpty()){
             return nonVisitedPathsAreReachable(initialTypes);
         }
         return false;
@@ -300,7 +301,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 if(unreachablePaths.contains(rt.nextTypes.get(";"))) unvisitedUnreachable ++;
             }
         }
-        return unvisitedUnreachable != unvisitedPaths.size();
+        return unvisitedUnreachable < unvisitedPaths.size();
     }
 
     public void reduceNetwork(){
@@ -333,13 +334,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             addReducedTypesToHistory();
             if(iterationOver){
-                if (mustRunOtherIteration(initialTypes)) {
+                var hs = new HashSet<>(history);
+                if (hs.size() == history.size() && mustRunOtherIteration(initialTypes)) {
                     prepareIteration(initialTypes);
                 } else {
                     finalizeIteration();
                     break;
                 }
             }
+
         }
     }
 

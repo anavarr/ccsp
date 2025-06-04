@@ -58,6 +58,15 @@ public class SelectType extends LocalType {
     }
 
     @Override
+    public boolean visitedAllBranches() {
+        if (visited == 0) return false;
+        for (String s : nextTypes.keySet()) {
+            if(nextTypes.get(s).visited == 0) return false;
+        }
+        return true;
+    }
+
+    @Override
     public ArrayList<LocalType> getUnvisitedNodes() {
         var l = new ArrayList<LocalType>();
         for (LocalType value : nextTypes.values()) {
