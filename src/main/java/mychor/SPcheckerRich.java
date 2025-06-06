@@ -11,6 +11,7 @@ import mychor.types.SendType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,6 +77,14 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         }
     }
 
+    public HashMap<String, Integer> getBranchingDepths(HashMap<String, LocalType> network){
+        var hm = new HashMap<String, Integer>();
+        for (Map.Entry<String, LocalType> entry : network.entrySet()) {
+            hm.put(entry.getKey(), 1);
+        }
+        return hm;
+    }
+
     private HashMap<String, LocalType> checkLoop(){
         for (HashMap<String, LocalType> localTypes : history.get(currentHistory)) {
             if (localTypes.values().containsAll(reducedTypes.values())) {
@@ -137,28 +146,51 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         history.get(currentHistory).add(toAdd);
     }
 
+    private ArrayList<LocalType> testStuck(HashMap<String, LocalType> startingPoint){
+        if(startingPoint.values().stream()
+                .allMatch(el -> el instanceof ReceiveType ||
+                        el instanceof EndType ||
+                        el instanceof BranchType )){
+            if(startingPoint.values().stream().anyMatch(el -> el instanceof ReceiveType || el instanceof BranchType)) {
+                var pendingCommsReceive = startingPoint.entrySet().stream()
+                        .filter(entry -> entry.getValue() instanceof ReceiveType)
+                        .map(entry -> ((ReceiveType) entry.getValue()).getDestination() + "-" + entry.getKey())
+                        .toList();
+                var pendingCommsBranch = startingPoint.entrySet().stream()
+                        .filter(entry -> entry.getValue() instanceof BranchType)
+                        .map(entry -> ((BranchType) entry.getValue()).getDestination() + "-" + entry.getKey())
+                        .toList();
+                var stuck = true;
+                for (String pendingComm : pendingCommsReceive) {
+                    if (qs.containsKey(pendingComm) && !qs.get(pendingComm).isEmpty() &&
+                            qs.get(pendingComm).peek().direction().equals(Utils.Direction.SEND)) {
+                        stuck = false;
+                        break;
+                    }
+                }
+                for (String pendingComm : pendingCommsBranch) {
+                    if (qs.containsKey(pendingComm) && !qs.get(pendingComm).isEmpty() &&
+                            qs.get(pendingComm).peek().direction().equals(Utils.Direction.SELECT)) {
+                        stuck = false;
+                        break;
+                    }
+                }
+                if (stuck) {
+                    return new ArrayList<>(startingPoint.values().stream()
+                            .filter(el -> el instanceof ReceiveType || el instanceof BranchType).toList());
+                }
+            }
+        }
+        return new ArrayList<>();
+    }
+
     private ArrayList<LocalType> computeUnreachablePaths(HashMap<String, LocalType> startingPoint){
         //three situations :
         //  1. there are non-selected labels, in which case we must send them
         //  2. there are non-selected branches, in which case we must see if they can be selected
         //  3. all nodes are stuck on receive or end and
-        if(startingPoint.values().stream().allMatch(el -> el instanceof ReceiveType || el instanceof EndType)){
-            if(startingPoint.values().stream().anyMatch(el -> el instanceof ReceiveType)){
-                var pendingComms = startingPoint.entrySet().stream()
-                        .filter(entry -> entry.getValue() instanceof ReceiveType)
-                        .map(entry -> ((ReceiveType) entry.getValue()).getDestination()+"-"+entry.getKey()).toList();
-                var stuck = true;
-                for (String pendingComm : pendingComms) {
-                    if(qs.containsKey(pendingComm) && !qs.get(pendingComm).isEmpty()){
-                        stuck = false;
-                        break;
-                    }
-                }
-                if(stuck) {
-                    return new ArrayList<>(startingPoint.values().stream().filter(el -> el instanceof ReceiveType).toList());
-                }
-            }
-        }
+        var stuckNodes = testStuck(startingPoint);
+        if(!stuckNodes.isEmpty()) return stuckNodes;
         HashMap<String, HashMap<BranchType, List<String>>> branchingNodes = new HashMap<>();
         HashMap<String, HashMap<SelectType, List<String>>> selectionNodes = new HashMap<>();
         for (String process : startingPoint.keySet()) {
@@ -305,6 +337,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public void reduceNetwork(){
+        var counter = 0;
         // extracting types
         var initialTypes = setupTypes();
         history.add(new ArrayList<>());
@@ -313,6 +346,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         history.get(currentHistory).add(hm);
         qsHistory.get(currentHistory).add(new ArrayList<>());
         while(true){
+            counter++;
             var iterationOver = false;
             reduceTypes();
             if(reducedTypes.values().stream().allMatch(t -> t instanceof EndType)){
@@ -321,7 +355,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 iterationOver = true;
             }else{
                 // check if states are already registered AND their children are fully visited
-                var loopingTypes = checkLoop();
+                HashMap<String, LocalType> loopingTypes = null;
+                if(counter%20 == 0) loopingTypes = checkLoop();
+//                var loopingTypes = checkLoop();
                 //this set of states has already been registered
                 if(loopingTypes != null){
                     var continuingIsPossible = checkContinuingIsPossible();
