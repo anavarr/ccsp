@@ -34,7 +34,6 @@ public class SendType extends LocalType{
     public LocalType reduce(String pr, MessageQueues mqs) {
         visited++;
         mqs.add(Utils.Direction.SEND, pr, destination, null);
-        if(nextTypes.get(";") instanceof RecurseCallType rct) return rct.reduce(pr, mqs);
         return nextTypes.get(";");
     }
 

@@ -133,7 +133,6 @@ public class SelectType extends LocalType {
         if(label == null) return new EndType();
         visitStats.put(label, visitStats.get(label)+1);
         mqs.add(Utils.Direction.SELECT, pr, destination, label);
-        if(nextTypes.get(label) instanceof RecurseCallType rct) return rct.reduce(pr, mqs);
         return nextTypes.get(label);
     }
 

@@ -134,4 +134,5 @@ public abstract class LocalType {
     public abstract HashMap<SelectType, List<String>> getSelectionNodesAndLabelsToVisit();
 
     public abstract boolean contains(LocalType lt);
+
 }

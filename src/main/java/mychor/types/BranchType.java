@@ -76,7 +76,6 @@ public class BranchType extends LocalType{
                 String.format("Process %s does not support label %s at that point of its execution, type is not valid",
                         process, msg.label()));
         visitedLabels.add(msg.label());
-        if(nextTypes.get(msg.label()) instanceof RecurseCallType rct) return rct.reduce(process,mqs);
         return nextTypes.get(msg.label());
     }
 
@@ -174,6 +173,7 @@ public class BranchType extends LocalType{
         }
         return false;
     }
+
 
     private void removeBranch(String s) {
         nextTypes.remove(s);

@@ -75,5 +75,4 @@ public class EndType extends LocalType{
         return lt == this;
     }
 
-
 }

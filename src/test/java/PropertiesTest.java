@@ -92,7 +92,7 @@ public class PropertiesTest extends ProgramReaderTest{
             var lln = spc.livelockedNodes();
             var urn = spc.getUnreachableNodes();
             assertFalse(spc.deadlockFreedom());
-            assertFalse(spc.getUnreachableNodes().isEmpty());
+            assertFalse(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
         }
 
         @Test
@@ -107,7 +107,7 @@ public class PropertiesTest extends ProgramReaderTest{
             var lln = spc.livelockedNodes();
             var urn = spc.getUnreachableNodes();
             assertTrue(spc.deadlockFreedom());
-            assertTrue(spc.getUnreachableNodes().isEmpty());
+            assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
         }
 //        @Test
 //        public void ThreeBuyerProtoolIsTypeSafe() throws IOException {
@@ -315,21 +315,21 @@ public class PropertiesTest extends ProgramReaderTest{
             public void IPProtocolShouldNotHaveDeadBranches() throws IOException{
                 var spc = testFile("IP_protocol.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
             }
             @Test
             public void OAuth2LocalHasDeadBranches() throws IOException {
                 var spc = testFile("OAuth2_fragment.sp");
                 spc.reduceNetwork();
                 var unreachableNodes = spc.getUnreachableNodes();
-                assertFalse(unreachableNodes.stream().allMatch(List::isEmpty));
-                assertEquals(unreachableNodes.size(), 1);
+                assertFalse(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
+                assertEquals(unreachableNodes.size(), 3);
             }
             @Test
             public void exampleFredHasNoUnreachableNodes() throws IOException {
                 var spc = testFile("example_fred.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
                 assertTrue(spc.deadlockFreedom());
             }
 
@@ -337,34 +337,34 @@ public class PropertiesTest extends ProgramReaderTest{
             public void twoVSoneHasNoDeadBranches() throws IOException {
                 var spc = testFile("recursion/2_vs_1.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
             }
 
             @Test
             public void recurseVsStaticHasNoDeadBranches() throws IOException {
                 var spc = testFile("recurse_vs_static.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
             }
 
             @Test
             public void recurseVSStaticEndHasDeadBranches() throws IOException {
                 var spc = testFile("recurse_vs_static_end_first.sp");
                 spc.reduceNetwork();
-                assertFalse(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertFalse(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
             }
 
             @Test
             public void starvingBranchShouldGiveMeAnError() throws IOException{
                 var spc = testFile("recursion/starving_one_branch.sp");
                 spc.reduceNetwork();
-                assertFalse(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertFalse(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
             }
             @Test
             public void recursionSelectionSecondShouldNotHaveDeadBranches() throws IOException {
                 var spc = testFile("recursion/recursion_selection_second.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.getUnreachableNodes().stream().allMatch(List::isEmpty));
+                assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
             }
         }
     }
