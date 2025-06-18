@@ -20,6 +20,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -338,6 +340,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     public void reduceNetwork(){
         var counter = 0;
+        Function<Integer, Boolean> alwaysTrue = (c) -> true;
+        Function<Integer, Boolean> alwaysFals = (c) -> false;
+        BiFunction<Integer, Integer, Boolean> checkOnceEveryXRounds = (c, n) -> c%n == 0;
+        Function<Integer, Boolean> checkOnceEvery20Rounds = (c) -> checkOnceEveryXRounds.apply(c, 20);
         // extracting types
         var initialTypes = setupTypes();
         history.add(new ArrayList<>());
@@ -355,9 +361,9 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 iterationOver = true;
             }else{
                 // check if states are already registered AND their children are fully visited
-                HashMap<String, LocalType> loopingTypes = null;
-                if(counter%20 == 0) loopingTypes = checkLoop();
-//                var loopingTypes = checkLoop();
+//                HashMap<String, LocalType> loopingTypes = null;
+//                if(alwaysTrue.apply(counter)) loopingTypes = checkLoop();
+                var loopingTypes = checkLoop();
                 //this set of states has already been registered
                 if(loopingTypes != null){
                     var continuingIsPossible = checkContinuingIsPossible();
