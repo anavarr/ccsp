@@ -308,7 +308,8 @@ public class PropertiesTest extends ProgramReaderTest{
             public void lessUnreachableThanUnvisitedShouldHaveDeadBranches() throws IOException{
                 var spc = testFile("less_unreachable_than_unvisited.sp");
                 spc.reduceNetwork();
-                assertEquals(spc.getHistory().size(), 2);
+                assertEquals(spc.getHistory().size(), 3);
+                assertFalse(spc.getUnreachableNodes().isEmpty());
             }
 
             @Test
