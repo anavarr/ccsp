@@ -93,12 +93,14 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 for (String s : qstate.keySet()) {
                     var qstates = qstate.get(s);
                     var qhistorys = qsHistory.get(currentHistory).get(i).get(s);
-                    if(qstates == null && qhistorys == null) return history.get(currentHistory).get(i);
-                    if(qstates == null && qhistorys != null) return history.get(currentHistory).get(i);
-                    if(qstates != null && qhistorys == null) break;
-                    if(qstates.size() < qhistorys.size()) break;
-                    if(qstates.containsAll(qhistorys)){
-                        return history.get(currentHistory).get(i);
+                    if(qstates == null){
+                        if(qhistorys == null || qhistorys.isEmpty()) return history.get(currentHistory).get(i);
+                    }else if(qstates.isEmpty()){
+                        if(qhistorys == null || qhistorys.isEmpty()) return history.get(currentHistory).get(i);
+                    }else{
+                        if(qhistorys == null || qhistorys.isEmpty()) continue;
+                        if(qstates.size() < qhistorys.size()) break;
+                        if(qstates.containsAll(qhistorys)) return history.get(currentHistory).get(i);
                     }
                 }
             }
@@ -555,8 +557,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return false;
     }
 
-    public List<List<HashMap<String, LocalType>>> livelockedNodes(){
-        var lln = new ArrayList<List<HashMap<String, LocalType>>>();
+    public HashMap<String, HashSet<LocalType>> livelockedNodes(){
+        var hm = new HashMap<String, HashSet<LocalType>>();
         for (int i = 0; i < loopingStates.size(); i++) {
             var cls = loopingStates.get(i);
             if(cls.isEmpty()) continue;
@@ -565,11 +567,15 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
                 var ch = history.get(i1);
                 var o = ch.stream().filter(cls::contains).toList();
                 if(o.isEmpty()) {
-                    lln.add(cls);
+                    for (HashMap<String, LocalType> cl : cls) {
+                        for (String s : cl.keySet()) {
+                            hm.computeIfAbsent(s, key -> new HashSet<>()).add(cl.get(s));
+                        }
+                    }
                 }
             }
         }
-        return lln;
+        return hm;
     }
     
     public HashMap<String, List<LocalType>> getUnreachableNodes() {

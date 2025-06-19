@@ -252,8 +252,22 @@ public class PropertiesTest extends ProgramReaderTest{
         @Nested
         public class Livelock{
             @Test
+            public void oauthHasNoLiveLock() throws IOException{
+                var spc = testFile("OAuth2_fragment.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.livelockedNodes().isEmpty());
+            }
+
+            @Test
             public void twoBuyerHasNoLiveLock()throws IOException{
-                var spc = testFile("Three_buyer_protocol.sp");
+                    var spc = testFile("Three_buyer_protocol.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.livelockedNodes().isEmpty());
+            }
+
+            @Test
+            public void IPProtocolHasNoLiveLock() throws IOException {
+                var spc=testFile("IP_protocol.sp");
                 spc.reduceNetwork();
                 assertTrue(spc.livelockedNodes().isEmpty());
             }
@@ -263,7 +277,30 @@ public class PropertiesTest extends ProgramReaderTest{
                 var spc = testFile("example_fred.sp");
                 spc.reduceNetwork();
                 assertFalse(spc.livelockedNodes().isEmpty());
+            }
+
+
+
+            @Test
+            public void singleExchangeHasNoLiveLock() throws IOException {
+                var spc = testFile("complementarySessionsSndRcv.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.livelockedNodes().isEmpty());
+            }
+
+            @Test
+            public void exampleFredCutHasNoLiveLock() throws IOException{
+                var spc = testFile("example_fred_cut.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.livelockedNodes().isEmpty());
                 System.out.println(spc.livelockedNodes());
+            }
+
+            @Test
+            public void livelockedContinuation() throws IOException {
+                var spc = testFile("recursion/livelockedContinuation.sp");
+                spc.reduceNetwork();
+                assertFalse(spc.livelockedNodes().isEmpty());
             }
         }
 
