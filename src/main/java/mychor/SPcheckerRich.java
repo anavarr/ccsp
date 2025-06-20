@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static mychor.Utils.ERROR_NULL_PROCESS;
 import static mychor.Utils.ERROR_RECVAR_ADD;
@@ -557,7 +559,98 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return false;
     }
 
+    private ArrayList<HashSet<LocalType>> clusterizeForProcess(String s) {
+        var clusters = new ArrayList<HashSet<LocalType>>();
+        var size = 0;
+        var ssize = 0;
+        ArrayList<List<LocalType>> localLoopingStates = new ArrayList<>(loopingStates.stream().map(el -> el.stream().map(item -> item.get(s)).toList()).toList());
+        clusters.add(new HashSet<>(localLoopingStates.removeFirst()));
+        while(clusters.size() > ssize){
+            while(clusters.getLast().size() > size){
+                size = clusters.getLast().size();
+                var toRemove = new ArrayList<List<LocalType>>();
+                for (List<LocalType> localLoopingState : localLoopingStates) {
+                    if(localLoopingState.stream().anyMatch(it -> clusters.getLast().contains(it))){
+                        clusters.getLast().addAll(localLoopingState);
+                        toRemove.add(localLoopingState);
+                    }
+                }
+                for (List<LocalType> localTypes : toRemove) {
+                    localLoopingStates.remove(localTypes);
+                }
+            }
+            if(localLoopingStates.isEmpty()) break;
+            size = 0;
+            ssize = clusters.size();
+            clusters.add(new HashSet<>(localLoopingStates.removeFirst()));
+        }
+        return clusters;
+    }
+
+    //the logic of livelock:
+    // - if two loops share a state, they are joined (we can switch from one to the other)
+    // - if they don't, they are disjoined, we can't switch from one to the other
+    // - if the starting state is in a loop, then it is good
+    public HashMap<String, ArrayList<HashSet<LocalType>>> clusterizeNodes(){
+        var clusters = new HashMap<String, ArrayList<HashSet<LocalType>>>();
+        var initialStates = history.getFirst().getFirst();
+        for (String s : initialStates.keySet()) {
+            clusters.put(s, clusterizeForProcess(s));
+        }
+//        for (String s : initialStates.keySet()) {
+//            var localClusters = new ArrayList<HashSet<LocalType>>();
+//            var localLoopingStates = loopingStates.stream().map(el -> el.stream().map(item -> item.get(s)).toList()).toList();
+//            localClusters.add(new HashSet<>(localLoopingStates.getFirst()));
+//            int clustersNumber;
+//            do{
+//                var tmpStorage = new ArrayList<List<LocalType>>();
+//                clustersNumber = localClusters.size();
+//                for (List<LocalType> localLoopingState : localLoopingStates) {
+//                    if(localLoopingState.stream().anyMatch(localClusters.getLast()::contains)){
+//                        localClusters.getLast().addAll(localLoopingState);
+//                    }else{
+//                        tmpStorage.add(localLoopingState);
+//                    }
+//                }
+//                int oldStorageSize;
+//                do{
+//                    oldStorageSize = tmpStorage.size();
+//                    var toRemove = tmpStorage.stream()
+//                            .filter(item -> item.stream().anyMatch(localClusters.getLast()::contains)).toList();
+//                    tmpStorage.remove(toRemove);
+//                    var nodes = toRemove.stream().reduce(new ArrayList<LocalType>(), (accu, item) -> {
+//                        accu.addAll(item);
+//                        return accu;
+//                    });
+//                    localClusters.getLast().addAll(nodes);
+//                }while(tmpStorage.size()<oldStorageSize);
+//                if(!tmpStorage.isEmpty()){
+//                    localClusters.add(new HashSet<>());
+//                    localClusters.getLast().addAll(tmpStorage.getFirst());
+//                    tmpStorage.removeFirst();
+//                }
+//            }while(localClusters.size() > clustersNumber);
+//            clusters.put(s, localClusters);
+//        }
+        return clusters;
+    }
+
     public HashMap<String, HashSet<LocalType>> livelockedNodes(){
+        var initialTypes = history.getFirst().getFirst();
+        var clusters = clusterizeNodes();
+        var livelockedNodes = new HashMap<String, HashSet<LocalType>>();
+        for (String s : initialTypes.keySet()) {
+            livelockedNodes.put(s, new HashSet<>());
+        }
+        for (Map.Entry<String, ArrayList<HashSet<LocalType>>> entry : clusters.entrySet()) {
+            var nonAccessibleFromStart = entry.getValue().stream()
+                    .filter(set -> !set.contains(initialTypes.get(entry.getKey()))).flatMap(Collection::stream).toList();
+            livelockedNodes.get(entry.getKey()).addAll(nonAccessibleFromStart);
+        }
+        return livelockedNodes;
+    }
+
+    public HashMap<String, HashSet<LocalType>> livelockedNodesOld(){
         var hm = new HashMap<String, HashSet<LocalType>>();
         for (int i = 0; i < loopingStates.size(); i++) {
             var cls = loopingStates.get(i);

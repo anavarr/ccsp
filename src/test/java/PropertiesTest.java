@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -255,28 +257,28 @@ public class PropertiesTest extends ProgramReaderTest{
             public void oauthHasNoLiveLock() throws IOException{
                 var spc = testFile("OAuth2_fragment.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.livelockedNodes().isEmpty());
+                assertTrue(spc.livelockedNodes().values().stream().allMatch(HashSet::isEmpty));
             }
 
             @Test
-            public void twoBuyerHasNoLiveLock()throws IOException{
+            public void twoBuyerHasLiveLock()throws IOException{
                     var spc = testFile("Three_buyer_protocol.sp");
                 spc.reduceNetwork();
-                assertFalse(spc.livelockedNodes().isEmpty());
+                assertFalse(spc.livelockedNodes().values().stream().allMatch(HashSet::isEmpty));
             }
 
             @Test
             public void IPProtocolHasNoLiveLock() throws IOException {
                 var spc=testFile("IP_protocol.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.livelockedNodes().isEmpty());
+                assertTrue(spc.livelockedNodes().values().stream().allMatch(HashSet::isEmpty));
             }
 
             @Test
             public void exampleFredHasLiveLocks() throws IOException{
                 var spc = testFile("example_fred.sp");
                 spc.reduceNetwork();
-                assertFalse(spc.livelockedNodes().isEmpty());
+                assertTrue(spc.livelockedNodes().values().stream().anyMatch(list -> !list.isEmpty()));
             }
 
 
@@ -285,15 +287,14 @@ public class PropertiesTest extends ProgramReaderTest{
             public void singleExchangeHasNoLiveLock() throws IOException {
                 var spc = testFile("complementarySessionsSndRcv.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.livelockedNodes().isEmpty());
+                assertTrue(spc.livelockedNodes().values().stream().allMatch(HashSet::isEmpty));
             }
 
             @Test
             public void exampleFredCutHasNoLiveLock() throws IOException{
                 var spc = testFile("example_fred_cut.sp");
                 spc.reduceNetwork();
-                assertTrue(spc.livelockedNodes().isEmpty());
-                System.out.println(spc.livelockedNodes());
+                assertTrue(spc.livelockedNodes().values().stream().allMatch(HashSet::isEmpty));
             }
 
             @Test
