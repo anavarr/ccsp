@@ -8,12 +8,17 @@ import mychor.End;
 import mychor.MessageQueues;
 import mychor.None;
 import mychor.Utils;
+import org.apache.commons.lang3.builder.RecursiveToStringStyle;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 public abstract class LocalType {
 
@@ -135,4 +140,62 @@ public abstract class LocalType {
 
     public abstract boolean contains(LocalType lt);
 
+    public int count(Function<LocalType, Boolean> predicate){
+        var count = 0;
+        if(this instanceof RecurseCallType){
+            if(predicate.apply(this)) return 1;
+            return 0;
+        }
+        for (LocalType value : nextTypes.values()) {
+            count+=value.count(predicate);
+        }
+        if(predicate.apply(this)) count += 1;
+        return count;
+    }
+
+    public ArrayList<Integer> getBranchesDistribution(){
+        if(this instanceof RecurseCallType) return new ArrayList<>();
+        var counted = nextTypes.values().stream().flatMap(t -> t.getBranchesDistribution().stream()).toList();
+        var count = new ArrayList<>(counted);
+        if(nextTypes.size() > 1) {
+            if(count.isEmpty()) count.add(1);
+            else count = new ArrayList<>(count.stream().map(el -> el+1).toList());
+        }
+        return count;
+    }
+
+    public ArrayList<Integer> countPerBranch(Function<LocalType, Boolean> predicate){
+        if(this instanceof RecurseCallType) return new ArrayList<>();
+        var counted = nextTypes.values().stream().map(t -> t.countPerBranch(predicate)).toList();
+        var count = new ArrayList<Integer>();
+        if(predicate.apply(this)){
+            if(counted.stream().anyMatch(ArrayList::isEmpty)) count.add(1);
+            for (ArrayList<Integer> integers : counted) {
+                count.addAll(integers.stream().map(el -> el+1).toList());
+            }
+        }
+        return count;
+    }
+
+    public ArrayList<ArrayList<String>> getBranches(){
+        var aas = new ArrayList<ArrayList<String>>();
+        if(this instanceof RecurseCallType) return new ArrayList<>();
+        for (Map.Entry<String, LocalType> entry : nextTypes.entrySet()) {
+            var next = entry.getValue().getBranches();
+            var as = new ArrayList<String>();
+            as.add("placeholder");
+            if(next.isEmpty()) aas.add(as);
+            else{
+                for (ArrayList<String> strings : next) {
+                    strings.remove("placeholder");
+                    var l = new ArrayList<String>();
+                    l.add("placeholder");
+                    l.add(entry.getKey());
+                    l.addAll(strings);
+                    aas.add(l);
+                }
+            }
+        }
+        return aas;
+    }
 }

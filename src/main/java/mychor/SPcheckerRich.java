@@ -52,6 +52,57 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return qsHistory;
     }
 
+    public HashMap<String, Integer> numberOfInstances(Function<LocalType, Boolean> predicate){
+        var hm = new HashMap<String, Integer>();
+        for (String s : history.getFirst().getFirst().keySet()) {
+            hm.put(s,
+                    history.getFirst().getFirst().get(s).count(predicate)
+            );
+        }
+        return hm;
+    }
+
+    public HashMap<String, List<Integer>> distributionOfInstances(Function<LocalType, Boolean> predicate){
+        var hm = new HashMap<String, List<Integer>>();
+        for (String s : history.getFirst().getFirst().keySet()) {
+            hm.put(s,
+                    history.getFirst().getFirst().get(s).countPerBranch(predicate)
+            );
+        }
+        return hm;
+    }
+
+    public HashMap<String, Integer> numberOfSelections(){
+        return numberOfInstances((lt) -> lt instanceof SelectType);
+    }
+
+    public HashMap<String, Integer> numberOfBranching(){
+        return numberOfInstances((lt) -> lt instanceof BranchType);
+    }
+
+    public HashMap<String, Integer> numberOfBranchingAndSelections(){
+        return numberOfInstances((lt) -> lt instanceof BranchType || lt instanceof SelectType);
+    }
+
+    public HashMap<String, List<Integer>> selectionDistribution(){
+        return distributionOfInstances((lt) -> lt instanceof SelectType);
+    }
+
+    public HashMap<String, List<Integer>> branchingDistribution(){
+        return distributionOfInstances((lt) -> lt instanceof BranchType);
+    }
+
+    public HashMap<String, List<Integer>> selectionAndBranchingDistribution(){
+        return distributionOfInstances((lt) -> lt instanceof SelectType || lt instanceof BranchType);
+    }
+
+    public HashMap<String, ArrayList<ArrayList<String>>> getBranches() {
+        for (String s : history.getFirst().getFirst().keySet()) {
+
+        }
+        return null;
+    }
+
     private HashMap<String, LocalType> setupTypes(){
         HashMap<String,LocalType> initialTypes = new HashMap<>();
         for (String s : compilerCtx.behaviours.keySet()) {
@@ -208,6 +259,8 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         qsHistory.add(new ArrayList<>());
         var hm = new HashMap<>(initialTypes);
         history.get(currentHistory).add(hm);
+        int deadline = 1;
+        var iterationsCounter = 0;
         qsHistory.get(currentHistory).add(new HashMap<>());
         while(true){
             counter++;
@@ -231,15 +284,17 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             }
             addReducedTypesToHistory();
             if(iterationOver){
-                var hs = new HashSet<>(history);
-                if (hs.size() == history.size()) {
+                iterationsCounter ++;
+                if(!history.subList(0, history.size()-1).contains(history.getLast())){
+                    deadline = (iterationsCounter+1)*2;
+                }
+                if (iterationsCounter < deadline) {
                     prepareIteration(initialTypes);
                 } else {
                     finalizeIteration();
                     break;
                 }
             }
-
         }
     }
 
@@ -597,41 +652,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         for (String s : initialStates.keySet()) {
             clusters.put(s, clusterizeForProcess(s));
         }
-//        for (String s : initialStates.keySet()) {
-//            var localClusters = new ArrayList<HashSet<LocalType>>();
-//            var localLoopingStates = loopingStates.stream().map(el -> el.stream().map(item -> item.get(s)).toList()).toList();
-//            localClusters.add(new HashSet<>(localLoopingStates.getFirst()));
-//            int clustersNumber;
-//            do{
-//                var tmpStorage = new ArrayList<List<LocalType>>();
-//                clustersNumber = localClusters.size();
-//                for (List<LocalType> localLoopingState : localLoopingStates) {
-//                    if(localLoopingState.stream().anyMatch(localClusters.getLast()::contains)){
-//                        localClusters.getLast().addAll(localLoopingState);
-//                    }else{
-//                        tmpStorage.add(localLoopingState);
-//                    }
-//                }
-//                int oldStorageSize;
-//                do{
-//                    oldStorageSize = tmpStorage.size();
-//                    var toRemove = tmpStorage.stream()
-//                            .filter(item -> item.stream().anyMatch(localClusters.getLast()::contains)).toList();
-//                    tmpStorage.remove(toRemove);
-//                    var nodes = toRemove.stream().reduce(new ArrayList<LocalType>(), (accu, item) -> {
-//                        accu.addAll(item);
-//                        return accu;
-//                    });
-//                    localClusters.getLast().addAll(nodes);
-//                }while(tmpStorage.size()<oldStorageSize);
-//                if(!tmpStorage.isEmpty()){
-//                    localClusters.add(new HashSet<>());
-//                    localClusters.getLast().addAll(tmpStorage.getFirst());
-//                    tmpStorage.removeFirst();
-//                }
-//            }while(localClusters.size() > clustersNumber);
-//            clusters.put(s, localClusters);
-//        }
         return clusters;
     }
 

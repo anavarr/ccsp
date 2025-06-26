@@ -109,7 +109,7 @@ public class PropertiesTest extends ProgramReaderTest{
             var lln = spc.livelockedNodes();
             var urn = spc.getUnreachableNodes();
             assertTrue(spc.deadlockFreedom());
-            assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
+            assertTrue(urn.values().stream().allMatch(List::isEmpty));
         }
 //        @Test
 //        public void ThreeBuyerProtoolIsTypeSafe() throws IOException {
@@ -247,8 +247,43 @@ public class PropertiesTest extends ProgramReaderTest{
         }
 
         @Nested
-        public class Liveness{
+        public class CountingElements{
 
+            public void testComposition(int nBranchings, int nSelections,
+                                        List<Integer> bDistr, List<Integer> sDistr, String label, SPcheckerRich spc){
+                assertEquals(bDistr,spc.branchingDistribution().get(label));
+                assertEquals(sDistr,spc.selectionDistribution().get(label));
+
+                assertEquals(nBranchings, spc.numberOfBranching().get(label));
+                assertEquals(nSelections, spc.numberOfSelections().get(label));
+                assertEquals(nBranchings+nSelections, spc.numberOfBranchingAndSelections().get(label));
+            }
+
+            @Test
+            public void starvedHasOneBranch() throws IOException {
+                var spc = testFile("recursion/starving_one_branch.sp");
+                spc.reduceNetwork();
+                testComposition(1, 0, List.of(1), List.of(), "starved", spc);
+                testComposition(0, 1, List.of(), List.of(1), "starver", spc);
+            }
+
+            @Test
+            public void testDepthGenerated() throws IOException {
+                var path = Path.of("/", "tmp", "choreoGen", "system.sp");
+                SPlexer spl = new SPlexer(CharStreams.fromPath(path));
+                var spp = new SPparserRich(new CommonTokenStream(spl));
+                var spc = new SPcheckerRich();
+                spp.program().accept(spc);
+                spc.reduceNetwork();
+                var df = spc.deadlockFreedom();
+                var lf = spc.livelockedNodes();
+                var bd = spc.branchingDistribution();
+                var sd = spc.selectionDistribution();
+                var bsd = spc.selectionAndBranchingDistribution();
+                var bsn = spc.numberOfBranchingAndSelections();
+                var branches = spc.getBranches();
+                System.out.println("hoho");
+            }
         }
 
         @Nested
@@ -343,11 +378,17 @@ public class PropertiesTest extends ProgramReaderTest{
         @Nested
         public class DeadBranches{
             @Test
+            public void unbalancedTreeShouldVisitAllNodes() throws IOException {
+                var spc = testFile("unbalanced_graphs.sp");
+                spc.reduceNetwork();
+                assertTrue(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
+            }
+
+            @Test
             public void lessUnreachableThanUnvisitedShouldHaveDeadBranches() throws IOException{
                 var spc = testFile("less_unreachable_than_unvisited.sp");
                 spc.reduceNetwork();
-                assertEquals(spc.getHistory().size(), 3);
-                assertFalse(spc.getUnreachableNodes().isEmpty());
+                assertFalse(spc.getUnreachableNodes().values().stream().allMatch(List::isEmpty));
             }
 
             @Test
