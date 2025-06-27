@@ -54,9 +54,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     public HashMap<String, Integer> numberOfInstances(Function<LocalType, Boolean> predicate){
         var hm = new HashMap<String, Integer>();
-        for (String s : history.getFirst().getFirst().keySet()) {
+        var types = setupTypes();
+        for (String s : types.keySet()) {
             hm.put(s,
-                    history.getFirst().getFirst().get(s).count(predicate)
+                    types.get(s).count(predicate)
             );
         }
         return hm;
@@ -64,9 +65,10 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
     public HashMap<String, List<Integer>> distributionOfInstances(Function<LocalType, Boolean> predicate){
         var hm = new HashMap<String, List<Integer>>();
-        for (String s : history.getFirst().getFirst().keySet()) {
+        var types = setupTypes();
+        for (String s : types.keySet()) {
             hm.put(s,
-                    history.getFirst().getFirst().get(s).countPerBranch(predicate)
+                    types.get(s).countPerBranch(predicate)
             );
         }
         return hm;
@@ -97,10 +99,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public HashMap<String, ArrayList<ArrayList<String>>> getBranches() {
-        for (String s : history.getFirst().getFirst().keySet()) {
-
+        var types = setupTypes();
+        var hm = new HashMap<String, ArrayList<ArrayList<String>>>();
+        for (String s : types.keySet()) {
+            hm.put(s, types.get(s).getBranches());
         }
-        return null;
+        return hm;
     }
 
     private HashMap<String, LocalType> setupTypes(){
@@ -286,6 +290,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             if(iterationOver){
                 iterationsCounter ++;
                 if(!history.subList(0, history.size()-1).contains(history.getLast())){
+                    System.out.println("found a new iteration we never encountered, updating deadline: "+iterationsCounter);
                     deadline = (iterationsCounter+1)*2;
                 }
                 if (iterationsCounter < deadline) {
@@ -608,6 +613,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public boolean generateWaste() {
+        if(history.isEmpty()) System.err.println("network wasn't reduced yet");
         for (ArrayList<Message> leftOver : qs.leftOvers) {
             if(!leftOver.isEmpty()) return true;
         }
@@ -656,6 +662,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public HashMap<String, HashSet<LocalType>> livelockedNodes(){
+        if(history.isEmpty()) System.err.println("network wasn't reduced yet");
         var initialTypes = history.getFirst().getFirst();
         var clusters = clusterizeNodes();
         var livelockedNodes = new HashMap<String, HashSet<LocalType>>();
@@ -670,27 +677,6 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return livelockedNodes;
     }
 
-    public HashMap<String, HashSet<LocalType>> livelockedNodesOld(){
-        var hm = new HashMap<String, HashSet<LocalType>>();
-        for (int i = 0; i < loopingStates.size(); i++) {
-            var cls = loopingStates.get(i);
-            if(cls.isEmpty()) continue;
-            for (int i1 = 0; i1 < history.size(); i1++) {
-                if(i== i1) continue;
-                var ch = history.get(i1);
-                var o = ch.stream().filter(cls::contains).toList();
-                if(o.isEmpty()) {
-                    for (HashMap<String, LocalType> cl : cls) {
-                        for (String s : cl.keySet()) {
-                            hm.computeIfAbsent(s, key -> new HashSet<>()).add(cl.get(s));
-                        }
-                    }
-                }
-            }
-        }
-        return hm;
-    }
-    
     public HashMap<String, List<LocalType>> getUnreachableNodes() {
         if(history.isEmpty()) System.err.println("network wasn't reduced yet");
         var unreach = new HashMap<String, List<LocalType>>();
@@ -735,6 +721,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public HashMap<String, ArrayList<LocalType>> deadlockedNodes(){
+        if(history.isEmpty()) System.err.println("network wasn't reduced yet");
         var deadlockedNodes = new HashMap<String, ArrayList<LocalType>>();
         for (int i = 0; i < history.size(); i++) {
             var dn = deadlockedNodesInIteration(i);
@@ -759,6 +746,7 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
     }
 
     public boolean deadlockFreedom() {
+        if(history.isEmpty()) System.err.println("network wasn't reduced yet");
         return deadlockedNodes().isEmpty();
     }
 }

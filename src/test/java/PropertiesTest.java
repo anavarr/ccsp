@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -152,6 +154,16 @@ public class PropertiesTest extends ProgramReaderTest{
 //        }
     }
 
+    @Nested
+    public class BigSystems{
+        @Test
+        public void testDepthGenerated() throws IOException {
+            var spc = testFile("generation/400_many_branches.sp");
+            spc.reduceNetwork();
+            spc.deadlockFreedom();
+            spc.livelockedNodes();
+        }
+    }
 
     @Nested
     public class ExactAlgorithm{
@@ -276,12 +288,17 @@ public class PropertiesTest extends ProgramReaderTest{
                 spp.program().accept(spc);
                 spc.reduceNetwork();
                 var df = spc.deadlockFreedom();
+                var dn = spc.deadlockedNodes();
                 var lf = spc.livelockedNodes();
+                var un = spc.getUnreachableNodes();
                 var bd = spc.branchingDistribution();
                 var sd = spc.selectionDistribution();
                 var bsd = spc.selectionAndBranchingDistribution();
                 var bsn = spc.numberOfBranchingAndSelections();
+                var bsnMax = Collections.max(bsn.values());
                 var branches = spc.getBranches();
+                var branches_data = branches.values().stream().map(ArrayList::size).toList();
+
                 System.out.println("hoho");
             }
         }

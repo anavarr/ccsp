@@ -178,21 +178,50 @@ public abstract class LocalType {
     }
 
     public ArrayList<ArrayList<String>> getBranches(){
+        if(this instanceof RecurseCallType) return new ArrayList<>();
+        var aas = new ArrayList<ArrayList<String>>();
+        if(this instanceof SelectType || this instanceof BranchType){
+            for (String s : nextTypes.keySet()) {
+                var as = new ArrayList<String>();
+                var aas2 = nextTypes.get(s).getBranches();
+                if(aas2.isEmpty()){
+                    as.add(s);
+                    aas.add(as);
+                }
+                else{
+                    for (ArrayList<String> strings : aas2) {
+                        as = new ArrayList<>();
+                        as.add(s);
+                        as.addAll(strings);
+                        aas.add(as);
+                    }
+                }
+            }
+        }else{
+            var l= nextTypes.values().stream().map(LocalType::getBranches).toList();
+            if(!l.isEmpty()) aas = (l.getFirst());
+        }
+        return aas;
+    }
+
+    public ArrayList<ArrayList<String>> getBranchesOld(){
         var aas = new ArrayList<ArrayList<String>>();
         if(this instanceof RecurseCallType) return new ArrayList<>();
         for (Map.Entry<String, LocalType> entry : nextTypes.entrySet()) {
             var next = entry.getValue().getBranches();
-            var as = new ArrayList<String>();
-            as.add("placeholder");
-            if(next.isEmpty()) aas.add(as);
-            else{
-                for (ArrayList<String> strings : next) {
-                    strings.remove("placeholder");
-                    var l = new ArrayList<String>();
-                    l.add("placeholder");
-                    l.add(entry.getKey());
-                    l.addAll(strings);
-                    aas.add(l);
+            if(nextTypes.size()>1){
+                var as = new ArrayList<String>();
+                as.add("placeholder");
+                if(next.isEmpty()) aas.add(as);
+                else{
+                    for (ArrayList<String> strings : next) {
+                        strings.remove("placeholder");
+                        var l = new ArrayList<String>();
+                        l.add("placeholder");
+                        l.add(entry.getKey());
+                        l.addAll(strings);
+                        aas.add(l);
+                    }
                 }
             }
         }
