@@ -6,6 +6,7 @@ import mychor.Utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class BranchType extends LocalType{
@@ -172,6 +173,16 @@ public class BranchType extends LocalType{
             if(value.contains(lt)) return true;
         }
         return false;
+    }
+
+    @Override
+    public HashSet<String> getCommunicatingProcess() {
+        var neighbors = new HashSet<String>();
+        neighbors.add(destination);
+        for (LocalType value : nextTypes.values()) {
+            neighbors.addAll(value.getCommunicatingProcess());
+        }
+        return neighbors;
     }
 
 

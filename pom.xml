@@ -22,6 +22,11 @@
             <version>1.12-4</version>
         </dependency>
         <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.10</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.julianthome</groupId>
             <artifactId>autorex</artifactId>
             <version>1.0</version>

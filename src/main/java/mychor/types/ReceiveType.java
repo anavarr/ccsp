@@ -6,6 +6,7 @@ import mychor.Utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class ReceiveType extends LocalType{
@@ -47,6 +48,13 @@ public class ReceiveType extends LocalType{
     public boolean contains(LocalType lt) {
         if(lt == this) return true;
         return nextTypes.get(";").contains(lt);
+    }
+
+    @Override
+    public HashSet<String> getCommunicatingProcess() {
+        var hs = nextTypes.get(";").getCommunicatingProcess();
+        hs.add(destination);
+        return hs;
     }
 
     @Override

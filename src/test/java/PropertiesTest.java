@@ -1,17 +1,20 @@
+import com.opencsv.CSVWriter;
 import mychor.SPcheckerRich;
 import mychor.SPlexer;
 import mychor.SPparserRich;
+import mychor.Utils;
 import mychor.types.LocalType;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -22,7 +25,102 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PropertiesTest extends ProgramReaderTest{
+//    @Test
+    public void testFeasibility() throws IOException{
+        var path = Path.of("/", "tmp", "choreoGen", "system.sp");
+        SPlexer spl = new SPlexer(CharStreams.fromPath(path));
+        var spp = new SPparserRich(new CommonTokenStream(spl));
+        var spc = new SPcheckerRich();
+        spp.program().accept(spc);
+        int complexity = spc.computeBiggestComplexity();
+        try(CSVWriter writer = new CSVWriter(new FileWriter("header.csv"),
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END)){
+            // Write header line
+            writer.writeNext(new String[]{"max complexity"});
+            writer.writeNext(new String[]{
+                    String.valueOf(complexity)
+            });
+        }
+    }
+//    @Test
+    public void testGeneratedSystem() throws IOException {
+        var path = Path.of("/", "tmp", "choreoGen", "system.sp");
+        SPlexer spl = new SPlexer(CharStreams.fromPath(path));
+        var spp = new SPparserRich(new CommonTokenStream(spl));
+        var spc = new SPcheckerRich();
+        spp.program().accept(spc);
+        int complexity = spc.computeBiggestComplexity();
+        System.out.println(complexity);
+        var tstart = Instant.now().toEpochMilli();
+        spc.reduceNetwork(complexity);
+        var tend = Instant.now().toEpochMilli();
+        long duration = tend - tstart;
+        var dn = spc.deadlockedNodes();
+        var ln = spc.livelockedNodes();
+        var un = spc.getUnreachableNodes();
+        var branches = spc.getBranches();
+        var branches_data = new ArrayList<>(branches.values().stream().map(ArrayList::size).toList());
+        var quartiles = Utils.quartiles(branches_data);
+        float average = (float) branches_data.stream().reduce(0, Integer::sum) /branches_data.size();
+        int maxBranching=branches_data.getLast();
+        int minBranching=branches_data.getFirst();
+        double stdev = Utils.stdev(branches_data);
 
+        List<String> processesByName = new ArrayList<>(branches.keySet());
+        Collections.sort(processesByName);
+        try(CSVWriter writer = new CSVWriter(new FileWriter("subnets.csv"),
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END)){
+            writer.writeNext(new String[]{"subnetworks"});
+            for (HashSet<String> computeSubNetwork : spc.computeSubNetworks()) {
+                writer.writeNext(computeSubNetwork.toArray(new String[0]));
+            }
+        }
+
+        try(CSVWriter writer = new CSVWriter(new FileWriter("properties.csv"),
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END)){
+        // Write header line
+            writer.writeNext(new String[]{"deadlocked nodes", "livelocked nodes", "unreachable nodes", "reduction duration", "max complexity"});
+            writer.writeNext(new String[]{
+                    dn.values().stream().allMatch(ArrayList::isEmpty) ? "no":"yes",
+                    ln.values().stream().allMatch(HashSet::isEmpty) ? "no":"yes",
+                    un.values().stream().allMatch(List::isEmpty) ? "no":"yes",
+                    String.valueOf(duration),
+                    String.valueOf(complexity)
+            });
+        }
+        try(CSVWriter writer = new CSVWriter(new FileWriter("results.csv"),
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END)){
+            String[] headers = processesByName.toArray(new String[0]);
+            writer.writeNext(headers);
+            for (int i = 0; i < maxBranching; i++) {
+                ArrayList<String> line = new ArrayList<>();
+                for (String s : processesByName) {
+                    if(i>=branches.get(s).size()) line.add("");
+                    else {
+                        var b = branches.get(s).get(i).stream().map(el -> el.replaceAll("\"", "")).toList();
+                        line.add(String.join("|", b));
+                    }
+                }
+                String[] lineA = line.toArray(new String[0]);
+                writer.writeNext(lineA);
+            }
+            // Write data lines
+        }catch(IOException e){
+            System.err.println(e);
+        }
+    }
 
     // Local Types
     @Nested
@@ -279,28 +377,7 @@ public class PropertiesTest extends ProgramReaderTest{
                 testComposition(0, 1, List.of(), List.of(1), "starver", spc);
             }
 
-            @Test
-            public void testDepthGenerated() throws IOException {
-                var path = Path.of("/", "tmp", "choreoGen", "system.sp");
-                SPlexer spl = new SPlexer(CharStreams.fromPath(path));
-                var spp = new SPparserRich(new CommonTokenStream(spl));
-                var spc = new SPcheckerRich();
-                spp.program().accept(spc);
-                spc.reduceNetwork();
-                var df = spc.deadlockFreedom();
-                var dn = spc.deadlockedNodes();
-                var lf = spc.livelockedNodes();
-                var un = spc.getUnreachableNodes();
-                var bd = spc.branchingDistribution();
-                var sd = spc.selectionDistribution();
-                var bsd = spc.selectionAndBranchingDistribution();
-                var bsn = spc.numberOfBranchingAndSelections();
-                var bsnMax = Collections.max(bsn.values());
-                var branches = spc.getBranches();
-                var branches_data = branches.values().stream().map(ArrayList::size).toList();
 
-                System.out.println("hoho");
-            }
         }
 
         @Nested

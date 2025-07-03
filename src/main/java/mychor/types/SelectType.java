@@ -6,6 +6,7 @@ import mychor.Utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -83,6 +84,16 @@ public class SelectType extends LocalType {
             if(value.contains(lt)) return true;
         }
         return false;
+    }
+
+    @Override
+    public HashSet<String> getCommunicatingProcess() {
+        var hs = new HashSet<String>();
+        hs.add(destination);
+        for (LocalType value : nextTypes.values()) {
+            hs.addAll(value.getCommunicatingProcess());
+        }
+        return hs;
     }
 
     @Override

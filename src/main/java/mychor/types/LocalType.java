@@ -227,4 +227,6 @@ public abstract class LocalType {
         }
         return aas;
     }
+
+    public abstract HashSet<String> getCommunicatingProcess();
 }

@@ -98,6 +98,42 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
         return distributionOfInstances((lt) -> lt instanceof SelectType || lt instanceof BranchType);
     }
 
+    public int computeBiggestComplexity(){
+        var subnets = computeSubNetworks();
+        var branches = getBranches();
+        int cpl = 0;
+        for (HashSet<String> subnet : subnets) {
+            int c = 1;
+            for (String process : subnet) {
+                c *= branches.get(process).size();
+            }
+            if(c > cpl) cpl = c;
+        }
+        return cpl;
+    }
+
+    public List<HashSet<String>> computeSubNetworks(){
+        var types = setupTypes();
+        var subnets = new ArrayList<HashSet<String>>();
+        for (String s : types.keySet()) {
+            var neighbours = types.get(s).getCommunicatingProcess();
+            neighbours.add(s);
+            var toPutIn = subnets.stream().filter(subnet -> subnet.stream().anyMatch(neighbours::contains)).toList();
+            if (toPutIn.isEmpty()) subnets.add(neighbours);
+            else if (toPutIn.size() == 1) {
+                toPutIn.getFirst().addAll(neighbours);
+            } else {
+                var englobingSet = new HashSet<>(neighbours);
+                for (HashSet<String> strings : toPutIn) {
+                    englobingSet.addAll(strings);
+                    subnets.remove(strings);
+                }
+                subnets.add(englobingSet);
+            }
+        }
+        return subnets;
+    }
+
     public HashMap<String, ArrayList<ArrayList<String>>> getBranches() {
         var types = setupTypes();
         var hm = new HashMap<String, ArrayList<ArrayList<String>>>();
@@ -252,6 +288,12 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
 
 
     public void reduceNetwork(){
+        var c = computeBiggestComplexity();
+        System.out.println(c);
+        reduceNetwork(c);
+    }
+
+    public void reduceNetwork(int complexity){
         var counter = 0;
         Function<Integer, Boolean> alwaysTrue = (c) -> true;
         Function<Integer, Boolean> alwaysFals = (c) -> false;
@@ -289,11 +331,11 @@ public class SPcheckerRich extends SPparserRichBaseVisitor<List<String>>{
             addReducedTypesToHistory();
             if(iterationOver){
                 iterationsCounter ++;
-                if(!history.subList(0, history.size()-1).contains(history.getLast())){
-                    System.out.println("found a new iteration we never encountered, updating deadline: "+iterationsCounter);
-                    deadline = (iterationsCounter+1)*2;
-                }
-                if (iterationsCounter < deadline) {
+//                if(!history.subList(0, history.size()-1).contains(history.getLast())){
+//                    System.out.println("found a new iteration we never encountered, updating deadline: "+iterationsCounter);
+//                    deadline = (iterationsCounter+1)*3;
+//                }
+                if (iterationsCounter < complexity) {
                     prepareIteration(initialTypes);
                 } else {
                     finalizeIteration();

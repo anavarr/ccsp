@@ -5,6 +5,7 @@ import mychor.MessageQueues;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class RecurseCallType extends LocalType{
@@ -63,6 +64,11 @@ public class RecurseCallType extends LocalType{
     @Override
     public boolean contains(LocalType lt) {
         return lt == this;
+    }
+
+    @Override
+    public HashSet<String> getCommunicatingProcess() {
+        return new HashSet<>();
     }
 
     @Override
